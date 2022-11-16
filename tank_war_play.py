@@ -1,4 +1,6 @@
 import os
+
+# Disable pygame welcome message (https://stackoverflow.com/questions/51464455/how-to-disable-welcome-message-when-importing-pygame)
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 import argparse
