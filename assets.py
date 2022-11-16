@@ -29,11 +29,11 @@ class _Tank(pygame.sprite.Sprite):
         elif self.rect.bottom >= self.window_height:
             self.rect.bottom = self.window_height
 
-    def update(self, d_x, d_y, angle: int) -> None:
+    def update(self, dx, dy, angle: int) -> None:
         self.surf = pygame.transform.rotate(self.surf, self._angle2rotation(angle))
         self.angle = angle
         self.rect = self.surf.get_rect(center=self.rect.center)
-        self.rect.move_ip(d_x * self.speed, d_y * self.speed)
+        self.rect.move_ip(dx * self.speed, dy * self.speed)
         self._keep_inside()
 
     def _angle2rotation(self, angle: int) -> int:
@@ -78,3 +78,35 @@ class Enemy(_Tank):
             self.start_y = random.randint(0, self.window_height)
         self.rect = self.surf.get_rect(center=(self.start_x, self.start_y))
         self._keep_inside()
+
+
+class _Bullet(pygame.sprite.Sprite):
+    def __init__(self, image_path: str, speed: int, resize_ratio: int = 1, seed: None | int = None):
+        super().__init__()
+        # Seed the random module
+        random.seed(seed)
+
+        self.speed = speed
+
+        self.surf = pygame.image.load(image_path)
+        self.surf.set_alpha(256)
+        self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / resize_ratio, self.surf.get_height() / resize_ratio))
+
+        self.angle = random.choice((0, 90, 180, 270))
+        self.surf = pygame.transform.rotate(self.surf, self.angle)
+
+
+class PlayerBullet(_Bullet):
+    image_path = "images/bullets/bullet_01.png"
+    resize_ratio = 2
+
+    def __init__(self, speed: int, seed: None | int = None):
+        super().__init__(self.image_path, speed, self.resize_ratio, seed)
+
+
+class EnemyBullet(_Bullet):
+    image_path = "images/bullets/bullet_02.png"
+    resize_ratio = 2
+    
+    def __init__(self, speed: int, seed: None | int = None):
+        super().__init__(self.image_path, speed, self.resize_ratio, seed)
