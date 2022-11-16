@@ -11,9 +11,9 @@ from tank_war import TankWar
 
 
 def pressed_to_action(pressed_keys):
-    action = 9
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
-        action = -1
+        return -1
+    action = 9
     if not pressed_keys[pygame.K_SPACE]:
         if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
             action = 0
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--mode", type=str, required=True, help="\"human\", \"read_only\" or \"rgb_array\"")
     parser.add_argument("-s", "--seed", type=int, default=None)
     parser.add_argument("-e", "--episodes", type=int, required=True)
-    parser.add_argument("-ms", "--max_steps", type=int, required=True)
+    parser.add_argument("-ms", "--max_steps", type=int, default=3600)
     args = parser.parse_args()
     render_mode = str(args.mode)
     try:
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     except ValueError:
         print("Invalid argument(s).")
 
-    env = TankWar(render_mode, seed)
+    env = TankWar(render_mode, seed, max_steps)
     for episode in range(1, episodes + 1):
         env.reset()
         if render_mode == "human":
@@ -64,16 +64,19 @@ if __name__ == "__main__":
                 if action == -1:
                     running = False
                 else:
-                    env.step(action)
+                    terminated, info = env.step(action)
                     env.render()
+
+                    if terminated:
+                        running = False
         elif render_mode == "read_only":
             while True:
                 action = env.action_space.sample()
                 # obs, reward, done, info = env.step(action)
-                env.step(action)
+                terminated, info = env.step(action)
                 env.render()
 
-                # if done == True:
-                #     break
+                if terminated:
+                    break
     env.close()
     
