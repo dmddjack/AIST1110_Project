@@ -1,4 +1,4 @@
-from tank import Tank
+from tank_war import TankWar
 import numpy as np
 
-env = Tank(render_mode="rgb_array")
+env = TankWar(render_mode="rgb_array")
