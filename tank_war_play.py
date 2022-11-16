@@ -1,80 +1,82 @@
-import random
+import os
+
+# Disable pygame welcome message (Credit: https://stackoverflow.com/questions/51464455/how-to-disable-welcome-message-when-importing-pygame)
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
+import argparse
 
 import pygame
 
-
-class _Tank(pygame.sprite.Sprite):
-    def __init__(self, window_width: int, window_height: int, image_path: str, speed: int, resize_ratio: int = 1, seed: None | int = None):
-        super().__init__()
-        # Seed the random module
-        random.seed(seed)
-
-        self.window_width, self.window_height = window_width, window_height
-        self.speed = speed
-
-        self.surf = pygame.image.load(image_path)
-        self.surf.set_alpha(256)
-        self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / resize_ratio, self.surf.get_height() / resize_ratio))
-
-        self.angle = random.choice((0, 90, 180, 270))
-        self.surf = pygame.transform.rotate(self.surf, self.angle)
-
-    def _keep_inside(self) -> None:
-        if self.rect.left < 0:
-            self.rect.left = 0
-        elif self.rect.right > self.window_width:
-            self.rect.right = self.window_width
-        if self.rect.top <= 0:
-            self.rect.top = 0
-        elif self.rect.bottom >= self.window_height:
-            self.rect.bottom = self.window_height
-
-    def update(self, d_x, d_y, angle: int) -> None:
-        self.surf = pygame.transform.rotate(self.surf, self._angle2rotation(angle))
-        self.angle = angle
-        self.rect = self.surf.get_rect(center=self.rect.center)
-        self.rect.move_ip(d_x * self.speed, d_y * self.speed)
-        self._keep_inside()
-
-    def _angle2rotation(self, angle: int) -> int:
-        rotation = angle - self.angle
-        if rotation < 0:
-            rotation = 360 + rotation
-        return rotation
+from tank_war import TankWar
 
 
-class Player(_Tank):
-    image_path = "images/tank_01/tank_01_A.png"
-    resize_ratio = 5.5
+def pressed_to_action(pressed_keys):
+    if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
+        return -1
+    action = 9
+    if not pressed_keys[pygame.K_SPACE]:
+        if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
+            action = 0
+        if pressed_keys[pygame.K_DOWN] or pressed_keys[pygame.K_s]:
+            action = 1
+        if pressed_keys[pygame.K_LEFT] or pressed_keys[pygame.K_a]:
+            action = 2
+        if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
+            action = 3
+    else:
+        action = 4
+        if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
+            action = 5
+        if pressed_keys[pygame.K_DOWN] or pressed_keys[pygame.K_s]:
+            action = 6
+        if pressed_keys[pygame.K_LEFT] or pressed_keys[pygame.K_a]:
+            action = 7
+        if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
+            action = 8
+    return action
 
-    def __init__(self, window_width: int, window_height: int, speed: int, seed: None | int = None) -> None:
-        super().__init__(window_width, window_height, self.image_path, speed, self.resize_ratio, seed)
-        self.rect = self.surf.get_rect(
-            center=(
-                random.randint(self.window_width * 0.2, self.window_width * 0.8),
-                random.randint(self.window_height * 0.2, self.window_height * 0.8),
-            )
-        )
-        self._keep_inside()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--mode", type=str, required=True, help="\"human\", \"read_only\" or \"rgb_array\"")
+    parser.add_argument("-s", "--seed", type=int, default=None)
+    parser.add_argument("-e", "--episodes", type=int, required=True)
+    parser.add_argument("-ms", "--max_steps", type=int, default=3600)
+    args = parser.parse_args()
+    render_mode = str(args.mode)
+    try:
+        seed = None if args.seed is None else int(args.seed)
+        episodes = int(args.episodes)
+        max_steps = int(args.max_steps)
+    except ValueError:
+        print("Invalid argument(s).")
 
+    env = TankWar(render_mode, seed, max_steps)
+    for episode in range(1, episodes + 1):
+        env.reset()
+        if render_mode == "human":
+            running = True
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                pressed_keys = pygame.key.get_pressed()
+                action = pressed_to_action(pressed_keys)
+                if action == -1:
+                    running = False
+                else:
+                    _, terminated, info = env.step(action)
+                    env.render()
 
-class Enemy(_Tank):
-    image_path = "images/tank_02/tank_02_A.png"
-    resize_ratio = 4.4
+                    if terminated:
+                        running = False
+        elif render_mode == "read_only":
+            while True:
+                action = env.action_space.sample()
+                # obs, reward, done, info = env.step(action)
+                _, terminated, info = env.step(action)
+                env.render()
 
-    def __init__(self, window_width: int, window_height: int, speed: int, seed: None | int = None) -> None:
-        super().__init__(window_width, window_height, self.image_path, speed, self.resize_ratio, seed)
-        if self.angle == 0:
-            self.start_x = random.randint(0, self.window_width)
-            self.start_y = self.window_height
-        elif self.angle == 90:
-            self.start_x = self.window_width
-            self.start_y = random.randint(0, self.window_height)
-        elif self.angle == 180:
-            self.start_x = random.randint(0, self.window_width)
-            self.start_y = 0
-        else:
-            self.start_x = 0
-            self.start_y = random.randint(0, self.window_height)
-        self.rect = self.surf.get_rect(center=(self.start_x, self.start_y))
-        self._keep_inside()
+                if terminated:
+                    break
+    env.close()
+    
