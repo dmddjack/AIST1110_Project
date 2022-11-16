@@ -4,7 +4,7 @@ import numpy as np
 import pygame
 from gym import Env, spaces
 
-from assets import Enemy, Player
+from assets import Enemy, EnemyBullet, Player, PlayerBullet
 
 
 class TankWar(Env):
@@ -28,71 +28,68 @@ class TankWar(Env):
 
     def step(self, action):
         self.steps += 1
+        reward = 0
         terminated = False
 
-        d_x, d_y, angle = 0, 0, self.player.angle
-        if action == 0:
-            d_y = -1
-            angle = 0
-        if action == 1:
-            d_y = 1
-            angle = 180
-        if action == 2:
-            d_x = -1
-            angle = 90
-        if action == 3:
-            d_x = 1
-            angle = 270
-        if action == 4:
+        player_dx, player_dy, player_angle = 0, 0, self.player.angle
+        if action == 0 or action == 5:
+            player_dy = -1
+            player_angle = 0
+            if action == 5:
+                print("up and shoot")
+        elif action == 1 or action == 6:
+            player_dy = 1
+            player_angle = 180
+            if action == 6:
+                print("down and shoot")
+        elif action == 2 or action == 7:
+            player_dx = -1
+            player_angle = 90
+            if action == 7:
+                print("left and shoot")
+        elif action == 3 or action == 8:
+            player_dx = 1
+            player_angle = 270
+            if action == 8:
+                print("right and shoot")
+        elif action == 4:
             print("shoot")
-        if action == 5:
-            d_y = -1
-            angle = 0
-            print("up and shoot")
-        if action == 6:
-            d_y = 1
-            angle = 180
-            print("down and shoot")
-        if action == 7:
-            d_x = -1
-            angle = 90
-            print("left and shoot")
-        if action == 8:
-            d_x = 1
-            angle = 270
-            print("right and shoot")
-        self.player.update(d_x, d_y, angle)
+        self.player.update(player_dx, player_dy, player_angle)
 
         for enemy in self.enemies:
-            d_x, d_y, angle = 0, 0, enemy.angle
+            enemy_dx, enemy_dy, enemy_angle = 0, 0, enemy.angle
             if self.steps != 0 and self.steps % (self.metadata["render_fps"] * 3) == 0:
-                while angle == enemy.angle:
-                    angle = random.choice((0, 90, 180, 270))
+                while enemy_angle == enemy.angle:
+                    enemy_angle = random.choice((0, 90, 180, 270))
 
-            if angle == 0:
-                d_y = -1
-            elif angle == 90:
-                d_x = -1
-            elif angle == 180:
-                d_y = 1
+            if enemy_angle == 0:
+                enemy_dy = -1
+            elif enemy_angle == 90:
+                enemy_dx = -1
+            elif enemy_angle == 180:
+                enemy_dy = 1
             else:
-                d_x = 1
-            enemy.update(d_x, d_y, angle)
+                enemy_dx = 1
+            enemy.update(enemy_dx, enemy_dy, enemy_angle)
 
         if pygame.sprite.spritecollideany(self.player, self.enemies):
+            # The player will not disappear iff the following line is commented
             # self.player.kill()
             terminated = True
 
         if self.steps == self.max_steps:
             terminated = True
 
+        # Create a placeholder for info
         info = {}
         # return obs, reward, done, info
-        return terminated, info
+        return reward, terminated, info
 
     def reset(self):
-        # super().reset(seed=self.rnd_seed)
+        super().reset(seed=self.rnd_seed)
         self.steps = 0
+        self.score = 0
+
         self.all_sprites = pygame.sprite.Group()
         self.player = Player(self.window_width, self.window_height, 3, self.rnd_seed)
         self.all_sprites.add(self.player)
