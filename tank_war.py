@@ -1,10 +1,8 @@
-import random
-
 import numpy as np
 import pygame
 from gym import Env, spaces
 
-from assets import Enemy, EnemyBullet, Player, PlayerBullet
+from assets import Enemy, Player
 
 
 class TankWar(Env):
@@ -12,16 +10,16 @@ class TankWar(Env):
     window_width = 600
     window_height = 400
 
-    def __init__(self, render_mode: str, seed: None | int = None, max_steps: int = 3600) -> None:
+    def __init__(self, render_mode: str, max_steps: int = 3600) -> None:
         super().__init__()
-        self.rnd_seed = seed
+
         self.max_steps = max_steps
 
         self.observation_shape = (self.window_height, self.window_width, 3)
         self.observation_space = spaces.Box(0, max(self.window_width, self.window_height), shape=(20,), dtype=np.float32)
         self.action_space = spaces.Discrete(10)
 
-        assert render_mode in self.metadata["render_modes"], "Invalid render mode, has to be \"human\", \"read_only\" or \"rgb_array\""
+        assert render_mode in self.metadata["render_modes"], f"Invalid render mode, has to be {', '.join(self.metadata['render_modes'])}"
         self.render_mode = render_mode
         self.window = None
         self.clock = None
@@ -31,37 +29,39 @@ class TankWar(Env):
         reward = 0
         terminated = False
 
+        # Move the player
         player_dx, player_dy, player_angle = 0, 0, self.player.angle
         if action == 0 or action == 5:
             player_dy = -1
             player_angle = 0
             if action == 5:
-                print("up and shoot")
+                self._player_shoot(player_angle)
         elif action == 1 or action == 6:
             player_dy = 1
             player_angle = 180
             if action == 6:
-                print("down and shoot")
+                self._player_shoot(player_angle)
         elif action == 2 or action == 7:
             player_dx = -1
             player_angle = 90
             if action == 7:
-                print("left and shoot")
+                self._player_shoot(player_angle)
         elif action == 3 or action == 8:
             player_dx = 1
             player_angle = 270
             if action == 8:
-                print("right and shoot")
+                self._player_shoot(player_angle)
         elif action == 4:
-            print("shoot")
+            self._player_shoot(player_angle)
         self.player.update(player_dx, player_dy, player_angle)
 
+        ##### Maybe better intelligence of the enemies is required
+        # Move the enemies randomly
         for enemy in self.enemies:
             enemy_dx, enemy_dy, enemy_angle = 0, 0, enemy.angle
             if self.steps != 0 and self.steps % (self.metadata["render_fps"] * 3) == 0:
                 while enemy_angle == enemy.angle:
-                    enemy_angle = random.choice((0, 90, 180, 270))
-
+                    enemy_angle = self.np_random.choice((0, 90, 180, 270))
             if enemy_angle == 0:
                 enemy_dy = -1
             elif enemy_angle == 90:
@@ -72,11 +72,24 @@ class TankWar(Env):
                 enemy_dx = 1
             enemy.update(enemy_dx, enemy_dy, enemy_angle)
 
+        # Move the player's bullets
+        for bullet in self.player_bullets:
+            bullet.move()
+            if bullet.rect.right < 0 or bullet.rect.left > self.window_width or bullet.rect.bottom <= 0 or bullet.rect.top >= self.window_height:
+                bullet.kill()
+
+        # Terminate the episode if the player has collided into any of the enemies
         if pygame.sprite.spritecollideany(self.player, self.enemies):
             # The player will not disappear iff the following line is commented
             # self.player.kill()
             terminated = True
 
+        for bullet in self.player_bullets:
+            if len(pygame.sprite.spritecollide(bullet, self.enemies, dokill=True)):
+                self.score += 10
+                bullet.kill()
+
+        # Terminate the episode if the number of maximum steps is reached
         if self.steps == self.max_steps:
             terminated = True
 
@@ -85,19 +98,51 @@ class TankWar(Env):
         # return obs, reward, done, info
         return reward, terminated, info
 
-    def reset(self):
-        super().reset(seed=self.rnd_seed)
+    def _player_shoot(self, angle):
+        if self.player_last_shot == 0 or self.steps - self.player_last_shot >= self.metadata["render_fps"]:
+            self.player_last_shot = self.steps
+            player_bullet = self.player.bullet(self.player.surf.get_size(), self.player.rect.center, angle, self.player.speed + 2)
+            self.player_bullets.add(player_bullet)
+            self.all_sprites.add(player_bullet)
+
+    def _score2enemy(self):
+        pass
+
+    def reset(self, seed: None | int = None):
+        super().reset(seed=seed)
         self.steps = 0
         self.score = 0
+        self.player_last_shot = 0
 
         self.all_sprites = pygame.sprite.Group()
-        self.player = Player(self.window_width, self.window_height, 3, self.rnd_seed)
+
+        player_start_x = int(self.np_random.integers(self.window_width * 0.2, self.window_width * 0.8, size=1))
+        player_start_y = int(self.np_random.integers(self.window_height * 0.2, self.window_height * 0.8, size=1))
+        player_start_angle = self.np_random.choice((0, 90, 180, 270))
+        self.player = Player(player_start_x, player_start_y, player_start_angle, self.window_width, self.window_height, 3)
         self.all_sprites.add(self.player)
+
         self.enemies = pygame.sprite.Group()
-        for _ in range(4):
-            new_enemy = Enemy(self.window_width, self.window_height, 2, self.rnd_seed)
-            self.enemies.add(new_enemy)
-            self.all_sprites.add(new_enemy)
+        enemy_start_angle = self.np_random.choice((0, 90, 180, 270))
+        if enemy_start_angle == 0:
+            enemy_start_x = int(self.np_random.integers(0, self.window_width, size=1))
+            enemy_start_y = self.window_height
+        elif enemy_start_angle == 90:
+            enemy_start_x = self.window_width
+            enemy_start_y = int(self.np_random.integers(0, self.window_height, size=1))
+        elif enemy_start_angle == 180:
+            enemy_start_x = int(self.np_random.integers(0, self.window_width, size=1))
+            enemy_start_y = 0
+        else:
+            enemy_start_x = 0
+            enemy_start_y = int(self.np_random.integers(0, self.window_height, size=1))
+        enemy = Enemy(enemy_start_x, enemy_start_y, enemy_start_angle, self.window_width, self.window_height, 2)
+        self.enemies.add(enemy)
+        self.all_sprites.add(enemy)
+
+        # Create placeholders for the player's and enemies' bullets
+        self.player_bullets = pygame.sprite.Group()
+        self.enemy_bullets = pygame.sprite.Group()
 
         if self.render_mode == "human" or self.render_mode == "read_only":
             pygame.init()
