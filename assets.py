@@ -10,7 +10,7 @@ class _Bullet(pygame.sprite.Sprite):
 
         self.surf = pygame.image.load(image_path)
         
-        # Ensure the transparent background is working
+        # Set the background to transparent
         self.surf.set_alpha(256)
         self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / resize_ratio, self.surf.get_height() / resize_ratio))
         self.surf = pygame.transform.rotate(self.surf, self.angle)
@@ -67,8 +67,6 @@ class _Tank(pygame.sprite.Sprite):
         self.last_shoot = last_shoot
 
         self.surf = pygame.image.load(image_path)
-
-        # Ensure the transparent background is working
         self.surf.set_alpha(256)
         self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / resize_ratio, self.surf.get_height() / resize_ratio))
         self.surf = pygame.transform.rotate(self.surf, self.angle)
@@ -114,3 +112,15 @@ class Enemy(_Tank):
     def __init__(self, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int, creation_step: int) -> None:
         super().__init__(_EnemyBullet, start_x, start_y, start_angle, window_width, window_height, speed, creation_step, self.image_path, self.resize_ratio)
         self.last_rotate = creation_step
+
+
+class Heart(pygame.sprite.Sprite):
+    image_path = "images/heart.png"
+    resize_ratio = 5
+
+    def __init__(self, window_width: int, order: int):
+        super().__init__()
+        self.surf = pygame.image.load(self.image_path)
+        self.surf.set_alpha(256)
+        self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / self.resize_ratio, self.surf.get_height() / self.resize_ratio))
+        self.rect = self.surf.get_rect(center=(window_width - order * self.surf.get_width() + 7, self.surf.get_height() // 2 + 5))
