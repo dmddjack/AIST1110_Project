@@ -57,13 +57,14 @@ class _EnemyBullet(_Bullet):
 
 
 class _Tank(pygame.sprite.Sprite):
-    def __init__(self, bullet: _Bullet, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int, image_path: str, resize_ratio: int = 1) -> None:
+    def __init__(self, bullet: _Bullet, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int, last_shoot: int, image_path: str, resize_ratio: int = 1) -> None:
         super().__init__()
 
         self.bullet = bullet
         self.angle = start_angle
         self.window_width, self.window_height = window_width, window_height
         self.speed = speed
+        self.last_shoot = last_shoot
 
         self.surf = pygame.image.load(image_path)
 
@@ -103,12 +104,13 @@ class Player(_Tank):
     resize_ratio = 5.5
 
     def __init__(self, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int) -> None:
-        super().__init__(_PlayerBullet, start_x, start_y, start_angle, window_width, window_height, speed, self.image_path, self.resize_ratio)
+        super().__init__(_PlayerBullet, start_x, start_y, start_angle, window_width, window_height, speed, 0, self.image_path, self.resize_ratio)
 
 
 class Enemy(_Tank):
     image_path = "images/tank_02/tank_02_A.png"
     resize_ratio = 4.4
 
-    def __init__(self, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int) -> None:
-        super().__init__(_EnemyBullet, start_x, start_y, start_angle, window_width, window_height, speed, self.image_path, self.resize_ratio)
+    def __init__(self, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int, creation_step: int) -> None:
+        super().__init__(_EnemyBullet, start_x, start_y, start_angle, window_width, window_height, speed, creation_step, self.image_path, self.resize_ratio)
+        self.last_rotate = creation_step
