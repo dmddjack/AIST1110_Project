@@ -18,6 +18,7 @@ Project Name: Tank War
 - [ ] Use Q-table or DQN to train a model
 
 ## Ideas
-- [ ] HP
+- [x] HP
 - [ ] Difficulty
 - [ ] Block
+- [ ] Animations
