@@ -10,7 +10,9 @@ import pygame
 from tank_war import TankWar
 
 
-def pressed_to_action(pressed_keys):
+def _pressed_to_action(pressed_keys):
+    """An internal function that maps pressed key(s) to an action"""
+
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
         return -1
     action = 9
@@ -37,7 +39,7 @@ def pressed_to_action(pressed_keys):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--mode", type=str, required=True, help="\"human\", \"read_only\" or \"rgb_array\"")
+    parser.add_argument("-m", "--mode", type=str, required=True)
     parser.add_argument("-s", "--seed", type=int, default=None)
     parser.add_argument("-e", "--episodes", type=int, required=True)
     parser.add_argument("-ms", "--max_steps", type=int, default=3600)
@@ -50,9 +52,9 @@ if __name__ == "__main__":
     except ValueError:
         print("Invalid argument(s).")
 
-    env = TankWar(render_mode, seed, max_steps)
+    env = TankWar(render_mode, max_steps)
     for episode in range(1, episodes + 1):
-        env.reset()
+        env.reset(seed)
         if render_mode == "human":
             running = True
             while running:
@@ -60,7 +62,7 @@ if __name__ == "__main__":
                     if event.type == pygame.QUIT:
                         running = False
                 pressed_keys = pygame.key.get_pressed()
-                action = pressed_to_action(pressed_keys)
+                action = _pressed_to_action(pressed_keys)
                 if action == -1:
                     running = False
                 else:
