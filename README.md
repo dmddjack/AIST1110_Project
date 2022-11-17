@@ -6,4 +6,7 @@ Project Name: Tank War
 - [x] Show score
 - [ ] Play audio
 - [ ] Design better algorithm for the enemies' movement
-- [ ] Decide the number of enemies and their bullets' speed at any score
+- [ ] Handle situation when different enemies touch one another
+- [ ] Decide the number of enemies and their speed at any score under _score2enemy()
+- [ ] Add sufficient comments
+- [ ] Use Q-table or DQN to train a model
