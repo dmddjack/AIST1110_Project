@@ -2,13 +2,14 @@ import numpy as np
 import pygame
 from gym import Env, spaces
 
-from assets import Enemy, Player
+from assets import Enemy, Heart, Player
 
 
 class TankWar(Env):
     metadata = {"render_modes": ["human", "read_only", "rgb_array"], "render_fps": 30}
     window_width, window_height = 600, 400
     player_speed = 4
+    beginning_hp = 3
 
     def __init__(self, render_mode: str, max_steps: int = 3600) -> None:
         super().__init__()
@@ -92,17 +93,29 @@ class TankWar(Env):
                 if bullet.rect.right < 0 or bullet.rect.left > self.window_width or bullet.rect.bottom <= 0 or bullet.rect.top >= self.window_height:
                     bullet.kill()
 
-        # Terminate the episode if the player has collided into any of the enemies
-        if pygame.sprite.spritecollideany(self.player, self.enemies) or pygame.sprite.spritecollideany(self.player, self.enemy_bullets):
-            # Remove the player from the window
-            # self.player.kill()
-            terminated = True
+        # Terminate the episode if the player has collided into any of the enemies or any of the enemies' bullets
+        if pygame.sprite.spritecollideany(self.player, self.enemies) or len(pygame.sprite.spritecollide(self.player, self.enemy_bullets, dokill=True)):
+            self.hp -= 1
+            reward -= 50
+            if self.hp == 0:
+                terminated = True
+
+                # Remove the player from the window
+                self.player.kill()
+            else:
+                player_restart_x = int(self.np_random.integers(self.window_width * 0.2, self.window_width * 0.8, size=1))
+                player_restart_y = int(self.np_random.integers(self.window_height * 0.2, self.window_height * 0.8, size=1))
+                player_restart_angle = self.np_random.choice((0, 90, 180, 270))
+                self.player.rect = self.player.surf.get_rect(center=(player_restart_x, player_restart_y))
+                self.player.update(0, 0, player_restart_angle)
+            self.hearts.sprites()[-1].kill()
 
         for bullet in self.player_bullets:
             # Remove the player's bullet if it hits an enemy
             if len(pygame.sprite.spritecollide(bullet, self.enemies, dokill=True)):
                 bullet.kill()
                 self.score += 10
+                reward += 10
 
         for bullet in self.player_bullets:
             # Remove the player's bullet if it hits an enemy's bullet
@@ -113,7 +126,7 @@ class TankWar(Env):
         if self.steps == self.max_steps:
             terminated = True
 
-        # Create a placeholder for info
+        # Create a placeholder for information
         info = {}
         # return obs, reward, done, info
         return reward, terminated, info
@@ -141,8 +154,9 @@ class TankWar(Env):
         # Reset all counting variables
         self.steps = 0
         self.score = 0
+        self.hp = self.beginning_hp
 
-        # Create a placeholder for all sprites
+        # Create a placeholder for all sprites except hearts
         self.all_sprites = pygame.sprite.Group()
 
         # Create the player
@@ -152,7 +166,7 @@ class TankWar(Env):
         self.player = Player(player_start_x, player_start_y, player_start_angle, self.window_width, self.window_height, self.player_speed)
         self.all_sprites.add(self.player)
 
-        # Create a placeholder for all enemies
+        # Create a placeholder for enemies
         self.enemies = pygame.sprite.Group()
 
         # Create one enemy
@@ -161,6 +175,13 @@ class TankWar(Env):
         # Create placeholders for the player's and enemies' bullets
         self.player_bullets = pygame.sprite.Group()
         self.enemy_bullets = pygame.sprite.Group()
+
+        # Create a placeholder for hearts
+        self.hearts = pygame.sprite.Group()
+        for i in range(1, self.beginning_hp + 1):
+            heart = Heart(self.window_width, i)
+            self.hearts.add(heart)
+            self.all_sprites.add(heart)
 
         # Initialize pygame if necessary
         if self.render_mode == "human" or self.render_mode == "read_only":
@@ -229,13 +250,15 @@ class TankWar(Env):
         for sprite in self.all_sprites:
             canvas.blit(sprite.surf, sprite.rect)
 
+        # Display the score on the window
         score_surf = self.font.render(f"Score: {self.score}", True, (0, 0, 0))
         canvas.blit(score_surf, (5, 5))
 
-        game_time_total = self.steps // self.metadata["render_fps"]
-        game_time_min = game_time_total // 60
-        game_time_sec = game_time_total - game_time_min * 60
-        time_surf = self.font.render(f"Time: {game_time_min:0>2d}:{game_time_sec:0>2d}", True, (0, 0, 0))
+        # Display the duration of game on the window
+        duration_total = self.steps // self.metadata["render_fps"]
+        duration_min = duration_total // 60
+        duration_sec = duration_total - duration_min * 60
+        time_surf = self.font.render(f"Time: {duration_min:0>2d}:{duration_sec:0>2d}", True, (0, 0, 0))
         canvas.blit(time_surf, (5, 25))
 
         if self.render_mode == "human" or self.render_mode == "read_only":
