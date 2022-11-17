@@ -9,10 +9,13 @@ class _Bullet(pygame.sprite.Sprite):
         self.speed = speed
 
         self.surf = pygame.image.load(image_path)
+        
+        # Ensure the transparent background is working
         self.surf.set_alpha(256)
         self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / resize_ratio, self.surf.get_height() / resize_ratio))
         self.surf = pygame.transform.rotate(self.surf, self.angle)
         if self.angle == 0:
+            # The "+1" is for pixel adjustment
             start_x = tank_center[0] + 1
             start_y = tank_center[1] - tank_size[1] // 2 - self.surf.get_height() // 2
         elif self.angle == 90:
@@ -47,7 +50,7 @@ class _PlayerBullet(_Bullet):
 
 class _EnemyBullet(_Bullet):
     image_path = "images/bullets/bullet_02.png"
-    resize_ratio = 2
+    resize_ratio = 1.5
     
     def __init__(self, tank_size: tuple[int, int], tank_center: tuple[int, int], angle: int, speed: int) -> None:
         super().__init__(tank_size, tank_center, angle, speed, self.image_path, self.resize_ratio)
@@ -63,6 +66,8 @@ class _Tank(pygame.sprite.Sprite):
         self.speed = speed
 
         self.surf = pygame.image.load(image_path)
+
+        # Ensure the transparent background is working
         self.surf.set_alpha(256)
         self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / resize_ratio, self.surf.get_height() / resize_ratio))
         self.surf = pygame.transform.rotate(self.surf, self.angle)
