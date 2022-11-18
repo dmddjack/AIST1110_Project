@@ -16,7 +16,7 @@ Project Name: Tank War
 - [x] Handle situations when enemies are overlapped at spawn
 - [x] Handle situations when enemies spwan at player's location
 - [x] Decide the number of enemies, their speed and their shooting interval at any score under _score2enemy()
-- [ ] Determine the maximum number of enemies $n$ and the maximum number of enemies' bullets $e$ -> size of observation space $=2 + 2n + 2e$
+- [x] Determine the maximum number of enemies $n$ and the maximum number of enemies' bullets $e$ -> size of observation space $=2 + 2n + 2e$
 - [ ] Add sufficient comments
 - [ ] Use Q-table or DQN to train a model
 
