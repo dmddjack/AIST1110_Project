@@ -6,9 +6,10 @@ from assets import Enemy, Heart, Player
 
 
 class TankWar(Env):
-    metadata = {"render_modes": ["human", "read_only", "rgb_array"], "render_fps": 30}
+    metadata = {"render_modes": ("human", "read_only", "rgb_array"), "render_fps": 30}
     window_width, window_height = 600, 400
     player_speed = 4
+    player_shoot_intvl = 1.0
     beginning_hp = 3
 
     def __init__(self, render_mode: str, max_steps: int = 3600) -> None:
@@ -34,55 +35,63 @@ class TankWar(Env):
         # Move the player
         player_dx, player_dy, player_angle = 0, 0, self.player.angle
         player_shoot = False
-        if action == 0 or action == 5:
+        if action == 0 or action == 5: # Move up
             player_dy = -1
             player_angle = 0
-            if action == 5:
+            if action == 5: # Shoot while moving up
                 player_shoot = True
-        elif action == 1 or action == 6:
+        elif action == 1 or action == 6: # Move down
             player_dy = 1
             player_angle = 180
-            if action == 6:
+            if action == 6: # Shoot while moving down
                 player_shoot = True
-        elif action == 2 or action == 7:
+        elif action == 2 or action == 7: # Move left
             player_dx = -1
             player_angle = 90
-            if action == 7:
+            if action == 7: # Shoot while moving left
                 player_shoot = True
-        elif action == 3 or action == 8:
+        elif action == 3 or action == 8: # Move right
             player_dx = 1
             player_angle = 270
-            if action == 8:
+            if action == 8: # Shoot while moving right
                 player_shoot = True
-        elif action == 4:
-            self._player_shoot(player_angle)
+        elif action == 4: # Shoot while not moving
+            player_shoot = True
+        
+        # Update the player's position
         self.player.update(player_dx, player_dy, player_angle)
+
+        # Shoot a bullet from the player's position if player_shoot is true
         if player_shoot:
             self._player_shoot(player_angle)
 
         # Create sufficient enemies
-        enemy_speed = self._create_enemy()
+        enemy_speed, enemy_shoot_intvl = self._create_enemy()
 
-        ##### Better intelligence of the enemies is required
-        # Move the enemies randomly
+        # Move the enemies
         for enemy in self.enemies:
             enemy.speed = enemy_speed
             enemy_dx, enemy_dy, enemy_angle = 0, 0, enemy.angle
-            # Enemies rotate with an interval of not less than 3 seconds and a probability of 1%
+
+            # An enemy rotates with an interval of not less than 3 seconds and a probability of 1%
             if self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 3 and self.np_random.random() < 0.01:
                 while enemy_angle == enemy.angle:
                     enemy_angle = self.np_random.choice((0, 90, 180, 270))
                 enemy.last_rotate = self.steps
-            if enemy_angle == 0:
+            if enemy_angle == 0: # Move up
                 enemy_dy = -1
-            elif enemy_angle == 90:
+            elif enemy_angle == 90: # Move down
                 enemy_dx = -1
-            elif enemy_angle == 180:
+            elif enemy_angle == 180: # Move left
                 enemy_dy = 1
-            else:
+            else: # Move right
                 enemy_dx = 1
+            
+            # Update the enemy's position
             enemy.update(enemy_dx, enemy_dy, enemy_angle)
-            self._enemy_shoot(enemy_angle, enemy)
+
+            # Shoot a bullet from the enemy's position
+            self._enemy_shoot(enemy, enemy_angle, enemy_shoot_intvl)
 
         # Move the player's and enemies' bullets
         for bullets in (self.player_bullets, self.enemy_bullets):
@@ -100,14 +109,21 @@ class TankWar(Env):
             if self.hp == 0:
                 terminated = True
 
-                # Remove the player from the window
+                # Remove the player
                 self.player.kill()
             else:
-                player_restart_x = int(self.np_random.integers(self.window_width * 0.2, self.window_width * 0.8, size=1))
-                player_restart_y = int(self.np_random.integers(self.window_height * 0.2, self.window_height * 0.8, size=1))
-                player_restart_angle = self.np_random.choice((0, 90, 180, 270))
-                self.player.rect = self.player.surf.get_rect(center=(player_restart_x, player_restart_y))
-                self.player.update(0, 0, player_restart_angle)
+                # Remove all enemies to ensure the player will not be killed at spawn
+                for enemy in self.enemies:
+                    enemy.kill()
+
+                # Respawn the player at a randomly generated location
+                player_respawn_x = int(self.np_random.integers(self.window_width * 0.3, self.window_width * 0.7, size=1))
+                player_respawn_y = int(self.np_random.integers(self.window_height * 0.3, self.window_height * 0.7, size=1))
+                player_respawn_angle = self.np_random.choice((0, 90, 180, 270))
+                self.player.rect = self.player.surf.get_rect(center=(player_respawn_x, player_respawn_y))
+                self.player.update(0, 0, player_respawn_angle)
+
+            # Remove one heart
             self.hearts.sprites()[-1].kill()
 
         for bullet in self.player_bullets:
@@ -133,15 +149,15 @@ class TankWar(Env):
 
     def _player_shoot(self, angle: int) -> None:
         # The player can shoot with an interval of 1 second
-        if self.player.last_shoot == 0 or self.steps - self.player.last_shoot >= self.metadata["render_fps"]:
+        if self.player.last_shoot == 0 or self.steps - self.player.last_shoot >= self.metadata["render_fps"] * self.player_shoot_intvl:
             self.player.last_shoot = self.steps
             player_bullet = self.player.bullet(self.player.surf.get_size(), self.player.rect.center, angle, self.player.speed + 3)
             self.player_bullets.add(player_bullet)
             self.all_sprites.add(player_bullet)
 
-    def _enemy_shoot(self, angle: int, enemy: Enemy) -> None:
+    def _enemy_shoot(self, enemy: Enemy, angle: int, interval: int) -> None:
         # Enemies shoot with an interval of not less than 2 seconds and a probability of 5%
-        if self.steps - enemy.last_shoot >= self.metadata["render_fps"] * 2 and self.np_random.random() < 0.05:
+        if self.steps - enemy.last_shoot >= self.metadata["render_fps"] * interval and self.np_random.random() < 0.05:
             enemy.last_shoot = self.steps
             enemy_bullet = enemy.bullet(enemy.surf.get_size(), enemy.rect.center, angle, enemy.speed + 2)
             self.enemy_bullets.add(enemy_bullet)
@@ -156,27 +172,27 @@ class TankWar(Env):
         self.score = 0
         self.hp = self.beginning_hp
 
-        # Create a placeholder for all sprites except hearts
+        # Create a group for all sprites except hearts
         self.all_sprites = pygame.sprite.Group()
 
         # Create the player
-        player_start_x = int(self.np_random.integers(self.window_width * 0.2, self.window_width * 0.8, size=1))
-        player_start_y = int(self.np_random.integers(self.window_height * 0.2, self.window_height * 0.8, size=1))
+        player_start_x = int(self.np_random.integers(self.window_width * 0.3, self.window_width * 0.7, size=1))
+        player_start_y = int(self.np_random.integers(self.window_height * 0.3, self.window_height * 0.7, size=1))
         player_start_angle = self.np_random.choice((0, 90, 180, 270))
         self.player = Player(player_start_x, player_start_y, player_start_angle, self.window_width, self.window_height, self.player_speed)
         self.all_sprites.add(self.player)
 
-        # Create a placeholder for enemies
+        # Create a group for enemies
         self.enemies = pygame.sprite.Group()
 
         # Create one enemy
         self._create_enemy()
 
-        # Create placeholders for the player's and enemies' bullets
+        # Create groups for the player's and enemies' bullets
         self.player_bullets = pygame.sprite.Group()
         self.enemy_bullets = pygame.sprite.Group()
 
-        # Create a placeholder for hearts
+        # Create a group for hearts
         self.hearts = pygame.sprite.Group()
         for i in range(1, self.beginning_hp + 1):
             heart = Heart(self.window_width, i)
@@ -194,32 +210,32 @@ class TankWar(Env):
 
         # return obs
 
-    def _score2enemy(self) -> tuple[int, int]:
+    def _score2enemy(self) -> tuple[int, int, float]:
         """An internal function that maps the current score to the behaviour of the enemies"""
 
-        enemy_n, enemy_speed = 0, 0
+        enemy_n, enemy_speed, enemy_shoot_intvl = 0, 0, 0
         if self.score < 50:
-            enemy_n, enemy_speed = 1, 2
+            enemy_n, enemy_speed, enemy_shoot_intvl = 1, 2, 2
         elif self.score < 100:
-            enemy_n, enemy_speed = 1, 3
+            enemy_n, enemy_speed, enemy_shoot_intvl = 1, 3, 2
         elif self.score < 150:
-            enemy_n, enemy_speed = 2, 2
+            enemy_n, enemy_speed, enemy_shoot_intvl = 2, 2, 2
         elif self.score < 200:
-            enemy_n, enemy_speed = 2, 3
+            enemy_n, enemy_speed, enemy_shoot_intvl = 2, 3, 2
         elif self.score < 250:
-            enemy_n, enemy_speed = 3, 2
+            enemy_n, enemy_speed, enemy_shoot_intvl = 3, 2, 1.5
         elif self.score < 300:
-            enemy_n, enemy_speed = 3, 3
+            enemy_n, enemy_speed, enemy_shoot_intvl = 3, 3, 1.5
         elif self.score < 350:
-            enemy_n, enemy_speed = 4, 2
+            enemy_n, enemy_speed, enemy_shoot_intvl = 4, 2, 1.5
         else:
-            enemy_n, enemy_speed = 4, 3
-        return enemy_n, enemy_speed
+            enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.5
+        return enemy_n, enemy_speed, enemy_shoot_intvl
 
     def _create_enemy(self) -> None:
         """An internal function that creates sufficient enemies"""
 
-        enemy_n, enemy_speed = self._score2enemy()
+        enemy_n, enemy_speed, enemy_shooting_interval = self._score2enemy()
         for _ in range(enemy_n - len(self.enemies)):
             enemy_start_angle = self.np_random.choice((0, 90, 180, 270))
             if enemy_start_angle == 0:
@@ -237,7 +253,7 @@ class TankWar(Env):
             enemy = Enemy(enemy_start_x, enemy_start_y, enemy_start_angle, self.window_width, self.window_height, enemy_speed, self.steps)
             self.enemies.add(enemy)
             self.all_sprites.add(enemy)
-        return enemy_speed
+        return enemy_speed, enemy_shooting_interval
 
     def render(self) -> None | np.ndarray:
         canvas = pygame.Surface((self.window_width, self.window_height))
