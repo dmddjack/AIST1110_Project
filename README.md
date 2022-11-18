@@ -11,8 +11,9 @@ Project Name: Tank War
   - [ ] Background music
 - [x] Design better algorithm for the enemies' movement
 - [ ] Handle situations when different enemies touch one another
-- [ ] Handle situations when enemies touch the walls
-- [ ] Handle situations when enemies are overlapped
+- [x] Handle situations when enemies touch the walls
+- [ ] Handle situations when enemies are overlapped at spawn
+- [ ] Handle situations when enemies spwan at player's location
 - [x] Decide the number of enemies, their speed and their shooting interval at any score under _score2enemy()
 - [ ] Determine the maximum number of player's bullets p and number of enemies' bullets e -> observation_space = 2 + 4 * 2 + (p + e) * 2
 - [ ] Add sufficient comments
@@ -24,3 +25,4 @@ Project Name: Tank War
 - [ ] Block
 - [ ] Animations
 - [ ] Multiple scenes
+- [ ] Display player's bullet reload time
