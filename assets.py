@@ -73,22 +73,34 @@ class _Tank(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect(center=(start_x, start_y))
         self._keep_inside()
 
-    def _keep_inside(self) -> None:
+    def _keep_inside(self) -> bool:
+        is_outside = False
+        possible_angles = []
         if self.rect.left < 0:
             self.rect.left = 0
+            is_outside = True
+            possible_angles.append(270)
         elif self.rect.right > self.window_width:
             self.rect.right = self.window_width
-        if self.rect.top <= 0:
+            is_outside = True
+            possible_angles.append(90)
+        if self.rect.top < 0:
             self.rect.top = 0
-        elif self.rect.bottom >= self.window_height:
+            is_outside = True
+            possible_angles.append(180)
+        elif self.rect.bottom > self.window_height:
             self.rect.bottom = self.window_height
+            is_outside = True
+            possible_angles.append(0)
+        return is_outside, possible_angles
 
-    def update(self, dx, dy, angle: int) -> None:
+    def update(self, dx, dy, angle: int) -> tuple[bool, list[int]]:
         self.surf = pygame.transform.rotate(self.surf, self._angle2rotation(angle))
         self.angle = angle
         self.rect = self.surf.get_rect(center=self.rect.center)
         self.rect.move_ip(dx * self.speed, dy * self.speed)
-        self._keep_inside()
+        is_outside, possible_angles = self._keep_inside()
+        return is_outside, possible_angles
 
     def _angle2rotation(self, angle: int) -> int:
         rotation = angle - self.angle
