@@ -12,7 +12,7 @@ class TankWar(Env):
     player_shoot_intvl = 1.0
     beginning_hp = 3
 
-    def __init__(self, render_mode: str, max_steps: int = 3600) -> None:
+    def __init__(self, render_mode: str, max_steps: int = 1800) -> None:
         super().__init__()
 
         self.max_steps = max_steps
@@ -80,9 +80,9 @@ class TankWar(Env):
                 enemy.last_rotate = self.steps
             if enemy_angle == 0: # Move up
                 enemy_dy = -1
-            elif enemy_angle == 90: # Move down
+            elif enemy_angle == 90: # Move left
                 enemy_dx = -1
-            elif enemy_angle == 180: # Move left
+            elif enemy_angle == 180: # Move down
                 enemy_dy = 1
             else: # Move right
                 enemy_dx = 1
@@ -90,7 +90,7 @@ class TankWar(Env):
             # Update the enemy's position
             enemy_is_outside, enemy_possible_new_angles = enemy.update(enemy_dx, enemy_dy, enemy_angle)
 
-            # Ensure the enemy does not stuck at the border
+            # Ensure the enemy does not stuck at the border by reversing their direction
             if enemy_is_outside:
                 enemy_new_angle = self.np_random.choice(enemy_possible_new_angles)
                 enemy.update(0, 0, enemy_new_angle)
@@ -98,6 +98,22 @@ class TankWar(Env):
 
             # Shoot a bullet from the enemy's position
             self._enemy_shoot(enemy, enemy_angle, enemy_shoot_intvl)
+
+        ##### Better algorithm is required
+        # Reverse the directions of two enemies when they collide with each other
+        enemy_collision = pygame.sprite.groupcollide(self.enemies, self.enemies, dokilla=False, dokillb=False)
+        for enemy in [enemy for enemies in enemy_collision.values() if len(enemies) > 1 for enemy in enemies]:
+            # enemy_old_angle = enemy.angle
+            # if enemy_old_angle == 0:
+            #     enemy.update(0, 1, 180)
+            # elif enemy_old_angle == 90:
+            #     enemy.update(1, 0, 270)
+            # elif enemy_old_angle == 180:
+            #     enemy.update(0, -1, 0)
+            # else:
+            #     enemy.update(-1, 0, 90)
+            # enemy.last_rotate = self.steps
+            enemy.kill()
 
         # Move the player's and enemies' bullets
         for bullets in (self.player_bullets, self.enemy_bullets):
@@ -122,12 +138,18 @@ class TankWar(Env):
                 for enemy in self.enemies:
                     enemy.kill()
 
+                # Remove all bullets
+                for bullets in (self.player_bullets, self.enemy_bullets):
+                    for bullet in bullets:
+                        bullet.kill()
+
                 # Respawn the player at a randomly generated location
                 player_respawn_x = int(self.np_random.integers(self.window_width * 0.3, self.window_width * 0.7, size=1))
                 player_respawn_y = int(self.np_random.integers(self.window_height * 0.3, self.window_height * 0.7, size=1))
                 player_respawn_angle = self.np_random.choice((0, 90, 180, 270))
                 self.player.rect = self.player.surf.get_rect(center=(player_respawn_x, player_respawn_y))
                 self.player.update(0, 0, player_respawn_angle)
+                self.player.last_shoot = 0
 
             # Remove one heart
             self.hearts.sprites()[-1].kill()
@@ -169,9 +191,10 @@ class TankWar(Env):
             self.enemy_bullets.add(enemy_bullet)
             self.all_sprites.add(enemy_bullet)
 
-    def reset(self, seed: None | int = None):
-        # Seed the random number generator
+    def reset(self, seed: int | None = None):
+        # Seed the random number generator and the action space
         super().reset(seed=seed)
+        self.action_space.seed(seed=seed)
 
         # Reset all counting variables
         self.steps = 0
@@ -221,7 +244,7 @@ class TankWar(Env):
 
         enemy_n, enemy_speed, enemy_shoot_intvl = 0, 0, 0
         if self.score < 50:
-            enemy_n, enemy_speed, enemy_shoot_intvl = 6, 2, 2
+            enemy_n, enemy_speed, enemy_shoot_intvl = 4, 2, 2
         elif self.score < 100:
             enemy_n, enemy_speed, enemy_shoot_intvl = 1, 3, 2
         elif self.score < 150:
@@ -243,20 +266,26 @@ class TankWar(Env):
 
         enemy_n, enemy_speed, enemy_shooting_interval = self._score2enemy()
         for _ in range(enemy_n - len(self.enemies)):
-            enemy_start_angle = self.np_random.choice((0, 90, 180, 270))
-            if enemy_start_angle == 0:
-                enemy_start_x = int(self.np_random.integers(0, self.window_width, size=1))
-                enemy_start_y = self.window_height
-            elif enemy_start_angle == 90:
-                enemy_start_x = self.window_width
-                enemy_start_y = int(self.np_random.integers(0, self.window_height, size=1))
-            elif enemy_start_angle == 180:
-                enemy_start_x = int(self.np_random.integers(0, self.window_width, size=1))
-                enemy_start_y = 0
-            else:
-                enemy_start_x = 0
-                enemy_start_y = int(self.np_random.integers(0, self.window_height, size=1))
-            enemy = Enemy(enemy_start_x, enemy_start_y, enemy_start_angle, self.window_width, self.window_height, enemy_speed, self.steps)
+            overlapped = True
+            while overlapped:
+                enemy_start_angle = self.np_random.choice((0, 90, 180, 270))
+                if enemy_start_angle == 0:
+                    enemy_start_x = int(self.np_random.integers(0, self.window_width, size=1))
+                    enemy_start_y = self.window_height
+                elif enemy_start_angle == 90:
+                    enemy_start_x = self.window_width
+                    enemy_start_y = int(self.np_random.integers(0, self.window_height, size=1))
+                elif enemy_start_angle == 180:
+                    enemy_start_x = int(self.np_random.integers(0, self.window_width, size=1))
+                    enemy_start_y = 0
+                else:
+                    enemy_start_x = 0
+                    enemy_start_y = int(self.np_random.integers(0, self.window_height, size=1))
+                enemy = Enemy(enemy_start_x, enemy_start_y, enemy_start_angle, self.window_width, self.window_height, enemy_speed, self.steps)
+                
+                # Ensure the new enemy does not overlap the player or other enemies at spawn
+                if not (pygame.sprite.collide_rect(enemy, self.player) or pygame.sprite.spritecollideany(enemy, self.enemies)):
+                    overlapped = False
             self.enemies.add(enemy)
             self.all_sprites.add(enemy)
         return enemy_speed, enemy_shooting_interval
@@ -283,6 +312,10 @@ class TankWar(Env):
         time_surf = self.font.render(f"Time: {duration_min:0>2d}:{duration_sec:0>2d}", True, (0, 0, 0))
         canvas.blit(time_surf, (5, 25))
 
+        if self.player.last_shoot != 0:
+            reload_bar_len = 80 * (self.player_shoot_intvl * self.metadata["render_fps"] - (self.steps - self.player.last_shoot)) // (self.player_shoot_intvl * self.metadata["render_fps"])
+            pygame.draw.rect(canvas, (230, 230, 230), (self.window_width - reload_bar_len - 15, self.window_height - 20, reload_bar_len, 10))
+
         if self.render_mode == "human" or self.render_mode == "read_only":
             self.window.blit(canvas, canvas.get_rect())
             # pygame.event.pump()
@@ -290,7 +323,7 @@ class TankWar(Env):
 
             # Ensure the rendering occurs at the predefined framerate
             self.clock.tick(self.metadata["render_fps"])
-        else: # rgb_array
+        else: # Return an RGB array
             return np.transpose(np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2))
             
     def close(self) -> None:
