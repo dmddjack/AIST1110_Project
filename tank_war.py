@@ -88,7 +88,13 @@ class TankWar(Env):
                 enemy_dx = 1
             
             # Update the enemy's position
-            enemy.update(enemy_dx, enemy_dy, enemy_angle)
+            enemy_is_outside, enemy_possible_new_angles = enemy.update(enemy_dx, enemy_dy, enemy_angle)
+
+            # Ensure the enemy does not stuck at the border
+            if enemy_is_outside:
+                enemy_new_angle = self.np_random.choice(enemy_possible_new_angles)
+                enemy.update(0, 0, enemy_new_angle)
+                enemy.last_rotate = self.steps
 
             # Shoot a bullet from the enemy's position
             self._enemy_shoot(enemy, enemy_angle, enemy_shoot_intvl)
@@ -148,7 +154,7 @@ class TankWar(Env):
         return reward, terminated, info
 
     def _player_shoot(self, angle: int) -> None:
-        # The player can shoot with an interval of 1 second
+        # The player can shoot with a predefined interval
         if self.player.last_shoot == 0 or self.steps - self.player.last_shoot >= self.metadata["render_fps"] * self.player_shoot_intvl:
             self.player.last_shoot = self.steps
             player_bullet = self.player.bullet(self.player.surf.get_size(), self.player.rect.center, angle, self.player.speed + 3)
@@ -215,7 +221,7 @@ class TankWar(Env):
 
         enemy_n, enemy_speed, enemy_shoot_intvl = 0, 0, 0
         if self.score < 50:
-            enemy_n, enemy_speed, enemy_shoot_intvl = 1, 2, 2
+            enemy_n, enemy_speed, enemy_shoot_intvl = 6, 2, 2
         elif self.score < 100:
             enemy_n, enemy_speed, enemy_shoot_intvl = 1, 3, 2
         elif self.score < 150:
