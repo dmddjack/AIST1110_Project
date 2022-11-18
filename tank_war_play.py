@@ -39,9 +39,9 @@ def _pressed_to_action(pressed_keys):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--mode", type=str, required=True)
+    parser.add_argument("-m", "--mode", type=str, default="human")
     parser.add_argument("-s", "--seed", type=int, default=None)
-    parser.add_argument("-e", "--episodes", type=int, required=True)
+    parser.add_argument("-e", "--episodes", type=int, default=1)
     parser.add_argument("-ms", "--max_steps", type=int, default=3600)
     args = parser.parse_args()
     render_mode = str(args.mode)
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         episodes = int(args.episodes)
         max_steps = int(args.max_steps)
     except ValueError:
-        print("Invalid argument(s).")
+        print("Integer arguments are required")
 
     env = TankWar(render_mode, max_steps)
     for episode in range(1, episodes + 1):
@@ -58,27 +58,43 @@ if __name__ == "__main__":
         if render_mode == "human":
             running = True
             while running:
+                # Detect pygame events for quiting the game
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
+                
+                # Detect pressed keys
                 pressed_keys = pygame.key.get_pressed()
+
+                # Map pressed keys to an action
                 action = _pressed_to_action(pressed_keys)
                 if action == -1:
                     running = False
                 else:
-                    _, terminated, info = env.step(action)
+                    _, terminated, _ = env.step(action)
                     env.render()
 
+                    # Terminate the game
                     if terminated:
                         running = False
         elif render_mode == "read_only":
-            while True:
+            running = True
+            while running:
+                # Detect pygame events for quiting the game
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
+                            running = False
+                            
                 action = env.action_space.sample()
                 # obs, reward, done, info = env.step(action)
                 _, terminated, info = env.step(action)
                 env.render()
 
+                # Terminate the game
                 if terminated:
-                    break
+                    running = False
     env.close()
     
