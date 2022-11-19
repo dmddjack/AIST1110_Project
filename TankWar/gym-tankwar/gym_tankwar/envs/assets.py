@@ -1,5 +1,7 @@
+import numpy as np
 import pygame
 
+# We need to create class _Bullet before class _Tank because the latter one uses the former one
 
 class _Bullet(pygame.sprite.Sprite):
     def __init__(self, tank_size: tuple[int, int], tank_center: tuple[int, int], angle: int, speed: int, image_path: str, resize_ratio: int = 1) -> None:
@@ -39,9 +41,12 @@ class _Bullet(pygame.sprite.Sprite):
         else:
             self.rect.move_ip(self.speed, 0)
 
+    def get_location(self) -> np.ndarray:
+        return np.array((self.rect.center[0] / 600, self.rect.center[1] / 400))
+
 
 class _PlayerBullet(_Bullet):
-    image_path = "images/bullets/bullet_01.png"
+    image_path = "./images/bullets/bullet_01.png"
     resize_ratio = 2
 
     def __init__(self, tank_size: tuple[int, int], tank_center: tuple[int, int], angle: int, speed: int) -> None:
@@ -49,7 +54,7 @@ class _PlayerBullet(_Bullet):
 
 
 class _EnemyBullet(_Bullet):
-    image_path = "images/bullets/bullet_02.png"
+    image_path = "./images/bullets/bullet_02.png"
     resize_ratio = 1.5
     
     def __init__(self, tank_size: tuple[int, int], tank_center: tuple[int, int], angle: int, speed: int) -> None:
@@ -73,44 +78,49 @@ class _Tank(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect(center=(start_x, start_y))
         self._keep_inside()
 
-    def _keep_inside(self) -> bool:
-        is_outside = False
-        possible_angles = []
+    def _keep_inside(self) -> tuple[bool, list[int]]:
+        """An internal function that keeps the sprite inside the window"""
+
+        touches_border = False
+        correction_angles = []
         if self.rect.left < 0:
             self.rect.left = 0
-            is_outside = True
-            possible_angles.append(270)
+            touches_border = True
+            correction_angles.append(270)
         elif self.rect.right > self.window_width:
             self.rect.right = self.window_width
-            is_outside = True
-            possible_angles.append(90)
+            touches_border = True
+            correction_angles.append(90)
         if self.rect.top < 0:
             self.rect.top = 0
-            is_outside = True
-            possible_angles.append(180)
+            touches_border = True
+            correction_angles.append(180)
         elif self.rect.bottom > self.window_height:
             self.rect.bottom = self.window_height
-            is_outside = True
-            possible_angles.append(0)
-        return is_outside, possible_angles
+            touches_border = True
+            correction_angles.append(0)
+        return touches_border, correction_angles
 
     def update(self, dx, dy, angle: int) -> tuple[bool, list[int]]:
-        self.surf = pygame.transform.rotate(self.surf, self._angle2rotation(angle))
+        self.surf = pygame.transform.rotate(self.surf, self._angle_to_rotation(angle))
         self.angle = angle
         self.rect = self.surf.get_rect(center=self.rect.center)
         self.rect.move_ip(dx * self.speed, dy * self.speed)
-        is_outside, possible_angles = self._keep_inside()
-        return is_outside, possible_angles
+        touches_border, correction_angles = self._keep_inside()
+        return touches_border, correction_angles
 
-    def _angle2rotation(self, angle: int) -> int:
+    def _angle_to_rotation(self, angle: int) -> int:
         rotation = angle - self.angle
         if rotation < 0:
             rotation = 360 + rotation
         return rotation
 
+    def get_location(self) -> np.ndarray:
+        return np.array((self.rect.center[0] / self.window_width, self.rect.center[1] / self.window_height))
+
 
 class Player(_Tank):
-    image_path = "images/tank_01/tank_01_A.png"
+    image_path = "./images/tank_01/tank_01_A.png"
     resize_ratio = 5.5
 
     def __init__(self, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int) -> None:
@@ -118,7 +128,7 @@ class Player(_Tank):
 
 
 class Enemy(_Tank):
-    image_path = "images/tank_02/tank_02_A.png"
+    image_path = "./images/tank_02/tank_02_A.png"
     resize_ratio = 4.4
 
     def __init__(self, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int, creation_step: int) -> None:
@@ -127,7 +137,7 @@ class Enemy(_Tank):
 
 
 class Heart(pygame.sprite.Sprite):
-    image_path = "images/heart.png"
+    image_path = "./images/heart.png"
     resize_ratio = 5
 
     def __init__(self, window_width: int, order: int):
