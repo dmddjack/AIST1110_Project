@@ -23,7 +23,11 @@ Project Name: Tank War
 
         python tankwar_play_v1.py
         
-   to expose the game in a non-GUI mode or
+   to expose the game in a non-GUI mode, or
+   
+        python tankwar_play_v1.py -m human_rand
+        
+   to visualize the gameplay GUI in a read-only human mode, or
    
         python tankwar_play_v1.py -m human
         
