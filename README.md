@@ -7,9 +7,13 @@ Project Name: Tank War
 
         cd gym-tankwar
         
-1. Do
+1. If you are using Windows, do
 
-        pip install -e .
+        setup.bat
+        
+   If you are using MacOS, do
+   
+        sh setup.sh
         
 1. Do
 
@@ -17,7 +21,17 @@ Project Name: Tank War
         
 1. Do
 
+        python tankwar_play_v1.py
+        
+   to expose the game in a non-GUI mode or
+   
         python tankwar_play_v1.py -m human
+        
+   or
+   
+        python tankwar_play_v2.py
+        
+   to play the game
         
 1. Press "q" or "Escape" to quit
 
@@ -37,7 +51,7 @@ Project Name: Tank War
 - [x] Handle situations when enemies spwan at player's location
 - [x] Decide the number of enemies, their speed and their shooting interval at any score under _score2enemy()
 - [x] Determine the maximum number of enemies $n$ and the maximum number of enemies' bullets $e$ -> size of observation space $=2 + 2n + 2e$
-- [ ] Add sufficient comments
+- [x] Add sufficient comments
 - [ ] Use Q-table or DQN to train a model
 
 ## Ideas
