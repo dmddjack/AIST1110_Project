@@ -44,6 +44,13 @@ class _Movable(pygame.sprite.Sprite):
     def get_location(self) -> np.ndarray:
         """A function that returns the movable's location."""
 
+        # return np.array(
+        #     (
+        #         self.rect.center[0] / self.window_width, 
+        #         self.rect.center[1] / self.window_height,
+        #     ),
+        #     dtype=np.float32,
+        # ) 
         return np.array(
             (self.rect.center[0], self.rect.center[1]),
             dtype=int,
