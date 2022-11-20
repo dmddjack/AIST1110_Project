@@ -40,11 +40,6 @@ Project Name: Tank War
 1. Press "q" or "Escape" to quit (except tankwar_play_v2.py)
 
 ## TO-DO
-- [ ] Play audio
-  - [ ] Two shooting sound effects
-  - [ ] Two moving sound effects
-  - [ ] Explosion sound effects
-  - [ ] Background music
 - [ ] Handle situations when different enemies touch one another\
   ***The current handling method is to kill both enemies. It would be better to reverse their directions.***
 - [ ] Determine whether to use a normal observation space or a normalized observation space
