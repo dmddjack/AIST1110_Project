@@ -219,6 +219,7 @@ class TankWar(gym.Env):
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 2, 1.5
         else:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.5
+
         return enemy_n, self._fps_to_speed(enemy_speed), enemy_shoot_intvl
 
     def _create_enemy(self) -> tuple[int, float]:
@@ -520,7 +521,7 @@ class TankWar(gym.Env):
                 tank_size=self.player.surf.get_size(),
                 tank_center=self.player.rect.center,
                 angle=angle,
-                speed=self.player_speed + self._fps_to_speed(3),
+                speed=self.player.speed + self._fps_to_speed(3),
             )
 
             # Add the player's new bullet to self.player_bullets and 
