@@ -3,6 +3,7 @@
 import numpy as np
 import pygame
 
+CONT_OBS_SPACE = True  # For testing purposes
 
 class _Movable(pygame.sprite.Sprite):
     def __init__(
@@ -43,20 +44,23 @@ class _Movable(pygame.sprite.Sprite):
         # Get the Rect of the Surface
         self.rect = self.surf.get_rect(center=(start_x, start_y))
 
-    def get_location(self) -> np.ndarray:
+    def get_obs(self) -> np.ndarray:
         """A function that returns the movable's location."""
 
-        # return np.array(
-        #     (
-        #         self.rect.center[0] / self.window_width, 
-        #         self.rect.center[1] / self.window_height,
-        #     ),
-        #     dtype=np.float32,
-        # ) 
-        return np.array(
-            (self.rect.center[0], self.rect.center[1]),
-            dtype=int,
-        )
+        if CONT_OBS_SPACE:
+            return np.array(
+                (
+                    self.rect.center[0] / self.window_width, 
+                    self.rect.center[1] / self.window_height, 
+                    self.angle / 360, 
+                ),
+                dtype=np.float32,
+            )
+        else:
+            return np.array(
+                (self.rect.center[0], self.rect.center[1], self.angle),
+                dtype=int,
+            )
 
 
 # We need to create class _Bullet before class _Tank 
