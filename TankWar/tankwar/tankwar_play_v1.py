@@ -10,6 +10,7 @@ def _pressed_to_action(pressed_keys):
 
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
         return None
+
     action = 9
     if not pressed_keys[pygame.K_SPACE]:
         if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
@@ -30,6 +31,7 @@ def _pressed_to_action(pressed_keys):
             action = 7
         if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
             action = 8
+            
     return action
 
 
@@ -42,7 +44,9 @@ def main():
     max_steps = args.max_steps
 
     env = gym.make(
-        "gym_tankwar/TankWar-v0", render_mode=render_mode, starting_hp=args.starting_hp
+        "gym_tankwar/TankWar-v0", 
+        render_mode=render_mode, 
+        starting_hp=args.starting_hp
     )
     env = gym.wrappers.TimeLimit(env, max_episode_steps=max_steps)
 
@@ -80,19 +84,23 @@ def main():
 
         if action is not None:
             observation, reward, done, truncated, info = env.step(action)
-            # print(episode, action, observation, reward, info)
             step += 1
             score += reward
             if done or truncated:
                 observation, info = env.reset(seed=args.seed)
+
+                # Print episode's final result
                 if done:
                     print(
-                        f"Episode {episode:<{len(str(episodes))}d} succeeded in {step:<{len(str(max_steps))}d} steps ...\tScore = {score}"
+                        f"Episode {episode:<{len(str(episodes))}d} " \
+                            f"succeeded in {step:<{len(str(max_steps))}d} " \
+                            f"steps ...\tScore = {score}"
                     )
                     success_episodes += 1
                 else:
                     print(
-                        f"Episode {episode:<{len(str(episodes))}d} truncated ...\t\t\tScore = {score}"
+                        f"Episode {episode:<{len(str(episodes))}d} " \
+                            f"truncated ...\t\t\tScore = {score}"
                     )
                 episode += 1
                 step = 0
@@ -100,8 +108,10 @@ def main():
                 score = 0
 
     if episode > 0:
+        # Print success rate of all episodes
         print(
-            f"Success rate = {success_episodes/episode:.2f}    Average score = {total_score/episode:.2f}"
+            f"Success rate = {success_episodes/episode:.2f}\t" \
+                f"Average score = {total_score/episode:.2f}"
         )
 
     env.close()
