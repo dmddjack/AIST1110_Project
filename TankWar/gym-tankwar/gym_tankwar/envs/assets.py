@@ -12,8 +12,7 @@ class _Movable(pygame.sprite.Sprite):
             start_angle: int,
             speed: int,
             image_path: str,
-            resize_ratio: float = 1.0,
-        ) -> None:
+            resize_ratio: float = 1.0) -> None:
         super().__init__()
 
         self.window_width = window_width
@@ -43,6 +42,8 @@ class _Movable(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect(center=(start_x, start_y))
 
     def get_location(self) -> np.ndarray:
+        """A function that returns the movable's location."""
+
         return np.array(
             (
                 self.rect.center[0] / self.window_width,
@@ -51,10 +52,8 @@ class _Movable(pygame.sprite.Sprite):
         )
 
 
-"""
-We need to create class _Bullet before class _Tank 
-because the latter one uses the former one.
-"""
+# We need to create class _Bullet before class _Tank 
+# because the latter one uses the former one.
 class _Bullet(_Movable):
     def __init__(
             self,
@@ -65,8 +64,8 @@ class _Bullet(_Movable):
             angle: int,
             speed: int,
             image_path: str,
-            resize_ratio: float = 1.0,
-        ) -> None:
+            resize_ratio: float = 1.0) -> None:
+        # Initialize _Movable with (0, 0) as the starting location first
         super().__init__(
             window_width=window_width,
             window_height=window_height,
@@ -78,22 +77,31 @@ class _Bullet(_Movable):
             resize_ratio=resize_ratio
         )
 
+        # Determine the starting location of the bullet based on 
+        # the location and the angle of the tank
         if angle == 0:
             start_x = tank_center[0] + 1  # The "+1" is for pixel adjustment
-            start_y = tank_center[1] - tank_size[1] // 2 - self.surf.get_height() // 2
+            start_y = tank_center[1] - tank_size[1] // 2 \
+                - self.surf.get_height() // 2
         elif angle == 90:
-            start_x = tank_center[0] - tank_size[0] // 2 - self.surf.get_width() // 2
+            start_x = tank_center[0] - tank_size[0] // 2 \
+                - self.surf.get_width() // 2
             start_y = tank_center[1]
         elif angle == 180:
             start_x = tank_center[0]
-            start_y = tank_center[1] + tank_size[1] // 2 + self.surf.get_height() // 2
+            start_y = tank_center[1] + tank_size[1] // 2 \
+                + self.surf.get_height() // 2
         else:
-            start_x = tank_center[0] + tank_size[0] // 2 + self.surf.get_width() // 2
+            start_x = tank_center[0] + tank_size[0] // 2 \
+                + self.surf.get_width() // 2
             start_y = tank_center[1]
 
+        # Utilize the calculated starting location
         self.rect = self.surf.get_rect(center=(start_x, start_y))
 
     def move(self) -> None:
+        """A function that moves the bullet."""
+
         if self.angle == 0:
             self.rect.move_ip(0, -self.speed)
         elif self.angle == 90:
@@ -115,8 +123,7 @@ class _PlayerBullet(_Bullet):
             tank_size: tuple[int, int],
             tank_center: tuple[int, int],
             angle: int,
-            speed: int,
-        ) -> None:
+            speed: int) -> None:
         super().__init__(
             window_width=window_width,
             window_height=window_height,
@@ -140,8 +147,7 @@ class _EnemyBullet(_Bullet):
             tank_size: tuple[int, int],
             tank_center: tuple[int, int],
             angle: int,
-            speed: int,
-        ) -> None:
+            speed: int) -> None:
         super().__init__(
             window_width=window_width,
             window_height=window_height,
@@ -166,8 +172,7 @@ class _Tank(_Movable):
             speed: int,
             last_shoot: int,
             image_path: str,
-            resize_ratio: float = 1.0,
-        ) -> None:
+            resize_ratio: float = 1.0) -> None:
         super().__init__(
             window_width=window_width,
             window_height=window_height,
@@ -182,11 +187,16 @@ class _Tank(_Movable):
         # Keep the tank inside the window
         self._keep_inside()
 
+        # Store the type of bullet used by the tank, 
+        # either _PlayerBullet or _EnemyBullet
         self.bullet = bullet
+
+        # Store the last step when the tank so the next step when the tank 
+        # can shoot can be calculated
         self.last_shoot = last_shoot
 
     def _keep_inside(self) -> tuple[bool, list[int]]:
-        """An internal function that keeps the tank inside the window"""
+        """An internal function that keeps the tank inside the window."""
 
         touches_border = False
         correction_angles = []
@@ -206,9 +216,16 @@ class _Tank(_Movable):
             self.rect.bottom = self.window_height
             touches_border = True
             correction_angles.append(0)
+            
         return touches_border, correction_angles
 
-    def update(self, dx: int, dy: int, new_angle: int) -> tuple[bool, list[int]]:
+    def update(self, dx: int, dy: int, 
+            new_angle: int) -> tuple[bool, list[int]]:
+        """
+        A function that rotates the tank (if necessary) and 
+        moves the tank
+        """
+
         # Rotate the Surface if necessary
         if new_angle != self.angle:
             self.surf = pygame.transform.rotate(
@@ -221,14 +238,19 @@ class _Tank(_Movable):
         self.rect.move_ip(dx * self.speed, dy * self.speed)
 
         touches_border, correction_angles = self._keep_inside()
+
         return touches_border, correction_angles
 
     def _angle_to_rotation(self, target_angle: int) -> int:
-        """An internal function that maps the target angle to a suitable rotation"""
+        """
+        An internal function that maps the target angle to 
+        a suitable rotation.
+        """
 
         rotation = target_angle - self.angle
         if rotation < 0:
             rotation = 360 + rotation
+
         return rotation
 
 
@@ -243,8 +265,7 @@ class Player(_Tank):
             start_x: int,
             start_y: int,
             start_angle: int,
-            speed: int,
-        ) -> None:
+            speed: int) -> None:
         super().__init__(
             window_width=window_width,
             window_height=window_height,
@@ -271,8 +292,7 @@ class Enemy(_Tank):
             start_y: int,
             start_angle: int,
             speed: int,
-            creation_step: int,
-        ) -> None:
+            creation_step: int) -> None:
         super().__init__(
             window_width=window_width,
             window_height=window_height,
