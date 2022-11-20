@@ -1,6 +1,7 @@
 import gym
 import gym_tankwar
 import pygame
+
 from cmdargs import args
 
 
@@ -32,65 +33,79 @@ def _pressed_to_action(pressed_keys):
     return action
 
 
-render_mode = args.mode
-if render_mode == "human_rand":
-    render_mode = "human"
+def main():
+    render_mode = args.mode
+    if render_mode == "human_rand":
+        render_mode = "human"
 
-episodes = args.episodes
-max_steps = args.max_steps
+    episodes = args.episodes
+    max_steps = args.max_steps
 
-env = gym.make('gym_tankwar/TankWar-v0', render_mode=render_mode, starting_hp=args.starting_hp)
-env = gym.wrappers.TimeLimit(env, max_episode_steps=max_steps)
+    env = gym.make(
+        "gym_tankwar/TankWar-v0", render_mode=render_mode, starting_hp=args.starting_hp
+    )
+    env = gym.wrappers.TimeLimit(env, max_episode_steps=max_steps)
 
-if args.fps is not None:
-    env.metadata["render_fps"] = args.fps
+    if args.fps is not None:
+        env.metadata["render_fps"] = args.fps
 
-env.action_space.seed(args.seed)
-observation, info = env.reset(seed=args.seed)
+    env.action_space.seed(args.seed)
 
-episode = 0
-success_episodes = 0
-running = True
-step = 0
-score = 0
-total_score = 0
+    observation, info = env.reset(seed=args.seed)
 
-while running and episode < episodes:
-    if args.mode == "human":
-        # Detect pygame events for quiting the game
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+    episode = 0
+    success_episodes = 0
+    running = True
+    step = 0
+    score = 0
+    total_score = 0
+
+    while running and episode < episodes:
+        if args.mode == "human":
+            # Detect pygame events for quiting the game
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            # Detect pressed keys
+            pressed_keys = pygame.key.get_pressed()
+
+            # Map pressed keys to an action
+            action = _pressed_to_action(pressed_keys)
+            if action == None:
                 running = False
-        
-        # Detect pressed keys
-        pressed_keys = pygame.key.get_pressed()
 
-        # Map pressed keys to an action
-        action = _pressed_to_action(pressed_keys)
-        if action == None:
-            running = False
+        else:
+            action = env.action_space.sample()  # random
 
-    else:
-        action = env.action_space.sample()  # random
-        
-    if action is not None:
-        observation, reward, done, truncated, info = env.step(action)
-        #print(episode, action, observation, reward, info)
-        step += 1
-        score += reward
-        if done or truncated:
-            observation, info = env.reset(seed=args.seed)
-            if done:
-                print(f"Episode {episode:<{len(str(episodes))}d} succeeded in {step:<{len(str(max_steps))}d} steps ...\tScore = {score}")
-                success_episodes += 1
-            else:
-                print(f"Episode {episode:<{len(str(episodes))}d} truncated ...\t\t\tScore = {score}")
-            episode += 1
-            step = 0
-            total_score += score
-            score = 0
+        if action is not None:
+            observation, reward, done, truncated, info = env.step(action)
+            # print(episode, action, observation, reward, info)
+            step += 1
+            score += reward
+            if done or truncated:
+                observation, info = env.reset(seed=args.seed)
+                if done:
+                    print(
+                        f"Episode {episode:<{len(str(episodes))}d} succeeded in {step:<{len(str(max_steps))}d} steps ...\tScore = {score}"
+                    )
+                    success_episodes += 1
+                else:
+                    print(
+                        f"Episode {episode:<{len(str(episodes))}d} truncated ...\t\t\tScore = {score}"
+                    )
+                episode += 1
+                step = 0
+                total_score += score
+                score = 0
 
-if episode > 0:
-    print(f"Success rate = {success_episodes/episode:.2f}    Average score = {total_score/episode:.2f}")
+    if episode > 0:
+        print(
+            f"Success rate = {success_episodes/episode:.2f}    Average score = {total_score/episode:.2f}"
+        )
 
-env.close()
+    env.close()
+
+
+if __name__ == "__main__":
+    main()

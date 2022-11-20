@@ -4,11 +4,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--mode", type=str, help="The render mode",
                     choices=["human", "human_rand", "rgb_array"], 
                     default="rgb_array")
-parser.add_argument("-sh", "--starting_hp", type=int, help="The starting HP of the player", 
-                    choices=range(1, 6), metavar="[1-5]", 
+parser.add_argument("-sh", "--starting_hp", type=int,
+                    help="The starting HP of the player",
+                    choices=range(1, 6), metavar="[1-5]",
                     default=3)
 parser.add_argument("-s", "--seed", type=int, 
-                    help="The seed for random number generator", 
+                    help="The seed for random number generator",
                     default=None)
 parser.add_argument("-e", "--episodes", type=int, 
                     help="The number of episodes", 

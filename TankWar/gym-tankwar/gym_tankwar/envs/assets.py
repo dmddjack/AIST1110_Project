@@ -1,34 +1,96 @@
 import numpy as np
 import pygame
 
-# We need to create class _Bullet before class _Tank because the latter one uses the former one
 
-class _Bullet(pygame.sprite.Sprite):
-    def __init__(self, tank_size: tuple[int, int], tank_center: tuple[int, int], angle: int, speed: int, image_path: str, resize_ratio: int = 1) -> None:
+class _Movable(pygame.sprite.Sprite):
+    def __init__(
+            self,
+            window_width: int,
+            window_height: int,
+            start_x: int,
+            start_y: int,
+            start_angle: int,
+            speed: int,
+            image_path: str,
+            resize_ratio: float = 1.0,
+        ) -> None:
         super().__init__()
 
-        self.angle = angle
+        self.window_width = window_width
+        self.window_height = window_height
+        self.angle = start_angle
         self.speed = speed
 
+        # Load the image and convert it into a Surface
         self.surf = pygame.image.load(image_path)
-        
+
         # Set the background to transparent
         self.surf.set_alpha(256)
-        self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / resize_ratio, self.surf.get_height() / resize_ratio))
+
+        # Resize the image
+        self.surf = pygame.transform.scale(
+            self.surf,
+            (
+                self.surf.get_width() / resize_ratio,
+                self.surf.get_height() / resize_ratio,
+            ),
+        )
+
+        # Rotate the image
         self.surf = pygame.transform.rotate(self.surf, self.angle)
-        if self.angle == 0:
-            # The "+1" is for pixel adjustment
-            start_x = tank_center[0] + 1
+
+        # Get the Rect of the Surface
+        self.rect = self.surf.get_rect(center=(start_x, start_y))
+
+    def get_location(self) -> np.ndarray:
+        return np.array(
+            (
+                self.rect.center[0] / self.window_width,
+                self.rect.center[1] / self.window_height,
+            )
+        )
+
+
+"""
+We need to create class _Bullet before class _Tank 
+because the latter one uses the former one.
+"""
+class _Bullet(_Movable):
+    def __init__(
+            self,
+            window_width: int,
+            window_height: int,
+            tank_size: tuple[int, int],
+            tank_center: tuple[int, int],
+            angle: int,
+            speed: int,
+            image_path: str,
+            resize_ratio: float = 1.0,
+        ) -> None:
+        super().__init__(
+            window_width=window_width,
+            window_height=window_height,
+            start_x=0,
+            start_y=0,
+            start_angle=angle,
+            speed=speed,
+            image_path=image_path,
+            resize_ratio=resize_ratio
+        )
+
+        if angle == 0:
+            start_x = tank_center[0] + 1  # The "+1" is for pixel adjustment
             start_y = tank_center[1] - tank_size[1] // 2 - self.surf.get_height() // 2
-        elif self.angle == 90:
+        elif angle == 90:
             start_x = tank_center[0] - tank_size[0] // 2 - self.surf.get_width() // 2
             start_y = tank_center[1]
-        elif self.angle == 180:
+        elif angle == 180:
             start_x = tank_center[0]
             start_y = tank_center[1] + tank_size[1] // 2 + self.surf.get_height() // 2
         else:
             start_x = tank_center[0] + tank_size[0] // 2 + self.surf.get_width() // 2
             start_y = tank_center[1]
+
         self.rect = self.surf.get_rect(center=(start_x, start_y))
 
     def move(self) -> None:
@@ -41,45 +103,90 @@ class _Bullet(pygame.sprite.Sprite):
         else:
             self.rect.move_ip(self.speed, 0)
 
-    def get_location(self) -> np.ndarray:
-        return np.array((self.rect.center[0] / 600, self.rect.center[1] / 400))
-
 
 class _PlayerBullet(_Bullet):
     image_path = "./images/bullets/bullet_01.png"
     resize_ratio = 2
 
-    def __init__(self, tank_size: tuple[int, int], tank_center: tuple[int, int], angle: int, speed: int) -> None:
-        super().__init__(tank_size, tank_center, angle, speed, self.image_path, self.resize_ratio)
+    def __init__(
+            self,
+            window_width: int,
+            window_height: int,
+            tank_size: tuple[int, int],
+            tank_center: tuple[int, int],
+            angle: int,
+            speed: int,
+        ) -> None:
+        super().__init__(
+            window_width=window_width,
+            window_height=window_height,
+            tank_size=tank_size,
+            tank_center=tank_center,
+            angle=angle,
+            speed=speed,
+            image_path=self.image_path,
+            resize_ratio=self.resize_ratio,
+        )
 
 
 class _EnemyBullet(_Bullet):
     image_path = "./images/bullets/bullet_02.png"
     resize_ratio = 1.5
-    
-    def __init__(self, tank_size: tuple[int, int], tank_center: tuple[int, int], angle: int, speed: int) -> None:
-        super().__init__(tank_size, tank_center, angle, speed, self.image_path, self.resize_ratio)
+
+    def __init__(
+            self,
+            window_width: int,
+            window_height: int,
+            tank_size: tuple[int, int],
+            tank_center: tuple[int, int],
+            angle: int,
+            speed: int,
+        ) -> None:
+        super().__init__(
+            window_width=window_width,
+            window_height=window_height,
+            tank_size=tank_size,
+            tank_center=tank_center,
+            angle=angle,
+            speed=speed,
+            image_path=self.image_path,
+            resize_ratio=self.resize_ratio,
+        )
 
 
-class _Tank(pygame.sprite.Sprite):
-    def __init__(self, bullet: _Bullet, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int, last_shoot: int, image_path: str, resize_ratio: int = 1) -> None:
-        super().__init__()
+class _Tank(_Movable):
+    def __init__(
+            self,
+            window_width: int,
+            window_height: int,
+            bullet: _Bullet,
+            start_x: int,
+            start_y: int,
+            start_angle: int,
+            speed: int,
+            last_shoot: int,
+            image_path: str,
+            resize_ratio: float = 1.0,
+        ) -> None:
+        super().__init__(
+            window_width=window_width,
+            window_height=window_height,
+            start_x=start_x,
+            start_y=start_y,
+            start_angle=start_angle,
+            speed=speed,
+            image_path=image_path,
+            resize_ratio=resize_ratio,
+        )
 
-        self.bullet = bullet
-        self.angle = start_angle
-        self.window_width, self.window_height = window_width, window_height
-        self.speed = speed
-        self.last_shoot = last_shoot
-
-        self.surf = pygame.image.load(image_path)
-        self.surf.set_alpha(256)
-        self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / resize_ratio, self.surf.get_height() / resize_ratio))
-        self.surf = pygame.transform.rotate(self.surf, self.angle)
-        self.rect = self.surf.get_rect(center=(start_x, start_y))
+        # Keep the tank inside the window
         self._keep_inside()
 
+        self.bullet = bullet
+        self.last_shoot = last_shoot
+
     def _keep_inside(self) -> tuple[bool, list[int]]:
-        """An internal function that keeps the sprite inside the window"""
+        """An internal function that keeps the tank inside the window"""
 
         touches_border = False
         correction_angles = []
@@ -101,38 +208,83 @@ class _Tank(pygame.sprite.Sprite):
             correction_angles.append(0)
         return touches_border, correction_angles
 
-    def update(self, dx, dy, angle: int) -> tuple[bool, list[int]]:
-        self.surf = pygame.transform.rotate(self.surf, self._angle_to_rotation(angle))
-        self.angle = angle
-        self.rect = self.surf.get_rect(center=self.rect.center)
+    def update(self, dx: int, dy: int, new_angle: int) -> tuple[bool, list[int]]:
+        # Rotate the Surface if necessary
+        if new_angle != self.angle:
+            self.surf = pygame.transform.rotate(
+                self.surf, self._angle_to_rotation(new_angle)
+            )
+            self.rect = self.surf.get_rect(center=self.rect.center)
+            self.angle = new_angle
+
+        # Move the Rect
         self.rect.move_ip(dx * self.speed, dy * self.speed)
+
         touches_border, correction_angles = self._keep_inside()
         return touches_border, correction_angles
 
-    def _angle_to_rotation(self, angle: int) -> int:
-        rotation = angle - self.angle
+    def _angle_to_rotation(self, target_angle: int) -> int:
+        """An internal function that maps the target angle to a suitable rotation"""
+
+        rotation = target_angle - self.angle
         if rotation < 0:
             rotation = 360 + rotation
         return rotation
-
-    def get_location(self) -> np.ndarray:
-        return np.array((self.rect.center[0] / self.window_width, self.rect.center[1] / self.window_height))
 
 
 class Player(_Tank):
     image_path = "./images/tank_01/tank_01_A.png"
     resize_ratio = 5.5
 
-    def __init__(self, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int) -> None:
-        super().__init__(_PlayerBullet, start_x, start_y, start_angle, window_width, window_height, speed, 0, self.image_path, self.resize_ratio)
+    def __init__(
+            self,
+            window_width: int,
+            window_height: int,
+            start_x: int,
+            start_y: int,
+            start_angle: int,
+            speed: int,
+        ) -> None:
+        super().__init__(
+            window_width=window_width,
+            window_height=window_height,
+            bullet=_PlayerBullet,
+            start_x=start_x,
+            start_y=start_y,
+            start_angle=start_angle,
+            speed=speed,
+            last_shoot=0,
+            image_path=self.image_path,
+            resize_ratio=self.resize_ratio,
+        )
 
 
 class Enemy(_Tank):
     image_path = "./images/tank_02/tank_02_A.png"
     resize_ratio = 4.4
 
-    def __init__(self, start_x: int, start_y: int, start_angle: int, window_width: int, window_height: int, speed: int, creation_step: int) -> None:
-        super().__init__(_EnemyBullet, start_x, start_y, start_angle, window_width, window_height, speed, creation_step, self.image_path, self.resize_ratio)
+    def __init__(
+            self,
+            window_width: int,
+            window_height: int,
+            start_x: int,
+            start_y: int,
+            start_angle: int,
+            speed: int,
+            creation_step: int,
+        ) -> None:
+        super().__init__(
+            window_width=window_width,
+            window_height=window_height,
+            bullet=_EnemyBullet,
+            start_x=start_x,
+            start_y=start_y,
+            start_angle=start_angle,
+            speed=speed,
+            last_shoot=creation_step,
+            image_path=self.image_path,
+            resize_ratio=self.resize_ratio,
+        )
         self.last_rotate = creation_step
 
 
@@ -140,9 +292,20 @@ class Heart(pygame.sprite.Sprite):
     image_path = "./images/heart.png"
     resize_ratio = 5
 
-    def __init__(self, window_width: int, order: int):
+    def __init__(self, window_width: int, order: int) -> None:
         super().__init__()
         self.surf = pygame.image.load(self.image_path)
         self.surf.set_alpha(256)
-        self.surf = pygame.transform.scale(self.surf, (self.surf.get_width() / self.resize_ratio, self.surf.get_height() / self.resize_ratio))
-        self.rect = self.surf.get_rect(center=(window_width - order * self.surf.get_width() + 7, self.surf.get_height() // 2 + 5))
+        self.surf = pygame.transform.scale(
+            self.surf,
+            (
+                self.surf.get_width() / self.resize_ratio,
+                self.surf.get_height() / self.resize_ratio,
+            ),
+        )
+        self.rect = self.surf.get_rect(
+            center=(
+                window_width - order * self.surf.get_width() + 7,
+                self.surf.get_height() // 2 + 5,
+            )
+        )
