@@ -45,10 +45,8 @@ class _Movable(pygame.sprite.Sprite):
         """A function that returns the movable's location."""
 
         return np.array(
-            (
-                self.rect.center[0] / self.window_width,
-                self.rect.center[1] / self.window_height,
-            )
+            (self.rect.center[0], self.rect.center[1]),
+            dtype=int,
         )
 
 
@@ -216,7 +214,7 @@ class _Tank(_Movable):
             self.rect.bottom = self.window_height
             touches_border = True
             correction_angles.append(0)
-            
+
         return touches_border, correction_angles
 
     def update(self, dx: int, dy: int, 
