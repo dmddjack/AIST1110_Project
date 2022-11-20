@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import gym
 import gym_tankwar
 import pygame
