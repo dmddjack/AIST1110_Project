@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import gym
 import numpy as np
 import pygame
@@ -14,7 +16,7 @@ class TankWar(gym.Env):
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
-        # The size of the PyGame window
+        # The size of the pygame window
         self.window_width, self.window_height = 600, 400
 
         # All possible angles of the tanks and bullets
@@ -38,11 +40,9 @@ class TankWar(gym.Env):
         # The reward when the player is killed by the enemies
         self.player_killed_reward = -5
 
-        """
-        Observation is a 51-element list: the player's location, 
-        enemies' locations, enemy's bullets' locations, 
-        player's gun's remaining reloading time
-        """
+        # Observation is a 51-element list: the player's location, 
+        # enemies' locations, enemy's bullets' locations, 
+        # player's cannon's remaining reloading time
         max_enemy_entities = self.max_enemies + self.max_enemy_bullets
 
         # Normalized observation space
@@ -87,12 +87,10 @@ class TankWar(gym.Env):
             dtype=int,
         )
 
-        # print(self.observation_space.sample())  # For testing purposes
+        # print(self.observation_space.sample())  # For testing purposes]
 
-        """
-        We have 10 actions: up, down, left, right, shoot, up and shoot, 
-        down and shoot, left and shoot, right and shoot, do nothing
-        """
+        # We have 10 actions: up, down, left, right, shoot, up and shoot, 
+        # down and shoot, left and shoot, right and shoot, do nothing
         self.action_space = spaces.Discrete(10)
 
         assert (
@@ -101,6 +99,9 @@ class TankWar(gym.Env):
         )
 
         self.render_mode = render_mode
+
+        self.pygame_initialized = False
+        self.font_initialized = False
 
         # The following will remain None iff "rgb_array" mode is used
         self.window = None
@@ -148,8 +149,8 @@ class TankWar(gym.Env):
                 dtype=int,
             )
 
-        # Get the player's gun's remaining reloading time
-        player_gun_reload_time = (
+        # Get the player's cannon's remaining reloading time
+        player_cannon_reload_time = (
             0 if self.player.last_shoot == 0
             else max(
                 0,
@@ -159,8 +160,8 @@ class TankWar(gym.Env):
                     - (self.steps - self.player.last_shoot),
             )
         )
-        player_gun_reload_time = np.array(
-            [player_gun_reload_time],
+        player_cannon_reload_time = np.array(
+            [player_cannon_reload_time],
             # dtype=np.float32,  
             dtype=int
         )
@@ -169,7 +170,7 @@ class TankWar(gym.Env):
         obs = np.concatenate(
             [
                 player_loc, enemies_loc, enemy_bullets_loc, 
-                player_gun_reload_time
+                player_cannon_reload_time
             ],
             # dtype=np.float32, 
             dtype=int,
@@ -357,6 +358,9 @@ class TankWar(gym.Env):
         reward = 0
         terminated = False
 
+        # Set the player's engine sound volume to normal
+        self.tank_engine_sound.set_volume(0.4)
+
         if action is not None:
             """Step 1: Move the player according to the action"""
 
@@ -385,13 +389,16 @@ class TankWar(gym.Env):
             elif action == 4:  # Shoot while not moving
                 player_shoot = True
 
-            if action != 9:
+            if action != 4 and action != 9:
                 # Update the player's location
                 self.player.update(
                     dx=player_dx,
                     dy=player_dy,
                     new_angle=player_new_angle
                 )
+
+                # Make the player's engine sound louder
+                self.tank_engine_sound.set_volume(0.8)
 
             """
             Step 2: Shoot a bullet from the player's location if player_shoot 
@@ -411,10 +418,10 @@ class TankWar(gym.Env):
             enemy.speed = enemy_speed
             enemy_dx, enemy_dy, enemy_new_angle = 0, 0, enemy.angle
 
-            # Rotates an enemy with an interval of not less than 3 seconds 
+            # Rotates an enemy with an interval of not less than 2 seconds 
             # and a probability of 2% (based on a framerate of 30)
             if (self.steps - enemy.last_rotate >= \
-                    self.metadata["render_fps"] * 3 and 
+                    self.metadata["render_fps"] * 2 and 
                     self.np_random.random() < self._fps_to_prob(0.02)):
                 enemy_new_angle = self.np_random.choice(
                     [angle for angle in self.angles if angle != enemy.angle]
@@ -471,6 +478,8 @@ class TankWar(gym.Env):
             # else:
             #     enemy.update(-1, 0, 90)
             # enemy.last_rotate = self.steps
+
+            # Kill the enemy
             enemy.kill()
 
         """Step 6: Move the player's and enemies' bullets"""
@@ -493,9 +502,12 @@ class TankWar(gym.Env):
                     bullet, 
                     self.enemies, 
                     dokill=True):
-                bullet.kill()
                 reward += self.enemy_killed_reward
                 self.score += self.enemy_killed_reward
+                bullet.kill()
+
+                # Play the explosion sound effect
+                self.explosion_sound.play()
 
         """Step 8: Remove the player's bullet if it hits an enemy's bullet"""
 
@@ -524,13 +536,16 @@ class TankWar(gym.Env):
             reward += self.player_killed_reward
             self.hp -= 1
 
-            # Remove the player
+            # Kill the player
             self.player.kill()
+
+            # Play the explosion sound effect
+            self.explosion_sound.play()
 
             if self.hp == 0:
                 terminated = True
             else:
-                # Remove all enemies to ensure the player will not be killed 
+                # Kill all enemies to ensure the player will not be killed 
                 # at spawn
                 for enemy in self.enemies:
                     enemy.kill()
@@ -592,11 +607,14 @@ class TankWar(gym.Env):
             self.player_bullets.add(player_bullet)
             self.all_sprites.add(player_bullet)
 
+            # Play the cannon firing sound effect
+            self.cannon_fire_sound.play()
+
     def _enemy_shoot(self, enemy: Enemy, angle: int, interval: int) -> None:
         """
         An internal function that controls how an enemy shoots. 
-        It shoots with an interval of not less than 2 seconds 
-        and a probability of 5% (based on a framerate on 30).
+        It shoots with a predefined interval and 
+        a probability of 5% (based on a framerate on 30).
         """
 
         if (len(self.enemy_bullets) < self.max_enemy_bullets and 
@@ -626,8 +644,41 @@ class TankWar(gym.Env):
             return self._render_frame()
 
     def _render_frame(self) -> np.ndarray | None:
-        # Initialize PyGame
-        pygame.init()
+        if not self.pygame_initialized:
+            # Initialize pygame
+            pygame.init()
+
+            # Initialize sound module
+            pygame.mixer.init()
+
+            # Load and play the background music
+            # Sound source: https://opengameart.org/content/war
+            # License: https://creativecommons.org/publicdomain/zero/1.0/
+            pygame.mixer.music.load("./audios/background_music.wav")
+            pygame.mixer.music.play(loops=-1)
+
+            # Load and play the tank engine sound effect
+            # Sound source: https://opengameart.org/content/engine-loop-heavy-vehicletank
+            # License 1: https://creativecommons.org/licenses/by/3.0/
+            # License 2: https://www.gnu.org/licenses/gpl-3.0.html
+            self.tank_engine_sound = pygame.mixer.Sound("./audios/tank_engine.ogg")
+            self.tank_engine_sound.set_volume(0.4)
+            self.tank_engine_sound.play(loops=-1)
+
+            # Load the cannon firing sound effect
+            # Sound source: https://opengameart.org/content/cannon-fire
+            # License: https://creativecommons.org/publicdomain/zero/1.0/
+            self.cannon_fire_sound = pygame.mixer.Sound("./audios/cannon_fire.ogg")
+
+            # Load the explosion sound effect
+            # This work, made by Unnamed (Viktor.Hahn@web.de), is
+            # licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License.
+            # Sound source: https://opengameart.org/content/9-explosion-sounds
+            # License: http://creativecommons.org/licenses/by-sa/3.0/
+            self.explosion_sound = pygame.mixer.Sound("./audios/explosion09.wav")
+            self.explosion_sound.set_volume(0.8)
+
+            self.pygame_initialized = True
 
         if self.window is None and self.render_mode == "human":
             pygame.display.init()
@@ -635,17 +686,22 @@ class TankWar(gym.Env):
             self.window = pygame.display.set_mode(
                 (self.window_width, self.window_height)
             )
+
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
-        # Initialize and set the font
-        self.font = pygame.font.SysFont("Garamond", 25)
+        if not self.font_initialized:
+            # Initialize and set the font
+            self.font = pygame.font.SysFont("Garamond", 25)
+            self.font_initialized = True
 
         # Create a surface to hold all elements
         canvas = pygame.Surface((self.window_width, self.window_height))
         canvas.fill((255, 255, 255))
 
         # Set the background
+        # Image source: https://opengameart.org/content/backgrounds-topdown-games
+        # License: https://creativecommons.org/licenses/by/3.0/
         bg = pygame.image.load("./images/background.png")
         bg.set_alpha(200)
         canvas.blit(bg, (0, 0))
@@ -671,7 +727,7 @@ class TankWar(gym.Env):
         )
         canvas.blit(time_surf, (5, 25))
 
-        # Display the player's gun's remaining reloading time as a 
+        # Display the player's cannon's remaining reloading time as a 
         # shrinking rectangle
         if self.player.last_shoot != 0:
             reload_bar_len = max(
@@ -692,7 +748,7 @@ class TankWar(gym.Env):
             )
 
         if self.render_mode == "human":
-            # Draw the canvas to the PyGame window
+            # Draw the canvas to the pygame window
             self.window.blit(canvas, canvas.get_rect())
             pygame.event.pump()
             pygame.display.update()
@@ -707,4 +763,10 @@ class TankWar(gym.Env):
     def close(self) -> None:
         if self.window is not None:
             pygame.display.quit()
-            pygame.quit()
+
+        # Stop and quit the sound module
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
+
+        # Quit pygame
+        pygame.quit()
