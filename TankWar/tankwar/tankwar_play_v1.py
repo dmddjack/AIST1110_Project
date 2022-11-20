@@ -48,7 +48,7 @@ def main():
     env = gym.make(
         "gym_tankwar/TankWar-v0", 
         render_mode=render_mode, 
-        starting_hp=args.starting_hp
+        starting_hp=args.starting_hp,
     )
     env = gym.wrappers.TimeLimit(env, max_episode_steps=max_steps)
 
