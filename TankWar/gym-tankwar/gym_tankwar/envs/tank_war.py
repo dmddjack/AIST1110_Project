@@ -9,7 +9,8 @@ from .assets import Enemy, Heart, Player
 class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
-    def __init__(self, render_mode: str | None = None, starting_hp: int = 3) -> None:
+    def __init__(self, render_mode: str | None = None, 
+            starting_hp: int = 3) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
@@ -36,7 +37,8 @@ class TankWar(gym.Env):
 
         """
         Observation is a 51-element normalized list: the player's location, 
-        a max. of 4 enemies' locations, a max. of 20 enemy's bullets' locations, 
+        a max. of 4 enemies' locations, 
+        a max. of 20 enemy's bullets' locations, 
         player's gun's remaining reloading time
         """
         self.observation_space = spaces.Box(-1, 1, shape=(51,), dtype=np.float32)
@@ -48,17 +50,22 @@ class TankWar(gym.Env):
         self.action_space = spaces.Discrete(10)
 
         assert (
-            render_mode is None or render_mode in self.metadata["render_modes"]
-        ), f"Invalid render mode, has to be {', '.join(self.metadata['render_modes'])}"
+            render_mode is None or 
+            render_mode in self.metadata["render_modes"]
+        ), f"Invalid render mode, \
+                has to be {', '.join(self.metadata['render_modes'])}"
+
         self.render_mode = render_mode
 
         # The following will remain None iff "rgb_array" mode is used
         self.window = None
         self.clock = None
-        self.font = None
 
     def _get_obs(self) -> np.ndarray:
+        # Get the player's location
         player_loc = self.player.get_location()
+
+        # Get all enemies' locations
         if len(self.enemies) > 0:
             enemies_loc = np.concatenate(
                 [enemy.get_location() for enemy in self.enemies]
@@ -71,6 +78,8 @@ class TankWar(gym.Env):
             )
         else:
             enemies_loc = np.full((self.max_enemies * 2,), -1)
+
+        # Get all enemies' bullets' location
         if len(self.enemy_bullets) > 0:
             enemy_bullets_loc = np.concatenate(
                 [bullet.get_location() for bullet in self.enemy_bullets]
@@ -83,22 +92,34 @@ class TankWar(gym.Env):
             )
         else:
             enemy_bullets_loc = np.full((self.max_enemy_bullets * 2,), -1)
+
+        # Get the player's gun's remaining reloading time
         player_gun_reload_time = (
             0 if self.player.last_shoot == 0
             else max(
                 0,
-                1 - (self.steps - self.player.last_shoot) / (self.metadata["render_fps"] * 1),
+                1 
+                - (self.steps - self.player.last_shoot) 
+                / (self.metadata["render_fps"] * 1),
             )
         )
         player_gun_reload_time = np.array([player_gun_reload_time])
+
+        # Concatenate all NumPy arrays and convert the data type to np.float32
         obs = np.concatenate(
-            [player_loc, enemies_loc, enemy_bullets_loc, player_gun_reload_time],
+            [
+                player_loc, enemies_loc, enemy_bullets_loc, 
+                player_gun_reload_time
+            ],
             dtype=np.float32,
         )
+
         # print(obs)  # For testing purposes
+
         return obs
 
-    def reset(self, seed: int | None = None, options=None) -> tuple[np.ndarray, dict]:
+    def reset(self, seed: int | None = None, 
+            options=None) -> tuple[np.ndarray, dict]:
         # Seed self.np_random
         super().reset(seed=seed)
 
@@ -147,6 +168,7 @@ class TankWar(gym.Env):
         in the middle of the window.
         """
 
+        # Randomly generate a starting location
         player_start_x = int(
             self.np_random.integers(
                 self.window_width * 0.3, self.window_width * 0.7, size=1
@@ -157,7 +179,11 @@ class TankWar(gym.Env):
                 self.window_height * 0.3, self.window_height * 0.7, size=1
             )
         )
-        player_start_angle = self.np_random.choice((0, 90, 180, 270))
+
+        # Randomly generate a starting angle
+        player_start_angle = self.np_random.choice(self.angles)
+
+        # Create a new player
         self.player = Player(
             window_width=self.window_width,
             window_height=self.window_height,
@@ -166,6 +192,8 @@ class TankWar(gym.Env):
             start_angle=player_start_angle,
             speed=self._fps_to_speed(self.player_speed),
         )
+
+        # Add the new player to self.all_sprites
         self.all_sprites.add(self.player)
 
     def _score_to_enemy(self) -> tuple[int, int, float]:
@@ -201,10 +229,14 @@ class TankWar(gym.Env):
 
         enemy_n, enemy_speed, enemy_shoot_intvl = self._score_to_enemy()
         for _ in range(enemy_n - len(self.enemies)):
-            # Keep recreating an enemy until it does not collide with the player or other enemies
+            # Keep recreating an enemy until it does not collide 
+            # with the player or other enemies
             overlapped = True
             while overlapped:
-                new_enemy_start_angle = self.np_random.choice((0, 90, 180, 270))
+                # Randomly generate a starting angle
+                new_enemy_start_angle = self.np_random.choice(self.angles)
+
+                # Choose which border to start from based on the starting angle
                 if new_enemy_start_angle == 0:
                     enemy_start_x = int(
                         self.np_random.integers(0, self.window_width, size=1)
@@ -225,6 +257,8 @@ class TankWar(gym.Env):
                     enemy_start_y = int(
                         self.np_random.integers(0, self.window_height, size=1)
                     )
+
+                # Create a new enemy
                 enemy = Enemy(
                     window_width=self.window_width,
                     window_height=self.window_height,
@@ -235,11 +269,10 @@ class TankWar(gym.Env):
                     creation_step=self.steps,
                 )
 
-                # Check if the new enemy collides with the player or other enemies
-                if not (
-                    pygame.sprite.collide_rect(enemy, self.player)
-                    or pygame.sprite.spritecollideany(enemy, self.enemies)
-                ):
+                # Check if the new enemy collides with the player or 
+                # other enemies
+                if not (pygame.sprite.collide_rect(enemy, self.player) or 
+                        pygame.sprite.spritecollideany(enemy, self.enemies)):
                     overlapped = False
 
             # Add the new enemy to self.enemies and self.all_sprites
@@ -257,7 +290,7 @@ class TankWar(gym.Env):
 
         return 30 * original_speed // self.metadata["render_fps"]
 
-    def step(self, action):
+    def step(self, action: int | None):
         self.steps += 1
         reward = 0
         terminated = False
@@ -298,7 +331,10 @@ class TankWar(gym.Env):
                     new_angle=player_new_angle
                 )
 
-            """Step 2: Shoot a bullet from the player's location if player_shoot is true"""
+            """
+            Step 2: Shoot a bullet from the player's location if player_shoot 
+            is true
+            """
 
             if player_shoot:
                 self._player_shoot(angle=self.player.angle)
@@ -313,11 +349,11 @@ class TankWar(gym.Env):
             enemy.speed = enemy_speed
             enemy_dx, enemy_dy, enemy_new_angle = 0, 0, enemy.angle
 
-            # Rotates an enemy with an interval of not less than 3 seconds and a probability of 2% (based on a framerate of 30)
-            if (
-                self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 3
-                and self.np_random.random() < self._fps_to_prob(0.02)
-            ):
+            # Rotates an enemy with an interval of not less than 3 seconds 
+            # and a probability of 2% (based on a framerate of 30)
+            if (self.steps - enemy.last_rotate >= \
+                    self.metadata["render_fps"] * 3 and 
+                    self.np_random.random() < self._fps_to_prob(0.02)):
                 enemy_new_angle = self.np_random.choice(
                     [angle for angle in self.angles if angle != enemy.angle]
                 )
@@ -339,7 +375,8 @@ class TankWar(gym.Env):
                 new_angle=enemy_new_angle
             )
 
-            # Ensure the enemy does not stuck at the border by reversing its direction
+            # Ensure the enemy does not stuck at the border by 
+            # reversing its direction
             if enemy_touches_border:
                 enemy_new_angle = self.np_random.choice(enemy_correction_angles)
                 enemy.update(0, 0, enemy_new_angle)
@@ -348,18 +385,20 @@ class TankWar(gym.Env):
             # Shoot a bullet from the enemy's location
             self._enemy_shoot(enemy, enemy.angle, enemy_shoot_intvl)
 
-        """Step: 5 Handle situations where two enemies collide with each other"""
+        """
+        Step: 5 Handle situations where two enemies collide with 
+        each other
+        """
 
         enemy_collision = pygame.sprite.groupcollide(
             self.enemies, self.enemies, dokilla=False, dokillb=False
         )
-        for enemy in [
-            enemy
-            for enemies in enemy_collision.values()
-            if len(enemies) > 1
-            for enemy in enemies
-        ]:
-            # Reverse the directions of two enemies when they collide with each other
+        for enemy in [enemy
+                for enemies in enemy_collision.values()
+                if len(enemies) > 1
+                for enemy in enemies]:
+            # Reverse the directions of two enemies when they collide 
+            # with each other
             # enemy_old_angle = enemy.angle
             # if enemy_old_angle == 0:
             #     enemy.update(0, 1, 180)
@@ -379,18 +418,19 @@ class TankWar(gym.Env):
                 bullet.move()
 
                 # Remove the bullet if it is outside the window
-                if (
-                    bullet.rect.right < 0
-                    or bullet.rect.left > self.window_width
-                    or bullet.rect.bottom <= 0
-                    or bullet.rect.top >= self.window_height
-                ):
+                if (bullet.rect.right < 0 or 
+                        bullet.rect.left > self.window_width or 
+                        bullet.rect.bottom <= 0 or 
+                        bullet.rect.top >= self.window_height):
                     bullet.kill()
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
 
         for bullet in self.player_bullets:
-            if pygame.sprite.spritecollide(bullet, self.enemies, dokill=True):
+            if pygame.sprite.spritecollide(
+                    bullet, 
+                    self.enemies, 
+                    dokill=True):
                 bullet.kill()
                 reward += self.enemy_killed_reward
                 self.score += self.enemy_killed_reward
@@ -398,7 +438,10 @@ class TankWar(gym.Env):
         """Step 8: Remove the player's bullet if it hits an enemy's bullet"""
 
         for bullet in self.player_bullets:
-            if pygame.sprite.spritecollide(bullet, self.enemy_bullets, dokill=True):
+            if pygame.sprite.spritecollide(
+                    bullet, 
+                    self.enemy_bullets, 
+                    dokill=True):
                 bullet.kill()
 
         """
@@ -406,10 +449,14 @@ class TankWar(gym.Env):
         any of the enemies or any of the enemies' bullets
         """
 
-        if (
-            pygame.sprite.spritecollide(self.player, self.enemies, dokill=True)
-            or pygame.sprite.spritecollide(self.player, self.enemy_bullets, dokill=True)
-        ):
+        if (pygame.sprite.spritecollide(
+                self.player, 
+                self.enemies, 
+                dokill=True) or 
+                pygame.sprite.spritecollide(
+                    self.player, 
+                    self.enemy_bullets, 
+                    dokill=True)):
             reward += self.player_killed_reward
             self.hp -= 1
 
@@ -419,11 +466,13 @@ class TankWar(gym.Env):
             if self.hp == 0:
                 terminated = True
             else:
-                # Remove all enemies to ensure the player will not be killed at spawn
+                # Remove all enemies to ensure the player will not be killed 
+                # at spawn
                 for enemy in self.enemies:
                     enemy.kill()
 
-                # Remove all bullets to make the window look nice and ensure the player will not be killed at spawn
+                # Remove all bullets to make the window look nice and 
+                # ensure the player will not be killed at spawn
                 for bullets in (self.player_bullets, self.enemy_bullets):
                     for bullet in bullets:
                         bullet.kill()
@@ -459,11 +508,12 @@ class TankWar(gym.Env):
         The player can shoot at the beginning or for every one second.
         """
 
-        if (
-            self.player.last_shoot == 0
-            or self.steps - self.player.last_shoot >= self.metadata["render_fps"] * 1
-        ):
+        if (self.player.last_shoot == 0 or 
+                self.steps - self.player.last_shoot >= \
+                    self.metadata["render_fps"] * 1):
             self.player.last_shoot = self.steps
+
+            # Create a new bullet for the player
             player_bullet = self.player.bullet(
                 window_width=self.window_width,
                 window_height=self.window_height,
@@ -472,6 +522,9 @@ class TankWar(gym.Env):
                 angle=angle,
                 speed=self.player_speed + self._fps_to_speed(3),
             )
+
+            # Add the player's new bullet to self.player_bullets and 
+            # self.all_sprites
             self.player_bullets.add(player_bullet)
             self.all_sprites.add(player_bullet)
 
@@ -482,12 +535,14 @@ class TankWar(gym.Env):
         and a probability of 5% (based on a framerate on 30).
         """
 
-        if (
-            len(self.enemy_bullets) < self.max_enemy_bullets
-            and self.steps - enemy.last_shoot >= self.metadata["render_fps"] * interval
-            and self.np_random.random() < self._fps_to_prob(0.05)
-        ):
+        if (len(self.enemy_bullets) < self.max_enemy_bullets and 
+                self.steps - enemy.last_shoot >= \
+                    self.metadata["render_fps"] * interval and 
+                self.np_random.random() < self._fps_to_prob(0.05)):
+
             enemy.last_shoot = self.steps
+
+            # Create a new bullet for the enemy
             enemy_bullet = enemy.bullet(
                 window_width=self.window_width,
                 window_height=self.window_height,
@@ -496,6 +551,9 @@ class TankWar(gym.Env):
                 angle=angle,
                 speed=enemy.speed + self._fps_to_speed(2),
             )
+
+            # Add the enemy's new bullet to self.enemy_bullets and 
+            # self.all_sprites
             self.enemy_bullets.add(enemy_bullet)
             self.all_sprites.add(enemy_bullet)
 
@@ -504,7 +562,9 @@ class TankWar(gym.Env):
             return self._render_frame()
 
     def _render_frame(self) -> np.ndarray | None:
+        # Initialize PyGame
         pygame.init()
+
         if self.window is None and self.render_mode == "human":
             pygame.display.init()
             pygame.display.set_caption("Tank War")
@@ -513,6 +573,8 @@ class TankWar(gym.Env):
             )
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
+
+        # Initialize and set the font
         self.font = pygame.font.SysFont("Garamond", 25)
 
         # Create a surface to hold all elements
@@ -545,11 +607,14 @@ class TankWar(gym.Env):
         )
         canvas.blit(time_surf, (5, 25))
 
-        # Display the player's gun's remaining reloading time as a shrinking rectangle
+        # Display the player's gun's remaining reloading time as a 
+        # shrinking rectangle
         if self.player.last_shoot != 0:
             reload_bar_len = max(
                 0,
-                80 * (self.metadata["render_fps"] * 1 - (self.steps - self.player.last_shoot)) // self.metadata["render_fps"],
+                80 * (self.metadata["render_fps"] * 1 \
+                    - (self.steps - self.player.last_shoot)) 
+                // self.metadata["render_fps"],
             )
             pygame.draw.rect(
                 canvas,
