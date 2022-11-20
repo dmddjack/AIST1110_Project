@@ -89,8 +89,6 @@ class TankWar(gym.Env):
 
         # print(self.observation_space.sample())  # For testing purposes
 
-        print(np.random.uniform(low=self.observation_space.low, high=self.observation_space.high))
-
         """
         We have 10 actions: up, down, left, right, shoot, up and shoot, 
         down and shoot, left and shoot, right and shoot, do nothing
