@@ -675,7 +675,7 @@ class TankWar(gym.Env):
             # licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License.
             # Sound source: https://opengameart.org/content/9-explosion-sounds
             # License: http://creativecommons.org/licenses/by-sa/3.0/
-            self.explosion_sound = pygame.mixer.Sound("./audios/explosion09.wav")
+            self.explosion_sound = pygame.mixer.Sound("./audios/explosion.wav")
             self.explosion_sound.set_volume(0.8)
 
             self.pygame_initialized = True
