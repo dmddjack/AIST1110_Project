@@ -23,6 +23,9 @@ class TankWar(gym.Env):
         # The moving speed of the player based on a framerate of 30
         self.player_speed = 4
 
+        # The minimum interval between the player's last shot and next shot
+        self.player_shoot_intvl = 1
+
         # The maximum number of enemies
         self.max_enemies = 4  
 
@@ -36,12 +39,34 @@ class TankWar(gym.Env):
         self.player_killed_reward = -5
 
         """
-        Observation is a 51-element normalized list: the player's location, 
-        a max. of 4 enemies' locations, 
-        a max. of 20 enemy's bullets' locations, 
+        Observation is a 51-element list: the player's location, 
+        enemies' locations, enemy's bullets' locations, 
         player's gun's remaining reloading time
         """
-        self.observation_space = spaces.Box(-1, 1, shape=(51,), dtype=np.float32)
+        max_enemy_entities = self.max_enemies + self.max_enemy_bullets
+        self.observation_space = spaces.Box(
+            low=np.concatenate(
+                [
+                    np.array([-1, -1] * (1 + max_enemy_entities)), 
+                    np.array([0]),
+                ],
+            ),
+            high=np.concatenate(
+                [
+                    np.array(
+                        [self.window_width, self.window_height] \
+                            * (1 + max_enemy_entities),
+                    ), 
+                    np.array(
+                        [self.metadata["render_fps"] \
+                            * self.player_shoot_intvl]
+                    ),
+                ],
+            ),
+            dtype=int,
+        )
+
+        # print(self.observation_space.sample())  # For testing purposes
 
         """
         We have 10 actions: up, down, left, right, shoot, up and shoot, 
@@ -52,8 +77,7 @@ class TankWar(gym.Env):
         assert (
             render_mode is None or 
             render_mode in self.metadata["render_modes"]
-        ), f"Invalid render mode, \
-                has to be {', '.join(self.metadata['render_modes'])}"
+        )
 
         self.render_mode = render_mode
 
@@ -77,7 +101,7 @@ class TankWar(gym.Env):
                 constant_values=(-1,),
             )
         else:
-            enemies_loc = np.full((self.max_enemies * 2,), -1)
+            enemies_loc = np.full((self.max_enemies * 2,), -1, dtype=int)
 
         # Get all enemies' bullets' location
         if len(self.enemy_bullets) > 0:
@@ -91,19 +115,22 @@ class TankWar(gym.Env):
                 constant_values=(-1,),
             )
         else:
-            enemy_bullets_loc = np.full((self.max_enemy_bullets * 2,), -1)
+            enemy_bullets_loc = np.full(
+                (self.max_enemy_bullets * 2,), 
+                -1, 
+                dtype=int
+            )
 
         # Get the player's gun's remaining reloading time
         player_gun_reload_time = (
             0 if self.player.last_shoot == 0
             else max(
                 0,
-                1 
-                - (self.steps - self.player.last_shoot) 
-                / (self.metadata["render_fps"] * 1),
+                self.metadata["render_fps"] * self.player_shoot_intvl \
+                    - (self.steps - self.player.last_shoot),
             )
         )
-        player_gun_reload_time = np.array([player_gun_reload_time])
+        player_gun_reload_time = np.array([player_gun_reload_time], dtype=int)
 
         # Concatenate all NumPy arrays and convert the data type to np.float32
         obs = np.concatenate(
@@ -111,10 +138,10 @@ class TankWar(gym.Env):
                 player_loc, enemies_loc, enemy_bullets_loc, 
                 player_gun_reload_time
             ],
-            dtype=np.float32,
+            dtype=int,
         )
 
-        # print(obs)  # For testing purposes
+        print(obs)  # For testing purposes
 
         return obs
 
@@ -453,11 +480,13 @@ class TankWar(gym.Env):
         if (pygame.sprite.spritecollide(
                 self.player, 
                 self.enemies, 
-                dokill=True) or 
+                dokill=True,
+                ) or 
                 pygame.sprite.spritecollide(
                     self.player, 
                     self.enemy_bullets, 
-                    dokill=True)):
+                    dokill=True
+                )):
             reward += self.player_killed_reward
             self.hp -= 1
 
@@ -511,7 +540,7 @@ class TankWar(gym.Env):
 
         if (self.player.last_shoot == 0 or 
                 self.steps - self.player.last_shoot >= \
-                    self.metadata["render_fps"] * 1):
+                    self.metadata["render_fps"] * self.player_shoot_intvl):
             self.player.last_shoot = self.steps
 
             # Create a new bullet for the player
@@ -613,9 +642,9 @@ class TankWar(gym.Env):
         if self.player.last_shoot != 0:
             reload_bar_len = max(
                 0,
-                80 * (self.metadata["render_fps"] * 1 \
-                    - (self.steps - self.player.last_shoot)) 
-                // self.metadata["render_fps"],
+                80 * (self.metadata["render_fps"] * self.player_shoot_intvl \
+                    - (self.steps - self.player.last_shoot)) \
+                    // (self.metadata["render_fps"] * self.player_shoot_intvl),
             )
             pygame.draw.rect(
                 canvas,
