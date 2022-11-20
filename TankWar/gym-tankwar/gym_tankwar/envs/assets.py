@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import numpy as np
 import pygame
 
@@ -118,7 +120,10 @@ class _Bullet(_Movable):
 
 
 class _PlayerBullet(_Bullet):
+    # Image source: https://craftpix.net/freebies/free-2d-battle-tank-game-assets/
+    # License: https://craftpix.net/file-licenses/
     image_path = "./images/bullets/bullet_01.png"
+
     resize_ratio = 2
 
     def __init__(
@@ -142,7 +147,10 @@ class _PlayerBullet(_Bullet):
 
 
 class _EnemyBullet(_Bullet):
+    # Image source: https://craftpix.net/freebies/free-2d-battle-tank-game-assets/
+    # License: https://craftpix.net/file-licenses/
     image_path = "./images/bullets/bullet_02.png"
+
     resize_ratio = 1.5
 
     def __init__(
@@ -260,7 +268,10 @@ class _Tank(_Movable):
 
 
 class Player(_Tank):
+    # Image source: https://craftpix.net/freebies/free-2d-battle-tank-game-assets/
+    # License: https://craftpix.net/file-licenses/
     image_path = "./images/tank_01/tank_01_A.png"
+
     resize_ratio = 5.5
 
     def __init__(
@@ -286,7 +297,10 @@ class Player(_Tank):
 
 
 class Enemy(_Tank):
+    # Image source: https://craftpix.net/freebies/free-2d-battle-tank-game-assets/
+    # License: https://craftpix.net/file-licenses/
     image_path = "./images/tank_02/tank_02_A.png"
+
     resize_ratio = 4.4
 
     def __init__(
@@ -314,7 +328,10 @@ class Enemy(_Tank):
 
 
 class Heart(pygame.sprite.Sprite):
+    # Image source: https://opengameart.org/content/heart-1
+    # License: https://creativecommons.org/publicdomain/zero/1.0/
     image_path = "./images/heart.png"
+
     resize_ratio = 5
 
     def __init__(self, window_width: int, order: int) -> None:
