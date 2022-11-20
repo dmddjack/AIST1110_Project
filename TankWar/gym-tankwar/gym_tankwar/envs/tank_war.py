@@ -7,6 +7,8 @@ from gym import spaces
 
 from .assets import Enemy, Heart, Player
 
+CONT_OBS_SPACE = True  # For testing purposes
+
 
 class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
@@ -29,10 +31,10 @@ class TankWar(gym.Env):
         self.player_shoot_intvl = 1
 
         # The maximum number of enemies
-        self.max_enemies = 4  
+        self.max_enemies = 4
 
         # The maximum number of enemies' bullets
-        self.max_enemy_bullets = 20
+        self.max_enemy_bullets = 10
 
         # The reward when the player kills an enemy
         self.enemy_killed_reward = 1
@@ -40,54 +42,49 @@ class TankWar(gym.Env):
         # The reward when the player is killed by the enemies
         self.player_killed_reward = -5
 
-        # Observation is a 51-element list: the player's location, 
+        # Observation: the player's location, 
         # enemies' locations, enemy's bullets' locations, 
         # player's cannon's remaining reloading time
         max_enemy_entities = self.max_enemies + self.max_enemy_bullets
 
-        # Normalized observation space
-        # self.observation_space = spaces.Box(
-        #     low=np.concatenate(
-        #         [
-        #             np.array([-1, -1] * (1 + max_enemy_entities)), 
-        #             np.array([0]),
-        #         ],
-        #     ),
-        #     high=np.concatenate(
-        #         [
-        #             np.array(
-        #                 [1, 1] * (1 + max_enemy_entities),
-        #             ), 
-        #             np.array([1]),
-        #         ],
-        #     ),
-        #     dtype=np.float32,
-        # )
+        if CONT_OBS_SPACE:
+            # Normalized observation space
+            self.observation_space = spaces.Box(
+                low=0,
+                high=1,
+                shape=((1 + max_enemy_entities) * 3 + 1,), 
+                dtype=np.float32,
+            )
 
-        # Normal observation space
-        self.observation_space = spaces.Box(
-            low=np.concatenate(
-                [
-                    np.array([-1, -1] * (1 + max_enemy_entities)), 
-                    np.array([0]),
-                ],
-            ),
-            high=np.concatenate(
-                [
-                    np.array(
-                        [self.window_width, self.window_height] \
-                            * (1 + max_enemy_entities),
-                    ), 
-                    np.array(
-                        [self.metadata["render_fps"] \
-                            * self.player_shoot_intvl]
-                    ),
-                ],
-            ),
-            dtype=int,
-        )
+        else:
+            # Normal observation space
+            self.observation_space = spaces.Box(
+                low=np.concatenate(
+                    [
+                        np.array([0, 0, 0]), 
+                        np.array([-1, -1, -1] * max_enemy_entities), 
+                        np.array([0]),
+                    ],
+                ),
+                high=np.concatenate(
+                    [
+                        np.array(
+                            [
+                                self.window_width, 
+                                self.window_height, 
+                                self.angles[-1]
+                            ] * (1 + max_enemy_entities),
+                        ), 
+                        np.array(
+                            [self.metadata["render_fps"] \
+                                * self.player_shoot_intvl]
+                        ),
+                    ],
+                ),
+                dtype=int,
+            )
 
-        # print(self.observation_space.sample())  # For testing purposes]
+        # print(self.observation_space.sample())  # For testing purposes
 
         # We have 10 actions: up, down, left, right, shoot, up and shoot, 
         # down and shoot, left and shoot, right and shoot, do nothing
@@ -101,7 +98,9 @@ class TankWar(gym.Env):
         self.render_mode = render_mode
 
         self.pygame_initialized = False
-        self.font_initialized = False
+        
+        self.font = None
+        self.background = None
 
         # The following will remain None iff "rgb_array" mode is used
         self.window = None
@@ -109,44 +108,42 @@ class TankWar(gym.Env):
 
     def _get_obs(self) -> np.ndarray:
         # Get the player's location
-        player_loc = self.player.get_location()
+        player_obs = self.player.get_obs()
 
         # Get all enemies' locations
         if len(self.enemies) > 0:
-            enemies_loc = np.concatenate(
-                [enemy.get_location() for enemy in self.enemies]
+            enemies_obs = np.concatenate(
+                [enemy.get_obs() for enemy in self.enemies]
             )
-            enemies_loc = np.pad(
-                enemies_loc,
-                (0, self.max_enemies * 2 - len(enemies_loc)),
+            enemies_obs = np.pad(
+                enemies_obs,
+                (0, self.max_enemies * 3 - len(enemies_obs)),
                 "constant",
-                constant_values=(-1,),
+                constant_values=(0,) if CONT_OBS_SPACE else (-1,),
             )
         else:
-            enemies_loc = np.full(
-                (self.max_enemies * 2,), 
-                -1, 
-                # dtype=np.float32,
-                dtype=int,
+            enemies_obs = np.full(
+                (self.max_enemies * 3,), 
+                0 if CONT_OBS_SPACE else -1, 
+                dtype=np.float32 if CONT_OBS_SPACE else int,
             )
 
         # Get all enemies' bullets' location
         if len(self.enemy_bullets) > 0:
-            enemy_bullets_loc = np.concatenate(
-                [bullet.get_location() for bullet in self.enemy_bullets]
+            enemy_bullets_obs = np.concatenate(
+                [bullet.get_obs() for bullet in self.enemy_bullets]
             )
-            enemy_bullets_loc = np.pad(
-                enemy_bullets_loc,
-                (0, self.max_enemy_bullets * 2 - len(enemy_bullets_loc)),
+            enemy_bullets_obs = np.pad(
+                enemy_bullets_obs,
+                (0, self.max_enemy_bullets * 3 - len(enemy_bullets_obs)),
                 "constant",
-                constant_values=(-1,),
+                constant_values=(0,) if CONT_OBS_SPACE else (-1,),
             )
         else:
-            enemy_bullets_loc = np.full(
-                (self.max_enemy_bullets * 2,), 
-                -1, 
-                # dtype=np.float32, 
-                dtype=int,
+            enemy_bullets_obs = np.full(
+                (self.max_enemy_bullets * 3,), 
+                0 if CONT_OBS_SPACE else -1, 
+                dtype=np.float32 if CONT_OBS_SPACE else int,
             )
 
         # Get the player's cannon's remaining reloading time
@@ -154,26 +151,26 @@ class TankWar(gym.Env):
             0 if self.player.last_shoot == 0
             else max(
                 0,
-                # 1 - (self.steps - self.player.last_shoot) \
-                #     / (self.metadata["render_fps"] * self.player_shoot_intvl),
+                1 - (self.steps - self.player.last_shoot) \
+                    / (self.metadata["render_fps"] * self.player_shoot_intvl)
+                if CONT_OBS_SPACE 
+                else
                 self.metadata["render_fps"] * self.player_shoot_intvl \
                     - (self.steps - self.player.last_shoot),
             )
         )
         player_cannon_reload_time = np.array(
             [player_cannon_reload_time],
-            # dtype=np.float32,  
-            dtype=int
+            dtype=np.float32 if CONT_OBS_SPACE else int,
         )
 
         # Concatenate all NumPy arrays
         obs = np.concatenate(
             [
-                player_loc, enemies_loc, enemy_bullets_loc, 
+                player_obs, enemies_obs, enemy_bullets_obs, 
                 player_cannon_reload_time
             ],
-            # dtype=np.float32, 
-            dtype=int,
+            dtype=np.float32 if CONT_OBS_SPACE else int,
         )
 
         # print(obs)  # For testing purposes
@@ -230,7 +227,7 @@ class TankWar(gym.Env):
         in the middle of the window.
         """
 
-        # Randomly generate a starting location
+        # Randomly generate a starting location in the middle of the window
         player_start_x = int(
             self.np_random.integers(
                 self.window_width * 0.3, self.window_width * 0.7, size=1
@@ -358,8 +355,9 @@ class TankWar(gym.Env):
         reward = 0
         terminated = False
 
-        # Set the player's engine sound volume to normal
-        self.tank_engine_sound.set_volume(0.4)
+        if self.pygame_initialized:
+            # Set the player's engine sound volume to normal
+            self.tank_engine_sound.set_volume(0.4)
 
         if action is not None:
             """Step 1: Move the player according to the action"""
@@ -397,8 +395,9 @@ class TankWar(gym.Env):
                     new_angle=player_new_angle
                 )
 
-                # Make the player's engine sound louder
-                self.tank_engine_sound.set_volume(0.8)
+                if self.pygame_initialized:
+                    # Make the player's engine sound louder
+                    self.tank_engine_sound.set_volume(0.8)
 
             """
             Step 2: Shoot a bullet from the player's location if player_shoot 
@@ -506,8 +505,9 @@ class TankWar(gym.Env):
                 self.score += self.enemy_killed_reward
                 bullet.kill()
 
-                # Play the explosion sound effect
-                self.explosion_sound.play()
+                if self.pygame_initialized:
+                    # Play the explosion sound effect
+                    self.explosion_sound.play()
 
         """Step 8: Remove the player's bullet if it hits an enemy's bullet"""
 
@@ -539,8 +539,9 @@ class TankWar(gym.Env):
             # Kill the player
             self.player.kill()
 
-            # Play the explosion sound effect
-            self.explosion_sound.play()
+            if self.pygame_initialized:
+                # Play the explosion sound effect
+                self.explosion_sound.play()
 
             if self.hp == 0:
                 terminated = True
@@ -607,8 +608,9 @@ class TankWar(gym.Env):
             self.player_bullets.add(player_bullet)
             self.all_sprites.add(player_bullet)
 
-            # Play the cannon firing sound effect
-            self.cannon_fire_sound.play()
+            if self.pygame_initialized:
+                # Play the cannon firing sound effect
+                self.cannon_fire_sound.play()
 
     def _enemy_shoot(self, enemy: Enemy, angle: int, interval: int) -> None:
         """
@@ -690,21 +692,23 @@ class TankWar(gym.Env):
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
-        if not self.font_initialized:
-            # Initialize and set the font
+        if self.font is None:
+            # Initialize the font
             self.font = pygame.font.SysFont("Garamond", 25)
-            self.font_initialized = True
+
+        if self.background is None:
+            # Load the background
+            # Image source: https://opengameart.org/content/backgrounds-topdown-games
+            # License: https://creativecommons.org/licenses/by/3.0/
+            self.background = pygame.image.load("./images/background.png")
+            self.background.set_alpha(200)
 
         # Create a surface to hold all elements
         canvas = pygame.Surface((self.window_width, self.window_height))
         canvas.fill((255, 255, 255))
 
         # Set the background
-        # Image source: https://opengameart.org/content/backgrounds-topdown-games
-        # License: https://creativecommons.org/licenses/by/3.0/
-        bg = pygame.image.load("./images/background.png")
-        bg.set_alpha(200)
-        canvas.blit(bg, (0, 0))
+        canvas.blit(self.background, (0, 0))
 
         # Draw all sprites
         for sprite in self.all_sprites:
