@@ -3,11 +3,15 @@ import gym_tankwar
 import pygame
 from gym.utils import play
 
-"""Play the game in human-controlled mode"""
+# Play the game in human-controlled mode
 
 
 def main():
-    env = gym.make("gym_tankwar/TankWar-v0", render_mode="rgb_array", starting_hp=3)
+    env = gym.make(
+        "gym_tankwar/TankWar-v0", 
+        render_mode="rgb_array", 
+        starting_hp=3
+    )
 
     mapping = {
         (pygame.K_UP,): 0,
