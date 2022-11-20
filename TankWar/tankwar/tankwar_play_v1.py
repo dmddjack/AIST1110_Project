@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import gym
 import gym_tankwar
 import pygame
@@ -31,7 +33,7 @@ def _pressed_to_action(pressed_keys):
             action = 7
         if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
             action = 8
-            
+
     return action
 
 
