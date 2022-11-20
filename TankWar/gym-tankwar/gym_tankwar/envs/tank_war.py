@@ -44,6 +44,27 @@ class TankWar(gym.Env):
         player's gun's remaining reloading time
         """
         max_enemy_entities = self.max_enemies + self.max_enemy_bullets
+
+        # Normalized observation space
+        # self.observation_space = spaces.Box(
+        #     low=np.concatenate(
+        #         [
+        #             np.array([-1, -1] * (1 + max_enemy_entities)), 
+        #             np.array([0]),
+        #         ],
+        #     ),
+        #     high=np.concatenate(
+        #         [
+        #             np.array(
+        #                 [1, 1] * (1 + max_enemy_entities),
+        #             ), 
+        #             np.array([1]),
+        #         ],
+        #     ),
+        #     dtype=np.float32,
+        # )
+
+        # Normal observation space
         self.observation_space = spaces.Box(
             low=np.concatenate(
                 [
@@ -67,6 +88,8 @@ class TankWar(gym.Env):
         )
 
         # print(self.observation_space.sample())  # For testing purposes
+
+        print(np.random.uniform(low=self.observation_space.low, high=self.observation_space.high))
 
         """
         We have 10 actions: up, down, left, right, shoot, up and shoot, 
@@ -101,7 +124,12 @@ class TankWar(gym.Env):
                 constant_values=(-1,),
             )
         else:
-            enemies_loc = np.full((self.max_enemies * 2,), -1, dtype=int)
+            enemies_loc = np.full(
+                (self.max_enemies * 2,), 
+                -1, 
+                # dtype=np.float32,
+                dtype=int,
+            )
 
         # Get all enemies' bullets' location
         if len(self.enemy_bullets) > 0:
@@ -118,7 +146,8 @@ class TankWar(gym.Env):
             enemy_bullets_loc = np.full(
                 (self.max_enemy_bullets * 2,), 
                 -1, 
-                dtype=int
+                # dtype=np.float32, 
+                dtype=int,
             )
 
         # Get the player's gun's remaining reloading time
@@ -126,22 +155,29 @@ class TankWar(gym.Env):
             0 if self.player.last_shoot == 0
             else max(
                 0,
+                # 1 - (self.steps - self.player.last_shoot) \
+                #     / (self.metadata["render_fps"] * self.player_shoot_intvl),
                 self.metadata["render_fps"] * self.player_shoot_intvl \
                     - (self.steps - self.player.last_shoot),
             )
         )
-        player_gun_reload_time = np.array([player_gun_reload_time], dtype=int)
+        player_gun_reload_time = np.array(
+            [player_gun_reload_time],
+            # dtype=np.float32,  
+            dtype=int
+        )
 
-        # Concatenate all NumPy arrays and convert the data type to np.float32
+        # Concatenate all NumPy arrays
         obs = np.concatenate(
             [
                 player_loc, enemies_loc, enemy_bullets_loc, 
                 player_gun_reload_time
             ],
+            # dtype=np.float32, 
             dtype=int,
         )
 
-        print(obs)  # For testing purposes
+        # print(obs)  # For testing purposes
 
         return obs
 
