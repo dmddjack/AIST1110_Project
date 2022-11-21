@@ -59,14 +59,15 @@ def main():
 
     observation, info = env.reset(seed=args.seed)
 
-    episode = 0
+    episode = 1
     success_episodes = 0
     running = True
     step = 0
     score = 0
     total_score = 0
+    total_steps = 0
 
-    while running and episode < episodes:
+    while running and episode <= episodes:
         if args.mode == "human":
             # Detect pygame events for quiting the game
             for event in pygame.event.get():
@@ -80,31 +81,34 @@ def main():
             action = _pressed_to_action(pressed_keys)
             if action == None:
                 running = False
-
         else:
             action = env.action_space.sample()  # random
 
         if action is not None:
             observation, reward, done, truncated, info = env.step(action)
+
             step += 1
             score += reward
+
             if done or truncated:
                 observation, info = env.reset(seed=args.seed)
 
                 # Print episode's final result
                 if done:
                     print(
-                        f"Episode {episode:<{len(str(episodes))}d} " \
-                            f"succeeded in {step:<{len(str(max_steps))}d} " \
+                        f"Episode {episode:<5d} " \
+                            f"succeeded in {step:<5d} " \
                             f"steps ...\tScore = {score}"
                     )
                     success_episodes += 1
                 else:
                     print(
-                        f"Episode {episode:<{len(str(episodes))}d} " \
+                        f"Episode {episode:<5d} " \
                             f"truncated ...\t\t\tScore = {score}"
                     )
+
                 episode += 1
+                total_steps += step
                 step = 0
                 total_score += score
                 score = 0
@@ -112,7 +116,8 @@ def main():
     if episode > 0:
         # Print success rate of all episodes
         print(
-            f"Success rate = {success_episodes/episode:.2f}\t" \
+            f"Success rate = {success_episodes/episode:.2f}    " \
+                f"Average steps = {total_steps//episode}    " \
                 f"Average score = {total_score/episode:.2f}"
         )
 
