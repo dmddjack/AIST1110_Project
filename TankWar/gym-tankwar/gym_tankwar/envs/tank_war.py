@@ -239,7 +239,7 @@ class TankWar(gym.Env):
         else:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.2
 
-        return enemy_n, self._fps_to_speed(enemy_speed), enemy_shoot_intvl
+        return min(enemy_n, self.max_enemies), self._fps_to_speed(enemy_speed), enemy_shoot_intvl
 
     def _create_enemy(self) -> tuple[int, float]:
         """
