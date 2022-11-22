@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import time
+
 import gym
 import gym_tankwar
 import pygame
@@ -85,16 +87,20 @@ def main():
             action = env.action_space.sample()  # random
 
         if action is not None:
-            observation, reward, done, truncated, info = env.step(action)
+            observation, reward, terminated, truncated, info = env.step(action)
 
             step += 1
             score += reward
 
-            if done or truncated:
+            if terminated or truncated:
+                # Sleep for a while in "human" mode if the episode is finished
+                # if render_mode == "human":
+                #     time.sleep(1.0)
+
                 observation, info = env.reset(seed=args.seed)
 
-                # Print episode's final result
-                if done:
+                # Print the episode's final result
+                if terminated:
                     print(
                         f"Episode {episode:<5d} " \
                             f"succeeded in {step:<5d} " \
