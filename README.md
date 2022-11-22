@@ -42,7 +42,7 @@ Project Name: Tank War
 ## TO-DO
 - [ ] Handle situations when different enemies touch one another \
   ***The current handling method is to kill both enemies. It would be better to reverse their directions.***
-- [ ] Use Q-table or DQN to train a model
+- [ ] Use DQN to train a model
 
 ## Ideas
 - [ ] Difficulty
