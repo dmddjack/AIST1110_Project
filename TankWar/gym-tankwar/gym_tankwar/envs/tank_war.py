@@ -226,23 +226,18 @@ class TankWar(gym.Env):
         of the enemies.
         """
 
-        enemy_n, enemy_speed, enemy_shoot_intvl = 0, 0, 0
-        if self.score < 5 * self.enemy_killed_reward:
+        if self.score < 5:
             enemy_n, enemy_speed, enemy_shoot_intvl = 1, 2, 2
-        elif self.score < 10 * self.enemy_killed_reward:
-            enemy_n, enemy_speed, enemy_shoot_intvl = 1, 3, 2
-        elif self.score < 15 * self.enemy_killed_reward:
+        elif self.score < 10:
             enemy_n, enemy_speed, enemy_shoot_intvl = 2, 2, 2
-        elif self.score < 20 * self.enemy_killed_reward:
-            enemy_n, enemy_speed, enemy_shoot_intvl = 2, 3, 2
-        elif self.score < 25 * self.enemy_killed_reward:
+        elif self.score < 15:
             enemy_n, enemy_speed, enemy_shoot_intvl = 3, 2, 1.5
-        elif self.score < 30 * self.enemy_killed_reward:
+        elif self.score < 20:
             enemy_n, enemy_speed, enemy_shoot_intvl = 3, 3, 1.5
-        elif self.score < 35 * self.enemy_killed_reward:
-            enemy_n, enemy_speed, enemy_shoot_intvl = 4, 2, 1.5
-        else:
+        elif self.score < 25:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.5
+        else:
+            enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.2
 
         return enemy_n, self._fps_to_speed(enemy_speed), enemy_shoot_intvl
 
@@ -467,7 +462,7 @@ class TankWar(gym.Env):
                     self.enemies, 
                     dokill=True):
                 reward += self.enemy_killed_reward
-                self.score += self.enemy_killed_reward
+                self.score += 1
                 bullet.kill()
 
                 if self.pygame_initialized:
@@ -484,8 +479,9 @@ class TankWar(gym.Env):
                 bullet.kill()
 
         """
-        Step 9: Terminate the episode if the player has collided with 
-        any of the enemies or any of the enemies' bullets
+        Step 9: Deduct 1 HP if the player has collided with 
+        any of the enemies or any of the enemies' bullets, terminate the 
+        episode if self.hp == 0
         """
 
         if (pygame.sprite.spritecollide(
@@ -527,6 +523,14 @@ class TankWar(gym.Env):
 
             # Remove the leftmost heart
             self.hearts.sprites()[-1].kill()
+
+        """
+        Step 10: Terminate the episode if self.score reaches a 
+        predefined number
+        """
+
+        if self.score >= 26:
+            terminated = True
 
         obs = self._get_obs()
 
