@@ -40,6 +40,7 @@ Project Name: Tank War
 1. Press "q" or "Escape" to quit (except tankwar_play_v2.py)
 
 ## TO-DO
+- [ ] Design a better algorithm for _score_to_enemy()
 - [ ] Handle situations when different enemies touch one another \
   ***The current handling method is to kill both enemies. It would be better to reverse their directions.***
 - [ ] Use Q-table or DQN to train a model
@@ -50,3 +51,15 @@ Project Name: Tank War
 - [ ] Animations
 - [ ] Multiple scenes
 - [ ] Power ups
+
+## Report
+- Genre of your game
+- How to play your game?
+    - Goal of the game
+    - What actions to be done by the human player?
+- How to train your agent?
+- How to test your agent?
+- UML class diagram show the design of your classes (only essential ones if too many)
+- Clear specification of game state and action
+- List and explain the command-line arguments for each program
+- Experimental data charts (produced by Matplotlib)
