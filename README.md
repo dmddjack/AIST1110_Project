@@ -60,7 +60,7 @@ Project Name: Tank War
 ### Content
 - Genre
 - How to play?
-    - Installing of the environment
+    - Installation of the environment
     - Goal of the game
     - Different stages
     - What actions to be done by the human player?
