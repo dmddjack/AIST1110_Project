@@ -524,14 +524,6 @@ class TankWar(gym.Env):
             # Remove the leftmost heart
             self.hearts.sprites()[-1].kill()
 
-        """
-        Step 10: Terminate the episode if self.score reaches a 
-        predefined number
-        """
-
-        if self.score >= 26:
-            terminated = True
-
         obs = self._get_obs()
 
         # Create a placeholder for additional information
