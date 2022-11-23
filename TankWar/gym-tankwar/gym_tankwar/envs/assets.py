@@ -49,7 +49,7 @@ class _Movable(pygame.sprite.Sprite):
         # Get the Rect of the Surface
         self.rect = self.surf.get_rect(center=(start_x, start_y))
 
-    def get_obs(self) -> np.ndarray:
+    def get_observation(self) -> np.ndarray:
         """A function that returns the movable's location."""
 
         return np.array(
