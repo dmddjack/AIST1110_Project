@@ -43,16 +43,13 @@ def main():
     render_mode = args.mode
     if render_mode == "human_rand":
         render_mode = "human"
-
-    episodes = args.episodes
-    max_steps = args.max_steps
-
+        
     env = gym.make(
         "gym_tankwar/TankWar-v0", 
         render_mode=render_mode, 
         starting_hp=args.starting_hp,
     )
-    env = gym.wrappers.TimeLimit(env, max_episode_steps=max_steps)
+    env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
 
     if args.fps is not None:
         env.metadata["render_fps"] = args.fps
@@ -69,7 +66,7 @@ def main():
     total_score = 0
     total_steps = 0
 
-    while running and episode <= episodes:
+    while running and episode <= args.episodes:
         if args.mode == "human":
             # Detect pygame events for quiting the game
             for event in pygame.event.get():
