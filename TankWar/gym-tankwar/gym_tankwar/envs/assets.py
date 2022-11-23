@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 
+import os
+
 import numpy as np
 import pygame
+
+# Code source: https://stackoverflow.com/questions/595305/how-do-i-get-the-path-of-the-python-script-i-am-running-in
+images_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
+audios_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audios")
 
 
 class _Movable(pygame.sprite.Sprite):
@@ -43,19 +49,16 @@ class _Movable(pygame.sprite.Sprite):
         # Get the Rect of the Surface
         self.rect = self.surf.get_rect(center=(start_x, start_y))
 
-    def get_location(self) -> np.ndarray:
+    def get_observation(self) -> np.ndarray:
         """A function that returns the movable's location."""
 
-        # return np.array(
-        #     (
-        #         self.rect.center[0] / self.window_width, 
-        #         self.rect.center[1] / self.window_height,
-        #     ),
-        #     dtype=np.float32,
-        # ) 
         return np.array(
-            (self.rect.center[0], self.rect.center[1]),
-            dtype=int,
+            (
+                self.rect.center[0] / self.window_width, 
+                self.rect.center[1] / self.window_height, 
+                self.angle / 360, 
+            ),
+            dtype=np.float32,
         )
 
 
@@ -122,7 +125,7 @@ class _Bullet(_Movable):
 class _PlayerBullet(_Bullet):
     # Image source: https://craftpix.net/freebies/free-2d-battle-tank-game-assets/
     # License: https://craftpix.net/file-licenses/
-    image_path = "./images/bullets/bullet_01.png"
+    image_path = os.path.join(images_path, "bullets/bullet_01.png")
 
     resize_ratio = 2
 
@@ -149,7 +152,7 @@ class _PlayerBullet(_Bullet):
 class _EnemyBullet(_Bullet):
     # Image source: https://craftpix.net/freebies/free-2d-battle-tank-game-assets/
     # License: https://craftpix.net/file-licenses/
-    image_path = "./images/bullets/bullet_02.png"
+    image_path = os.path.join(images_path, "bullets/bullet_02.png")
 
     resize_ratio = 1.5
 
@@ -270,7 +273,7 @@ class _Tank(_Movable):
 class Player(_Tank):
     # Image source: https://craftpix.net/freebies/free-2d-battle-tank-game-assets/
     # License: https://craftpix.net/file-licenses/
-    image_path = "./images/tank_01/tank_01_A.png"
+    image_path = os.path.join(images_path, "tank_01/tank_01_A.png")
 
     resize_ratio = 5.5
 
@@ -299,7 +302,7 @@ class Player(_Tank):
 class Enemy(_Tank):
     # Image source: https://craftpix.net/freebies/free-2d-battle-tank-game-assets/
     # License: https://craftpix.net/file-licenses/
-    image_path = "./images/tank_02/tank_02_A.png"
+    image_path = os.path.join(images_path, "tank_02/tank_02_A.png")
 
     resize_ratio = 4.4
 
@@ -324,18 +327,20 @@ class Enemy(_Tank):
             image_path=self.image_path,
             resize_ratio=self.resize_ratio,
         )
+
         self.last_rotate = creation_step
 
 
 class Heart(pygame.sprite.Sprite):
     # Image source: https://opengameart.org/content/heart-1
     # License: https://creativecommons.org/publicdomain/zero/1.0/
-    image_path = "./images/heart.png"
+    image_path = os.path.join(images_path, "heart.png")
 
     resize_ratio = 5
 
     def __init__(self, window_width: int, order: int) -> None:
         super().__init__()
+
         self.surf = pygame.image.load(self.image_path)
         self.surf.set_alpha(256)
         self.surf = pygame.transform.scale(
@@ -351,3 +356,36 @@ class Heart(pygame.sprite.Sprite):
                 self.surf.get_height() // 2 + 5,
             )
         )
+
+    
+class Background(pygame.sprite.Sprite):
+    # Image source: https://opengameart.org/content/backgrounds-topdown-games
+    # License: https://creativecommons.org/licenses/by/3.0/
+    image_path = os.path.join(images_path, "background.png")
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.surf = pygame.image.load(self.image_path)
+        self.surf.set_alpha(200)
+
+
+class Audios:
+    # Sound source: https://opengameart.org/content/war
+    # License: https://creativecommons.org/publicdomain/zero/1.0/
+    background_music = os.path.join(audios_path, "background_music.wav")
+
+    # Sound source: https://opengameart.org/content/engine-loop-heavy-vehicletank
+    # License 1: https://creativecommons.org/licenses/by/3.0/
+    # License 2: https://www.gnu.org/licenses/gpl-3.0.html
+    tank_engine_sound = os.path.join(audios_path, "tank_engine.ogg")
+
+    # Sound source: https://opengameart.org/content/cannon-fire
+    # License: https://creativecommons.org/publicdomain/zero/1.0/
+    cannon_fire_sound = os.path.join(audios_path, "cannon_fire.ogg")
+
+    # This work, made by Unnamed (Viktor.Hahn@web.de), is
+    # licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License.
+    # Sound source: https://opengameart.org/content/9-explosion-sounds
+    # License: http://creativecommons.org/licenses/by-sa/3.0/
+    explosion_sound = os.path.join(audios_path, "explosion.wav")

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import time
+
 import gym
 import gym_tankwar
 import pygame
@@ -41,16 +43,13 @@ def main():
     render_mode = args.mode
     if render_mode == "human_rand":
         render_mode = "human"
-
-    episodes = args.episodes
-    max_steps = args.max_steps
-
+        
     env = gym.make(
         "gym_tankwar/TankWar-v0", 
         render_mode=render_mode, 
-        starting_hp=args.starting_hp
+        starting_hp=args.starting_hp,
     )
-    env = gym.wrappers.TimeLimit(env, max_episode_steps=max_steps)
+    env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
 
     if args.fps is not None:
         env.metadata["render_fps"] = args.fps
@@ -59,14 +58,15 @@ def main():
 
     observation, info = env.reset(seed=args.seed)
 
-    episode = 0
+    episode = 1
     success_episodes = 0
     running = True
     step = 0
     score = 0
     total_score = 0
+    total_steps = 0
 
-    while running and episode < episodes:
+    while running and episode <= args.episodes:
         if args.mode == "human":
             # Detect pygame events for quiting the game
             for event in pygame.event.get():
@@ -80,31 +80,38 @@ def main():
             action = _pressed_to_action(pressed_keys)
             if action == None:
                 running = False
-
         else:
             action = env.action_space.sample()  # random
 
         if action is not None:
-            observation, reward, done, truncated, info = env.step(action)
+            observation, reward, terminated, truncated, info = env.step(action)
+
             step += 1
             score += reward
-            if done or truncated:
+
+            if terminated or truncated:
+                # Sleep for a while in "human" mode if the episode is finished
+                # if render_mode == "human":
+                #     time.sleep(1.0)
+
                 observation, info = env.reset(seed=args.seed)
 
-                # Print episode's final result
-                if done:
+                # Print the episode's final result
+                if terminated:
                     print(
-                        f"Episode {episode:<{len(str(episodes))}d} " \
-                            f"succeeded in {step:<{len(str(max_steps))}d} " \
+                        f"Episode {episode:<5d} " \
+                            f"succeeded in {step:<5d} " \
                             f"steps ...\tScore = {score}"
                     )
                     success_episodes += 1
                 else:
                     print(
-                        f"Episode {episode:<{len(str(episodes))}d} " \
+                        f"Episode {episode:<5d} " \
                             f"truncated ...\t\t\tScore = {score}"
                     )
+
                 episode += 1
+                total_steps += step
                 step = 0
                 total_score += score
                 score = 0
@@ -112,7 +119,8 @@ def main():
     if episode > 0:
         # Print success rate of all episodes
         print(
-            f"Success rate = {success_episodes/episode:.2f}\t" \
+            f"Success rate = {success_episodes/episode:.2f}    " \
+                f"Average steps = {total_steps//episode}    " \
                 f"Average score = {total_score/episode:.2f}"
         )
 

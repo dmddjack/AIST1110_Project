@@ -5,6 +5,8 @@ import gym_tankwar
 import pygame
 from gym.utils import play
 
+from cmdargs import args
+
 # Play the game in human-controlled mode
 
 
@@ -12,7 +14,7 @@ def main():
     env = gym.make(
         "gym_tankwar/TankWar-v0", 
         render_mode="rgb_array", 
-        starting_hp=3
+        starting_hp=args.starting_hp
     )
 
     mapping = {
@@ -36,7 +38,13 @@ def main():
         (pygame.NOEVENT,): 9,
     }
 
-    play.play(env, keys_to_action=mapping, noop=None, fps=30)
+    play.play(
+        env=env, 
+        fps=args.fps, 
+        keys_to_action=mapping, 
+        seed=args.seed, 
+        noop=None
+    )
 
 
 if __name__ == "__main__":
