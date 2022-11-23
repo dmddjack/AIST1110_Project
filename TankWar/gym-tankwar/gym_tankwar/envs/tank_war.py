@@ -75,23 +75,23 @@ class TankWar(gym.Env):
         self.window = None
         self.clock = None
 
-    def _get_obs(self) -> np.ndarray:
+    def _get_observation(self) -> np.ndarray:
         # Get the player's location
-        player_obs = self.player.get_obs()
+        player_observation = self.player.get_observation()
 
         # Get all enemies' locations
         if len(self.enemies) > 0:
-            enemies_obs = np.concatenate(
-                [enemy.get_obs() for enemy in self.enemies]
+            enemies_observation = np.concatenate(
+                [enemy.get_observation() for enemy in self.enemies]
             )
-            enemies_obs = np.pad(
-                enemies_obs,
-                (0, self.max_enemies * 3 - len(enemies_obs)),
+            enemies_observation = np.pad(
+                enemies_observation,
+                (0, self.max_enemies * 3 - len(enemies_observation)),
                 "constant",
                 constant_values=(0,),
             )
         else:
-            enemies_obs = np.full(
+            enemies_observation = np.full(
                 (self.max_enemies * 3,), 
                 0, 
                 dtype=np.float32,
@@ -99,17 +99,17 @@ class TankWar(gym.Env):
 
         # Get all enemies' bullets' location
         if len(self.enemy_bullets) > 0:
-            enemy_bullets_obs = np.concatenate(
-                [bullet.get_obs() for bullet in self.enemy_bullets]
+            enemy_bullets_observation = np.concatenate(
+                [bullet.get_observation() for bullet in self.enemy_bullets]
             )
-            enemy_bullets_obs = np.pad(
-                enemy_bullets_obs,
-                (0, self.max_enemy_bullets * 3 - len(enemy_bullets_obs)),
+            enemy_bullets_observation = np.pad(
+                enemy_bullets_observation,
+                (0, self.max_enemy_bullets * 3 - len(enemy_bullets_observation)),
                 "constant",
                 constant_values=(0,),
             )
         else:
-            enemy_bullets_obs = np.full(
+            enemy_bullets_observation = np.full(
                 (self.max_enemy_bullets * 3,), 
                 0, 
                 dtype=np.float32,
@@ -130,17 +130,17 @@ class TankWar(gym.Env):
         )
 
         # Concatenate all NumPy arrays
-        obs = np.concatenate(
+        observation = np.concatenate(
             [
-                player_obs, enemies_obs, enemy_bullets_obs, 
+                player_observation, enemies_observation, enemy_bullets_observation, 
                 player_cannon_reload_time
             ],
             dtype=np.float32,
         )
 
-        # print(obs)  # For testing purposes
+        # print(observation)  # For testing purposes
 
-        return obs
+        return observation
 
     def reset(self, seed: int | None = None, 
             options=None) -> tuple[np.ndarray, dict]:
@@ -176,7 +176,7 @@ class TankWar(gym.Env):
             heart = Heart(self.window_width, i)
             self.hearts.add(heart)
 
-        obs = self._get_obs()
+        observation = self._get_observation()
 
         # Create a placeholder for additional information
         info = {}
@@ -184,7 +184,7 @@ class TankWar(gym.Env):
         if self.render_mode == "human":
             self._render_frame()
 
-        return obs, info
+        return observation, info
 
     def _create_player(self) -> None:
         """
@@ -524,7 +524,7 @@ class TankWar(gym.Env):
             # Remove the leftmost heart
             self.hearts.sprites()[-1].kill()
 
-        obs = self._get_obs()
+        observation = self._get_observation()
 
         # Create a placeholder for additional information
         info = {}
@@ -532,7 +532,7 @@ class TankWar(gym.Env):
         if self.render_mode == "human":
             self._render_frame()
 
-        return obs, reward, terminated, False, info
+        return observation, reward, terminated, False, info
 
     def _fps_to_prob(self, original_prob: float) -> float:
         """
