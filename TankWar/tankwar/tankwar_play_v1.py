@@ -48,8 +48,13 @@ def main():
         "gym_tankwar/TankWar-v0", 
         render_mode=render_mode, 
         starting_hp=args.starting_hp,
+        window_width = args.window_width, 
+        window_height = args.window_height, 
+        max_enemies = args.max_enemies,
     )
-    env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
+
+    if args.mode != "human":
+        env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
 
     if args.fps is not None:
         env.metadata["render_fps"] = args.fps
