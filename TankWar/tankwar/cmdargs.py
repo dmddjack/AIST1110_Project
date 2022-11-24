@@ -34,7 +34,7 @@ parser.add_argument("-teste", "--test_episodes", type=int,
                     default=100)
 parser.add_argument("-ms", "--max_steps", type=int, 
                     help="The maximum number of steps in an episode", 
-                    default=3600)
+                    default=5400)
 parser.add_argument("-fps", "--fps", type=int, 
                     help="The rendering speed in frames per second", 
                     choices=range(15, 61), metavar="[15-60]", 
