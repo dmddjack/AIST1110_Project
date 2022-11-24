@@ -12,12 +12,21 @@ class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
     def __init__(self, render_mode: str | None = None, 
-            starting_hp: int = 3) -> None:
+            starting_hp: int = 3, 
+            window_width: int = 600, 
+            window_height: int = 400, 
+            max_enemies: int = 4) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
         # The size of the pygame window
-        self.window_width, self.window_height = 600, 400
+        self.window_width, self.window_height = window_width, window_height
+
+        # The maximum number of enemies
+        self.max_enemies = max_enemies
+
+        # The maximum number of enemies' bullets
+        self.max_enemy_bullets = max_enemies * 3
 
         # All possible angles of the tanks and bullets
         self.angles = (0, 90, 180, 270)
@@ -28,28 +37,19 @@ class TankWar(gym.Env):
         # The minimum interval between the player's last shot and next shot
         self.player_shoot_intvl = 1
 
-        # The maximum number of enemies
-        self.max_enemies = 4
-
-        # The maximum number of enemies' bullets
-        self.max_enemy_bullets = 10
-
         # The reward when the player kills an enemy
         self.enemy_killed_reward = 1
 
         # The reward when the player is killed by the enemies
         self.player_killed_reward = -5
 
-        # Observation: the player's location, 
+        # Normalized observation: the player's location, 
         # enemies' locations, enemy's bullets' locations, 
         # player's cannon's remaining reloading time
-        max_enemy_entities = self.max_enemies + self.max_enemy_bullets
-
-        # Normalized observation space
         self.observation_space = spaces.Box(
             low=0,
             high=1,
-            shape=((1 + max_enemy_entities) * 3 + 1,), 
+            shape=((1 + self.max_enemies + self.max_enemy_bullets) * 3 + 1,), 
             dtype=np.float32,
         )
 
@@ -76,41 +76,41 @@ class TankWar(gym.Env):
         self.clock = None
 
     def _get_observation(self) -> np.ndarray:
-        # Get the player's location
+        # Get the player's observation
         player_observation = self.player.get_observation()
 
-        # Get all enemies' locations
+        # Get all enemies' observation
         if len(self.enemies) > 0:
             enemies_observation = np.concatenate(
                 [enemy.get_observation() for enemy in self.enemies]
             )
             enemies_observation = np.pad(
                 enemies_observation,
-                (0, self.max_enemies * 3 - len(enemies_observation)),
+                (0, 4 * 3 - len(enemies_observation)), 
                 "constant",
                 constant_values=(0,),
             )
         else:
             enemies_observation = np.full(
-                (self.max_enemies * 3,), 
+                (4 * 3,), 
                 0, 
                 dtype=np.float32,
             )
 
-        # Get all enemies' bullets' location
+        # Get all enemies' bullets' observation
         if len(self.enemy_bullets) > 0:
             enemy_bullets_observation = np.concatenate(
                 [bullet.get_observation() for bullet in self.enemy_bullets]
             )
             enemy_bullets_observation = np.pad(
                 enemy_bullets_observation,
-                (0, self.max_enemy_bullets * 3 - len(enemy_bullets_observation)),
+                (0, 4 * 3 * 3 - len(enemy_bullets_observation)),
                 "constant",
                 constant_values=(0,),
             )
         else:
             enemy_bullets_observation = np.full(
-                (self.max_enemy_bullets * 3,), 
+                (4 * 3 * 3,), 
                 0, 
                 dtype=np.float32,
             )
@@ -524,6 +524,10 @@ class TankWar(gym.Env):
             # Remove the leftmost heart
             self.hearts.sprites()[-1].kill()
 
+        """Step 10: Terminate the episode if self.score >= 26"""
+        # if self.score >= 26:
+        #     terminated = True
+        
         observation = self._get_observation()
 
         # Create a placeholder for additional information
