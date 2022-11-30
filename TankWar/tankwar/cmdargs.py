@@ -8,18 +8,6 @@ parser.add_argument("-sh", "--starting_hp", type=int,
                     help="The starting HP of the player",
                     choices=range(1, 11), metavar="[1-10]",
                     default=3)
-parser.add_argument("-ww", "--window_width", type=int,
-                    help="The width of the pygame window",
-                    choices=range(450, 601), metavar="[450-600]",
-                    default=600)
-parser.add_argument("-wh", "--window_height", type=int,
-                    help="The height of the pygame window",
-                    choices=range(300, 401), metavar="[300-400]",
-                    default=400)
-parser.add_argument("-me", "--max_enemies", type=int,
-                    help="The maximum number of enemies",
-                    choices=range(1, 5), metavar="[1-4]",
-                    default=4)
 parser.add_argument("-s", "--seed", type=int, 
                     help="The seed for random number generator",
                     default=None)
