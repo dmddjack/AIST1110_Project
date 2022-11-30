@@ -128,8 +128,8 @@ class RLModel:
     def _train(self, terminated):
         learning_rate = 0.7
         discount_factor = 0.618
-        batch_size = 256
-        min_replay_size = 5000
+        batch_size = 128
+        min_replay_size = 10_000
 
         if len(self.replay_memory) < min_replay_size:
             return
@@ -159,7 +159,7 @@ class RLModel:
     #     return model.predict(state.reshape([1, state.shape[0]]))[0]
 
     def save(self, episode: int):
-        self.target_model.save(f"models/model.h5")
+        self.target_model.save(f"models/model_{episode}.h5")
 
     def plot(self):
         fig = plt.figure()
@@ -180,13 +180,16 @@ class RLModel:
 
 
 def main():
+    # Make a directory to store target models if necessary
+    if not os.path.isdir("models"):
+        os.mkdir("models")
+
+    assert args.mode != "human_rand"
+
     env = gym.make(
         "gym_tankwar/TankWar-v0", 
         render_mode=args.mode, 
-        starting_hp=args.starting_hp, 
-        window_width=args.window_width, 
-        window_height=args.window_height, 
-        max_enemies=args.max_enemies,
+        starting_hp=args.starting_hp,
     )
     env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
 
