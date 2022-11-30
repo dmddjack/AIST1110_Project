@@ -48,9 +48,6 @@ def main():
         "gym_tankwar/TankWar-v0", 
         render_mode=render_mode, 
         starting_hp=args.starting_hp,
-        window_width = args.window_width, 
-        window_height = args.window_height, 
-        max_enemies = args.max_enemies,
     )
 
     if args.mode != "human":
@@ -95,10 +92,6 @@ def main():
             score += reward
 
             if terminated or truncated:
-                # Sleep for a while in "human" mode if the episode is finished
-                # if render_mode == "human":
-                #     time.sleep(1.0)
-
                 observation, info = env.reset(seed=args.seed)
 
                 # Print the episode's final result
