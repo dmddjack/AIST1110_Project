@@ -14,12 +14,10 @@ def main():
     env = gym.make(
         "gym_tankwar/TankWar-v0", 
         render_mode="rgb_array", 
-        starting_hp=args.starting_hp, 
-        window_width = args.window_width, 
-        window_height = args.window_height, 
-        max_enemies = args.max_enemies,
+        starting_hp=args.starting_hp,
     )
 
+    # Map pressed keys to actions
     mapping = {
         (pygame.K_UP,): 0,
         (pygame.K_w,): 0,
