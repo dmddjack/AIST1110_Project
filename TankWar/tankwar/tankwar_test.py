@@ -11,27 +11,23 @@ from cmdargs import args
 
 
 def main():
+    assert args.mode != "human_rand"
+
     env = gym.make(
         "gym_tankwar/TankWar-v0", 
         render_mode=args.mode, 
-        starting_hp=args.starting_hp, 
-        window_width=args.window_width, 
-        window_height=args.window_height, 
-        max_enemies=args.max_enemies,
+        starting_hp=args.starting_hp,
     )
     env.action_space.seed(args.seed)
 
-    model = keras.models.load_model(f"models/model.h5")
-
-    test_episodes = 1000
-    max_steps = 5400
+    model = keras.models.load_model(f"models/{args.file}.h5")
 
     print("Testing started ...")
     success_episodes = 0
-    for episode in range(test_episodes):
+    for episode in range(args.test_episodes):
         state, info = env.reset()
         total_testing_rewards = 0
-        for step in range(max_steps):
+        for step in range(args.max_steps):
             predicted = model.predict(state.reshape(1, state.shape[0]), verbose=0)
             action = np.argmax(predicted)
             state, reward, terminated, truncated, info = env.step(action) # take action and get reward
@@ -43,7 +39,7 @@ def main():
         else:
             print(f"Episode {episode} truncated ...")
 
-    print(f"Success rate: {success_episodes/test_episodes:.2f}")
+    print(f"Success rate: {success_episodes/args.test_episodes:.2f}")
 
     env.close()
 
