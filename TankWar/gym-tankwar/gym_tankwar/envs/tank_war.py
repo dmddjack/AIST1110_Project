@@ -12,21 +12,12 @@ class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
     def __init__(self, render_mode: str | None = None, 
-            starting_hp: int = 3, 
-            window_width: int = 600, 
-            window_height: int = 400, 
-            max_enemies: int = 4) -> None:
+            starting_hp: int = 3) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
         # The size of the pygame window
-        self.window_width, self.window_height = window_width, window_height
-
-        # The maximum number of enemies
-        self.max_enemies = max_enemies
-
-        # The maximum number of enemies' bullets
-        self.max_enemy_bullets = max_enemies * 3
+        self.window_width, self.window_height = 450, 350
 
         # All possible angles of the tanks and bullets
         self.angles = (0, 90, 180, 270)
@@ -37,6 +28,15 @@ class TankWar(gym.Env):
         # The minimum interval between the player's last shot and next shot
         self.player_shoot_intvl = 1
 
+        # The maximum number of player's bullets
+        self.max_player_bullets = 6
+
+        # The maximum number of enemies
+        self.max_enemies = 4
+
+        # The maximum number of enemies' bullets
+        self.max_enemy_bullets = self.max_enemies * 3
+
         # The reward when the player kills an enemy
         self.enemy_killed_reward = 1
 
@@ -44,12 +44,14 @@ class TankWar(gym.Env):
         self.player_killed_reward = -5
 
         # Normalized observation: the player's location, 
+        # the player's bullets' location, 
         # enemies' locations, enemy's bullets' locations, 
         # player's cannon's remaining reloading time
         self.observation_space = spaces.Box(
             low=0,
             high=1,
-            shape=((1 + self.max_enemies + self.max_enemy_bullets) * 3 + 1,), 
+            shape=((1 + self.max_player_bullets + self.max_enemies + \
+                self.max_enemy_bullets) * 3 + 1,), 
             dtype=np.float32,
         )
 
@@ -79,6 +81,25 @@ class TankWar(gym.Env):
         # Get the player's observation
         player_observation = self.player.get_observation()
 
+        # Get all player's bullets' observation
+        if len(self.player_bullets) > 0:
+            player_bullets_observation = np.concatenate(
+                [bullet.get_observation() for bullet in self.player_bullets]
+            )
+            player_bullets_observation = np.pad(
+                player_bullets_observation,
+                (0, self.max_player_bullets * 3 \
+                    - len(player_bullets_observation)), 
+                "constant",
+                constant_values=(0,),
+            )
+        else:
+            player_bullets_observation = np.full(
+                (self.max_player_bullets * 3,), 
+                0, 
+                dtype=np.float32,
+            )
+
         # Get all enemies' observation
         if len(self.enemies) > 0:
             enemies_observation = np.concatenate(
@@ -86,13 +107,13 @@ class TankWar(gym.Env):
             )
             enemies_observation = np.pad(
                 enemies_observation,
-                (0, 4 * 3 - len(enemies_observation)), 
+                (0, self.max_enemies * 3 - len(enemies_observation)), 
                 "constant",
                 constant_values=(0,),
             )
         else:
             enemies_observation = np.full(
-                (4 * 3,), 
+                (self.max_enemies * 3,), 
                 0, 
                 dtype=np.float32,
             )
@@ -104,13 +125,14 @@ class TankWar(gym.Env):
             )
             enemy_bullets_observation = np.pad(
                 enemy_bullets_observation,
-                (0, 4 * 3 * 3 - len(enemy_bullets_observation)),
+                (0, self.max_enemy_bullets * 3 \
+                    - len(enemy_bullets_observation)),
                 "constant",
                 constant_values=(0,),
             )
         else:
             enemy_bullets_observation = np.full(
-                (4 * 3 * 3,), 
+                (self.max_enemy_bullets * 3,), 
                 0, 
                 dtype=np.float32,
             )
@@ -132,8 +154,9 @@ class TankWar(gym.Env):
         # Concatenate all NumPy arrays
         observation = np.concatenate(
             [
-                player_observation, enemies_observation, enemy_bullets_observation, 
-                player_cannon_reload_time
+                player_observation, player_bullets_observation, 
+                enemies_observation, enemy_bullets_observation, 
+                player_cannon_reload_time,
             ],
             dtype=np.float32,
         )
@@ -553,9 +576,11 @@ class TankWar(gym.Env):
         The player can shoot at the beginning or for every one second.
         """
 
-        if (self.player.last_shoot == 0 or 
-                self.steps - self.player.last_shoot >= \
-                    self.metadata["render_fps"] * self.player_shoot_intvl):
+        if (len(self.player_bullets) < self.max_player_bullets and 
+                (self.player.last_shoot == 0 or 
+                    self.steps - self.player.last_shoot \
+                        >= self.metadata["render_fps"] \
+                            * self.player_shoot_intvl)):
             self.player.last_shoot = self.steps
 
             # Create a new bullet for the player
