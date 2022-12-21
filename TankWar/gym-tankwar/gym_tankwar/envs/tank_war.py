@@ -240,32 +240,35 @@ class TankWar(gym.Env):
             start_x=player_start_x,
             start_y=player_start_y,
             start_angle=player_start_angle,
-            speed=self._fps_to_speed(self.player_speed),
+            speed=self._fps_to_speed(self.player_speed, self.metadata["render_fps"]),
         )
 
         # Add the new player to self.all_sprites
         self.all_sprites.add(self.player)
 
-    def _score_to_enemy(self) -> tuple[int, int, float]:
+    @staticmethod
+    def _score_to_enemy(score: int, max_enemies: int, render_fps: int) -> tuple[int, int, float]:
         """
         An internal function that maps the current score to the behaviour 
         of the enemies.
         """
 
-        if self.score < 5:
+        if score < 5:
             enemy_n, enemy_speed, enemy_shoot_intvl = 1, 2, 2
-        elif self.score < 10:
+        elif score < 10:
             enemy_n, enemy_speed, enemy_shoot_intvl = 2, 2, 2
-        elif self.score < 15:
+        elif score < 15:
             enemy_n, enemy_speed, enemy_shoot_intvl = 3, 2, 1.5
-        elif self.score < 20:
+        elif score < 20:
             enemy_n, enemy_speed, enemy_shoot_intvl = 3, 3, 1.5
-        elif self.score < 25:
+        elif score < 25:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.5
         else:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.2
 
-        return min(enemy_n, self.max_enemies), self._fps_to_speed(enemy_speed), enemy_shoot_intvl
+        return min(enemy_n, max_enemies), \
+               TankWar._fps_to_speed(enemy_speed, render_fps), \
+               enemy_shoot_intvl
 
     def _create_enemy(self) -> tuple[int, float]:
         """
@@ -273,7 +276,10 @@ class TankWar(gym.Env):
         random locations on the borders.
         """
 
-        enemy_n, enemy_speed, enemy_shoot_intvl = self._score_to_enemy()
+        enemy_n, enemy_speed, enemy_shoot_intvl = \
+            self._score_to_enemy(self.score, 
+                                 self.max_enemies, 
+                                 self.metadata["render_fps"])
         for _ in range(enemy_n - len(self.enemies)):
             # Keep recreating an enemy until it does not collide 
             # with the player or other enemies
@@ -327,14 +333,15 @@ class TankWar(gym.Env):
 
         return enemy_speed, enemy_shoot_intvl
 
-    def _fps_to_speed(self, original_speed: int) -> int:
+    @staticmethod
+    def _fps_to_speed(original_speed: int, render_fps: int) -> int:
         """
         An internal function that converts the original speed, 
         which was based on a framerate of 30, to a speed that fits 
         any framerate.
         """
 
-        return 30 * original_speed // self.metadata["render_fps"]
+        return 30 * original_speed // render_fps
 
     def step(self, action: int | None):
         self.steps += 1
@@ -593,7 +600,7 @@ class TankWar(gym.Env):
                 tank_size=self.player.surf.get_size(),
                 tank_center=self.player.rect.center,
                 angle=angle,
-                speed=self.player.speed + self._fps_to_speed(3),
+                speed=self.player.speed + self._fps_to_speed(3, self.metadata["render_fps"]),
             )
 
             # Add the player's new bullet to self.player_bullets and 
@@ -626,7 +633,7 @@ class TankWar(gym.Env):
                 tank_size=enemy.surf.get_size(),
                 tank_center=enemy.rect.center,
                 angle=angle,
-                speed=enemy.speed + self._fps_to_speed(2),
+                speed=enemy.speed + self._fps_to_speed(2, self.metadata["render_fps"]),
             )
 
             # Add the enemy's new bullet to self.enemy_bullets and 
