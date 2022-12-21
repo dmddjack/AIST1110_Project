@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import time
-
 import gym
 import gym_tankwar
 import pygame
