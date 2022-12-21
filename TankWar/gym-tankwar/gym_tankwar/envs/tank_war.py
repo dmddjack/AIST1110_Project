@@ -38,10 +38,10 @@ class TankWar(gym.Env):
         self.max_enemy_bullets = self.max_enemies * 3
 
         # The reward when the player kills an enemy
-        self.enemy_killed_reward = 1
+        self.enemy_killed_reward = 5
 
         # The reward when the player is killed by the enemies
-        self.player_killed_reward = -5
+        self.player_killed_reward = -1
 
         # Normalized observation: the player's location, 
         # the player's bullets' location, 
@@ -367,7 +367,7 @@ class TankWar(gym.Env):
                 player_new_angle = 270
                 if action == 8:  # Shoot while moving right
                     player_shoot = True
-            elif action == 4:  # Shoot while not moving
+            elif action == 9:  # Shoot while not moving
                 player_shoot = True
 
             if action != 4 and action != 9:

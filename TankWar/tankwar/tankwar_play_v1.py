@@ -9,44 +9,78 @@ import pygame
 from cmdargs import args
 
 
-def _pressed_to_action(pressed_keys):
+def _pressed_to_action(pressed_keys, last_pressed_keys, last_action):
     """An internal function that maps pressed key(s) to an action"""
+
+    def filter_dir(keys):
+        dir_ = (keys[pygame.K_UP] or keys[pygame.K_w],
+               keys[pygame.K_DOWN] or keys[pygame.K_s],
+               keys[pygame.K_LEFT] or keys[pygame.K_a],
+               keys[pygame.K_RIGHT] or keys[pygame.K_d])
+        actions = []
+        # if keys[4]:
+        #     for i, value in enumerate(keys[:4]):
+        #         if value:
+        #             actions.append(i + 5)
+        #     if not actions:
+        #         actions.append(4)
+        # else:
+        for i, value in enumerate(dir_):
+            if value:
+                actions.append(i)
+        if not actions:
+            actions.append(4)  # stand still
+        return actions
 
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
         return None
-
-    action = 9
-    if not pressed_keys[pygame.K_SPACE]:
-        if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
-            action = 0
-        if pressed_keys[pygame.K_DOWN] or pressed_keys[pygame.K_s]:
-            action = 1
-        if pressed_keys[pygame.K_LEFT] or pressed_keys[pygame.K_a]:
-            action = 2
-        if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
-            action = 3
-    else:
-        action = 4
-        if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
-            action = 5
-        if pressed_keys[pygame.K_DOWN] or pressed_keys[pygame.K_s]:
-            action = 6
-        if pressed_keys[pygame.K_LEFT] or pressed_keys[pygame.K_a]:
-            action = 7
-        if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
-            action = 8
-
-    return action
+    last_action_space = filter_dir(last_pressed_keys)
+    action_space = filter_dir(pressed_keys)
+    shoot = pressed_keys[pygame.K_SPACE]
+    # print(shoot)
+    if last_action is not None:
+        # action = 4
+        # if not pressed_keys[pygame.K_SPACE]:
+        #     if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
+        #         action = 0
+        #     if pressed_keys[pygame.K_DOWN] or pressed_keys[pygame.K_s]:
+        #         action = 1
+        #     if pressed_keys[pygame.K_LEFT] or pressed_keys[pygame.K_a]:
+        #         action = 2
+        #     if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
+        #         action = 3
+        # else:
+        #     action = 9
+        #     if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
+        #         action = 5
+        #     if pressed_keys[pygame.K_DOWN] or pressed_keys[pygame.K_s]:
+        #         action = 6
+        #     if pressed_keys[pygame.K_LEFT] or pressed_keys[pygame.K_a]:
+        #         action = 7
+        #     if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
+        #         action = 8
+        # return action
+        last_action %= 5
+        if last_action_space == action_space and last_action in action_space:
+            return last_action + 5 * shoot
+        elif last_action in action_space and len(action_space) > 1:
+            tmp = action_space[:]
+            for action in tmp:
+                if action in last_action_space:
+                    action_space.remove(action)
+            if not action_space:
+                return last_action + 5 * shoot
+    return action_space[0] + 5 * shoot
 
 
 def main():
     render_mode = args.mode
     if render_mode == "human_rand":
         render_mode = "human"
-        
+
     env = gym.make(
-        "gym_tankwar/TankWar-v0", 
-        render_mode=render_mode, 
+        "gym_tankwar/TankWar-v0",
+        render_mode=render_mode,
         starting_hp=args.starting_hp,
     )
 
@@ -67,7 +101,8 @@ def main():
     score = 0
     total_score = 0
     total_steps = 0
-
+    action = None
+    pressed_keys = None
     while running and episode <= args.episodes:
         if args.mode == "human":
             # Detect pygame events for quiting the game
@@ -76,11 +111,18 @@ def main():
                     running = False
 
             # Detect pressed keys
+            last_action = action
+
+            if pressed_keys is not None:
+                last_pressed_keys = pressed_keys
+            else:
+                last_pressed_keys = pygame.key.get_pressed()
+
             pressed_keys = pygame.key.get_pressed()
 
             # Map pressed keys to an action
-            action = _pressed_to_action(pressed_keys)
-            if action == None:
+            action = _pressed_to_action(pressed_keys, last_pressed_keys, last_action)
+            if action is None:
                 running = False
         else:
             action = env.action_space.sample()  # random
@@ -98,14 +140,14 @@ def main():
                 if terminated:
                     print(
                         f"Episode {episode:<5d} " \
-                            f"succeeded in {step:<5d} " \
-                            f"steps ...\tScore = {score}"
+                        f"succeeded in {step:<5d} " \
+                        f"steps ...\tScore = {score}"
                     )
                     success_episodes += 1
                 else:
                     print(
                         f"Episode {episode:<5d} " \
-                            f"truncated ...\t\t\tScore = {score}"
+                        f"truncated ...\t\t\tScore = {score}"
                     )
 
                 episode += 1
@@ -117,9 +159,9 @@ def main():
     if episode > 0:
         # Print success rate of all episodes
         print(
-            f"Success rate = {success_episodes/episode:.2f}    " \
-                f"Average steps = {total_steps//episode}    " \
-                f"Average score = {total_score/episode:.2f}"
+            f"Success rate = {success_episodes / episode:.2f}    " \
+            f"Average steps = {total_steps // episode}    " \
+            f"Average score = {total_score / episode:.2f}"
         )
 
     env.close()
