@@ -13,10 +13,10 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action):
     """An internal function that maps pressed key(s) to an action"""
 
     def filter_dir(keys):
-        dir_ = (keys[pygame.K_UP] or keys[pygame.K_w],
-               keys[pygame.K_DOWN] or keys[pygame.K_s],
-               keys[pygame.K_LEFT] or keys[pygame.K_a],
-               keys[pygame.K_RIGHT] or keys[pygame.K_d])
+        dir_ = (keys[pygame.K_UP] or keys[pygame.K_w],    # Going up
+               keys[pygame.K_DOWN] or keys[pygame.K_s],   # Going down
+               keys[pygame.K_LEFT] or keys[pygame.K_a],   # Going left
+               keys[pygame.K_RIGHT] or keys[pygame.K_d])  # Going right
         actions = []
         # if keys[4]:
         #     for i, value in enumerate(keys[:4]):
