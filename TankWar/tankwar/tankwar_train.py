@@ -190,6 +190,7 @@ def main():
         "gym_tankwar/TankWar-v0", 
         render_mode=args.mode, 
         starting_hp=args.starting_hp,
+        difficulty=args.difficulty,
     )
     env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
 

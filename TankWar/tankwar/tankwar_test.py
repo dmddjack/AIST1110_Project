@@ -17,6 +17,7 @@ def main():
         "gym_tankwar/TankWar-v0", 
         render_mode=args.mode, 
         starting_hp=args.starting_hp,
+        difficulty=args.difficulty,
     )
     env.action_space.seed(args.seed)
 
