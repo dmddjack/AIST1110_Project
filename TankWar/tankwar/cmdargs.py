@@ -30,5 +30,8 @@ parser.add_argument("-fps", "--fps", type=int,
 parser.add_argument("-f", "--file", type=str, 
                     help="The file name of the HDF5 model file",
                     default=None)
+parser.add_argument("-d", "--difficulty", type=int, 
+                    help="The difficulty of AI",
+                    default=0)
 args = parser.parse_args()
 print(args)

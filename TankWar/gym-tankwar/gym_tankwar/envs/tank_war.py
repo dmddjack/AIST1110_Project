@@ -11,10 +11,13 @@ from .assets import Audios, Background, Enemy, Heart, Player
 class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
-    def __init__(self, render_mode: str | None = None, 
-            starting_hp: int = 3) -> None:
+    def __init__(self, render_mode: str | None, 
+            starting_hp: int, difficulty: int) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
+
+        # The difficulty of AI
+        self.difficulty = difficulty
 
         # The size of the pygame window
         self.window_width, self.window_height = 450, 350
