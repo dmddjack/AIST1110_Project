@@ -52,6 +52,9 @@ class TankWar(gym.Env):
         # The minimum difference between player and border coordinate
         self.border = 23
 
+        # size of observation space of each tank
+        self.obs_size = 4
+
         # Normalized observation: the player's location, 
         # the player's bullets' location, 
         # enemies' locations, enemy's bullets' locations, 
@@ -59,7 +62,7 @@ class TankWar(gym.Env):
         self.observation_space = spaces.Box(
             low=0,
             high=1,
-            shape=((1 + self.max_player_bullets + self.max_enemies + self.max_enemy_bullets) * 7 + 1,),
+            shape=((1 + self.max_player_bullets + self.max_enemies + self.max_enemy_bullets) * self.obs_size + 1,),
             dtype=np.float32,
         )
 
@@ -96,14 +99,14 @@ class TankWar(gym.Env):
             )
             player_bullets_observation = np.pad(
                 player_bullets_observation,
-                (0, self.max_player_bullets * 7 \
+                (0, self.max_player_bullets * self.obs_size \
                  - len(player_bullets_observation)),
                 "constant",
                 constant_values=(0,),
             )
         else:
             player_bullets_observation = np.full(
-                (self.max_player_bullets * 7,),
+                (self.max_player_bullets * self.obs_size,),
                 0,
                 dtype=np.float32,
             )
@@ -115,13 +118,13 @@ class TankWar(gym.Env):
             )
             enemies_observation = np.pad(
                 enemies_observation,
-                (0, self.max_enemies * 7 - len(enemies_observation)),
+                (0, self.max_enemies * self.obs_size - len(enemies_observation)),
                 "constant",
                 constant_values=(0,),
             )
         else:
             enemies_observation = np.full(
-                (self.max_enemies * 7,),
+                (self.max_enemies * self.obs_size,),
                 0,
                 dtype=np.float32,
             )
@@ -133,14 +136,14 @@ class TankWar(gym.Env):
             )
             enemy_bullets_observation = np.pad(
                 enemy_bullets_observation,
-                (0, self.max_enemy_bullets * 7 \
+                (0, self.max_enemy_bullets * self.obs_size \
                  - len(enemy_bullets_observation)),
                 "constant",
                 constant_values=(0,),
             )
         else:
             enemy_bullets_observation = np.full(
-                (self.max_enemy_bullets * 7,),
+                (self.max_enemy_bullets * self.obs_size,),
                 0,
                 dtype=np.float32,
             )
@@ -423,15 +426,30 @@ class TankWar(gym.Env):
         for enemy in self.enemies:
             enemy.speed = enemy_speed
             enemy_dx, enemy_dy, enemy_new_angle = 0, 0, enemy.angle
-
+            enemy_x, enemy_y = enemy.rect.center
             # Rotates an enemy with an interval of not less than 2 seconds 
             # and a probability of 2% (based on a framerate of 30)
-            if (self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 2 and
-                    self.np_random.random() < self._fps_to_prob(0.02)):
-                enemy_new_angle = self.np_random.choice(
-                    [angle for angle in self.angles if angle != enemy.angle]
-                )
-                enemy.last_rotate = self.steps
+            if self.difficulty == 0:
+                if (self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 2 and
+                        self.np_random.random() < self._fps_to_prob(0.02)):
+                    enemy_new_angle = self.np_random.choice(
+                        [angle for angle in self.angles if angle != enemy.angle]
+                    )
+                    enemy.last_rotate = self.steps
+            # Rotates an enemy with an interval of not less than 1 seconds
+            # and a probability of 2% (based on a framerate of 30)
+            # Improves rotation AI
+            elif self.difficulty == 1:
+                if (self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 1 and
+                        self.np_random.random() < self._fps_to_prob(0.02)):
+                    direction = np.argmax([abs(player_y - enemy_y), abs(player_x - enemy_x)])
+                    # print([abs(player_x - enemy_x), abs(player_y - enemy_y)])
+                    enemy_new_angle = 90 * direction + \
+                                      90 * (np.sign([(player_y - enemy_y), (player_x - enemy_x)])[direction] + 1)
+                    enemy.last_rotate = self.steps
+                    # print(enemy_new_angle)
+            else:
+                raise ValueError
 
             if enemy_new_angle == 0:  # Move up
                 enemy_dy = -1
@@ -448,8 +466,8 @@ class TankWar(gym.Env):
                 dy=enemy_dy,
                 new_angle=enemy_new_angle
             )
-            enemy_x, enemy_y = enemy.rect.center
-            distance = abs(enemy_x-player_x) + abs(enemy_y-player_y)
+
+            distance = abs(enemy_x - player_x) + abs(enemy_y - player_y)
             if distance < 100:
                 reward += -1 / distance
             for bullet in self.player_bullets:
