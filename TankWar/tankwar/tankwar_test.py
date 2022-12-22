@@ -19,6 +19,10 @@ def main():
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
     )
+
+    if args.mode != "human":
+        env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
+
     env.action_space.seed(args.seed)
 
     model = keras.models.load_model(f"models/{args.file}.h5")
@@ -33,7 +37,7 @@ def main():
             action = np.argmax(predicted)
             state, reward, terminated, truncated, info = env.step(action) # take action and get reward
             total_testing_rewards += reward    
-            if terminated or total_testing_rewards >= 15: # End the episode
+            if terminated or truncated:  # End the episode
                 print(f"Episode {episode} succeeded in {step + 1} steps ...")
                 success_episodes += 1
                 break
