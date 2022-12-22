@@ -36,8 +36,10 @@ def main():
             predicted = model.predict(state.reshape(1, state.shape[0]), verbose=0)
             action = np.argmax(predicted)
             state, reward, terminated, truncated, info = env.step(action) # take action and get reward
-            total_testing_rewards += reward    
-            if terminated or truncated:  # End the episode
+            total_testing_rewards += reward
+            
+            if terminated or total_testing_rewards >= 1500: # End the episode
+
                 print(f"Episode {episode} succeeded in {step + 1} steps ...")
                 success_episodes += 1
                 break

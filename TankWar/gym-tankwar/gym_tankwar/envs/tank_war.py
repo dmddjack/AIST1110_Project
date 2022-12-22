@@ -47,10 +47,10 @@ class TankWar(gym.Env):
         self.player_killed_reward = -10
 
         # The reward when the player shoots in a correct direction
-        self.shoot_reward = 1
+        self.player_shoot_reward = 1
 
         # The reward when the player is constrained by the border
-        self.player_on_border_reward = -.2
+        self.player_on_border_reward = -2
 
         # The minimum difference between player and border coordinate
         self.border = 23
@@ -474,21 +474,21 @@ class TankWar(gym.Env):
             # Get penalty of the player is too close to the bot
             distance = abs(enemy_x - player_x) + abs(enemy_y - player_y)
             if distance < 100:
-                reward += -5 / distance
+                reward += -25 / distance ** 2
 
             # Get reward if the bullet shot by player is close to the bot
             for bullet in self.player_bullets:
                 distance = (bullet.rect.centerx - enemy_x) + abs(bullet.rect.centery - enemy_y)
                 if 0 < distance < 100:
-                    reward += 2 / distance
+                    reward += 10 / distance ** 2
 
             # Get reward if the direction of player shoot is towards the enemy. Get penalty otherwise.
             if player_shoot:
-                angles = (np.sign([player_y - enemy_y, player_x - enemy_x]) + 1) * 90 + np.array([0, 90])
+                angles = (np.sign([enemy_y - player_y, enemy_x - player_x]) + 1) * 90 + np.array([0, 90])
                 if self.player.angle in angles:
-                    reward += self.shoot_reward
+                    reward += self.player_shoot_reward
                 else:
-                    reward -= self.shoot_reward
+                    reward -= self.player_shoot_reward
             # Ensure the enemy does not stuck at the border by 
             # reversing its direction
             if enemy_touches_border:
@@ -510,7 +510,7 @@ class TankWar(gym.Env):
         for enemy in [enemy
                       for enemies in enemy_collision.values()
                       if len(enemies) > 1
-                      for enemy in enemies]:
+                      for enemy in enemies][:2]:
             # Reverse the directions of two enemies when they collide 
             # with each other
             # enemy_old_angle = enemy.angle
@@ -523,7 +523,6 @@ class TankWar(gym.Env):
             # else:
             #     enemy.update(-1, 0, 90)
             # enemy.last_rotate = self.steps
-
             # Kill the enemy
             enemy.kill()
 
@@ -544,7 +543,7 @@ class TankWar(gym.Env):
         for bullet in self.enemy_bullets:
             distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
             if 0 < distance < 50:
-                reward += -5 / distance
+                reward += -25 / distance ** 2
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
 
