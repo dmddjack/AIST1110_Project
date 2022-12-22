@@ -222,24 +222,24 @@ class _Tank(_Movable):
 
         touches_border = False
         correction_angles = []
-        if self.rect.left < 0:
+        if self.rect.left < 0:  # Touch left border
             self.rect.left = 0
             touches_border = True
-            correction_angles.append(270)
-        elif self.rect.right > self.window_width:
+            correction_angles.extend([0, 180, 270])
+        elif self.rect.right > self.window_width:  # Touch right border
             self.rect.right = self.window_width
             touches_border = True
-            correction_angles.append(90)
-        if self.rect.top < 0:
+            correction_angles.extend([0, 90, 180])
+        if self.rect.top < 0:  # Touch top border
             self.rect.top = 0
             touches_border = True
-            correction_angles.append(180)
-        elif self.rect.bottom > self.window_height:
+            correction_angles.extend([90, 180, 270])
+        elif self.rect.bottom > self.window_height:  # Touch bottom border
             self.rect.bottom = self.window_height
             touches_border = True
-            correction_angles.append(0)
+            correction_angles.extend([0, 90, 270])
 
-        return touches_border, correction_angles
+        return touches_border, list(set(correction_angles))
 
     def update(self, dx: int, dy: int, 
             new_angle: int) -> tuple[bool, list[int]]:
