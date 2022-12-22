@@ -4,6 +4,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import random
 from collections import deque
+from itertools import islice
 
 import gym
 import gym_tankwar
@@ -22,7 +23,7 @@ class RLModel:
         self.epsilon = 1
         self.max_epsilon = 1
         self.min_epsilon = 0.01
-        self.decay = 0.02
+        self.decay = 0.01
 
         self.env = env
         self.state_shape = state_shape
@@ -39,18 +40,22 @@ class RLModel:
 
         print(self.target_model.summary())
 
-        self.replay_memory = deque(maxlen=100_000)
+        self.replay_memory = deque(maxlen=20_000)
 
         steps_to_update_target_model = 0
-
+        time = 2
+        total_score, total_steps = 0, 0
         for episode in range(1, 1 + self.train_episodes):
             total_training_rewards = 0
             state, info = self.env.reset()
 
             terminated, truncated = False, False
+            reward_interval = deque(maxlen=args.fps * time)
+            reward_interval_shoot = deque(maxlen=args.fps * time)
+            step = 0
             while not (terminated or truncated):
                 steps_to_update_target_model += 1
-
+                step += 1
                 random_num = np.random.rand()
                 if random_num <= self.epsilon:
                     action = self.env.action_space.sample()
@@ -63,22 +68,42 @@ class RLModel:
                 # if action == 4 or action == 9:
                 #     reward += -.2
                 # print(action)
+                reward_interval_shoot.append(0)
+                reward_interval.append(reward)
+                reward_mean = np.array(reward_interval).mean()
                 self.replay_memory.append([state, action, reward, new_state, terminated])
-                if steps_to_update_target_model % 30 == 0 or (terminated or truncated):
-                    self._train(terminated)
+                if info["bullet lifetime"] is not None:
+                    # print(reward_interval)
+                    if info["bullet lifetime"] <= args.fps * time:
+                        reward_interval_shoot[-info["bullet lifetime"]] += 500
+                    else:
+                        self.replay_memory[-info["bullet lifetime"]][2] += 500
 
+                if step > args.fps * time:
+                    self.replay_memory[-args.fps * time][2] = reward_mean + reward_interval_shoot[0]
+                if steps_to_update_target_model % 15 == 0 or (terminated or truncated):
+                    self._train(terminated)
+                # try:
+                #     print(self.replay_memory[-args.fps * time][1:3]) if self.replay_memory[-args.fps * time][1] > 4 else None
+                # except IndexError:
+                #     pass
                 state = new_state
                 total_training_rewards += reward
 
                 if terminated or truncated:
+                    for i in range(1, min(args.fps * time, step) + 1):
+                        self.replay_memory[-i][2] = np.array(list(islice(reward_interval, i-1, None))).mean() + \
+                                                    reward_interval_shoot[i-1]
                     self.rewards.append(total_training_rewards)
                     self.epsilons.append(self.epsilon)
 
                     if episode % 10 == 0:
                         self.save(episode)
-                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<4d} with score = {info['score']}, steps = {info['steps']}")
-
-                    if steps_to_update_target_model >= 500:
+                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<4d} "
+                          f"with score = {info['score']}, steps = {info['steps']}")
+                    total_score += info['score']
+                    total_steps += info['steps']
+                    if steps_to_update_target_model >= 400:
                         self.target_model.set_weights(self.main_model.get_weights())
                         steps_to_update_target_model = 0
 
@@ -90,6 +115,7 @@ class RLModel:
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
+        print(f"avg score:{total_score/self.train_episodes}, avg steps:{total_steps/self.train_episodes}")
 
     def _agent(self):
         learning_rate = 0.001
@@ -141,14 +167,15 @@ class RLModel:
         return model
 
     def _train(self, terminated):
-        learning_rate = 0.5
+        learning_rate = 0.7
         discount_factor = 0.618
-        batch_size = 128
+        batch_size = 512
         min_replay_size = 1_000
 
         if len(self.replay_memory) < min_replay_size:
             return
-
+        # start_inx = random.randint(0, len(self.replay_memory) - batch_size)
+        # mini_batch = list(islice(self.replay_memory, start_inx, start_inx+batch_size))
         mini_batch = random.sample(self.replay_memory, batch_size)
         current_states = np.array([transition[0] for transition in mini_batch])
         current_qs_list = self.main_model.predict(current_states, verbose=0)

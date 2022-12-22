@@ -26,7 +26,7 @@ parser.add_argument("-ms", "--max_steps", type=int,
 parser.add_argument("-fps", "--fps", type=int, 
                     help="The rendering speed in frames per second", 
                     choices=(15, 30, 60), metavar="[15, 30, 60]", 
-                    default=None)
+                    default=30)
 parser.add_argument("-f", "--file", type=str, 
                     help="The file name of the HDF5 model file",
                     default=None)

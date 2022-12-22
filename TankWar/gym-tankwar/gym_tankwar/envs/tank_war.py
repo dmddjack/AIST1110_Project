@@ -49,6 +49,9 @@ class TankWar(gym.Env):
         # The reward when the player shoots in a correct direction
         self.player_shoot_reward = 1
 
+        # The reward when the player shoots misses all targets
+        self.player_miss_reward = -10
+
         # The reward when the player is constrained by the border
         self.player_on_border_reward = -0.1
 
@@ -110,7 +113,7 @@ class TankWar(gym.Env):
         else:
             player_bullets_observation = np.full(
                 (self.max_player_bullets * self.obs_size,),
-                0,
+                -1,
                 dtype=np.float32,
             )
 
@@ -128,7 +131,7 @@ class TankWar(gym.Env):
         else:
             enemies_observation = np.full(
                 (self.max_enemies * self.obs_size,),
-                0,
+                -1,
                 dtype=np.float32,
             )
 
@@ -147,7 +150,7 @@ class TankWar(gym.Env):
         else:
             enemy_bullets_observation = np.full(
                 (self.max_enemy_bullets * self.obs_size,),
-                0,
+                -1,
                 dtype=np.float32,
             )
 
@@ -277,7 +280,7 @@ class TankWar(gym.Env):
         else:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.2
 
-        enemy_n = 4
+        # enemy_n = 4
 
         return min(enemy_n, max_enemies), \
                TankWar._fps_to_speed(enemy_speed, render_fps), enemy_shoot_intvl
@@ -357,7 +360,7 @@ class TankWar(gym.Env):
 
     def step(self, action: int | None):
         self.steps += 1
-        reward = 0.1 * self.steps
+        reward = 0.03 * np.sqrt(self.steps)
         terminated = False
         # reward = 0
         if self.pygame_initialized:
@@ -408,7 +411,7 @@ class TankWar(gym.Env):
 
                 # Get penalty if the player keeps touching border
                 if touches_border:
-                    reward += self.player_on_border_reward
+                    reward += self.player_on_border_reward * np.sqrt(self.steps)
             """
             Step 2: Shoot a bullet from the player's location if player_shoot 
             is true
@@ -479,12 +482,12 @@ class TankWar(gym.Env):
                     reward += 10 / distance
 
             # Get reward if the direction of player shoot is towards the enemy. Get penalty otherwise.
-            if player_shoot:
-                angles = (np.sign([enemy_y - player_y, enemy_x - player_x]) + 1) * 90 + np.array([0, 90])
-                if self.player.angle in angles:
-                    reward += self.player_shoot_reward
-                else:
-                    reward += -self.player_shoot_reward
+            # if player_shoot:
+            #     angles = (np.sign([enemy_y - player_y, enemy_x - player_x]) + 1) * 90 + np.array([0, 90])
+            #     if self.player.angle in angles:
+            #         reward += self.player_shoot_reward
+            #     else:
+            #         reward += -self.player_shoot_reward
             # Ensure the enemy does not stuck at the border by 
             # reversing its direction
             if enemy_touches_border:
@@ -539,15 +542,17 @@ class TankWar(gym.Env):
                         bullet.rect.bottom <= 0 or
                         bullet.rect.top >= self.window_height):
                     bullet.kill()
+                    # if bullets == self.player_bullets:
+                    #     reward += self.player_miss_reward
 
         # Get penalty if the player is too close to the enemy bullets
-        for bullet in self.enemy_bullets:
-            distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
-            if 0 < distance < 50:
-                reward += -200 / distance
+        # for bullet in self.enemy_bullets:
+        #     distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
+        #     if 0 < distance < 50:
+        #         reward += -200 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
-
+        bullet_lifetime = None
         for bullet in self.player_bullets:
             if pygame.sprite.spritecollide(
                     bullet,
@@ -555,6 +560,8 @@ class TankWar(gym.Env):
                     dokill=True):
                 reward += self.enemy_killed_reward
                 self.score += 1
+                bullet_lifetime = bullet.lifetime
+                print(f"lifetime: {bullet.lifetime}")
                 bullet.kill()
 
                 if self.pygame_initialized:
@@ -623,7 +630,7 @@ class TankWar(gym.Env):
         observation = self._get_observation()
 
         # Create a placeholder for additional information
-        info = {"score": self.score, "steps": self.steps}
+        info = {"score": self.score, "steps": self.steps, "bullet lifetime": bullet_lifetime}
 
         if self.render_mode == "human":
             self._render_frame()
