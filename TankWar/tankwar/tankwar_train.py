@@ -22,7 +22,7 @@ class RLModel:
         self.epsilon = 1
         self.max_epsilon = 1
         self.min_epsilon = 0.01
-        self.decay = 0.02
+        self.decay = 0.05
 
         self.env = env
         self.state_shape = state_shape
@@ -59,7 +59,6 @@ class RLModel:
                     action = np.argmax(predicted)
                 new_state, reward, terminated, truncated, info = self.env.step(action)
                 
-                reward += 1
                 if action == 4 or action == 9:
                     reward += -.2
                 # print(action)
@@ -76,7 +75,7 @@ class RLModel:
 
                     if episode % 10 == 0:
                         self.save(episode)
-                    print(f"Total training rewards = {total_training_rewards:<7.1f} at episode {episode:<4d} with score = {info['score']}, steps = {info['steps']}")
+                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<4d} with score = {info['score']}, steps = {info['steps']}")
 
                     if steps_to_update_target_model >= 500:
                         self.target_model.set_weights(self.main_model.get_weights())

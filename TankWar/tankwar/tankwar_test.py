@@ -30,14 +30,16 @@ def main():
     episode = 0
     running = True
     while episode < args.test_episodes and running:
+        episode += 1
+
         state, info = env.reset()
         total_testing_rewards = 0
         for step in range(args.max_steps):
             if not running:
                 break
 
+            # Detect events for quitting the game
             if args.mode == "human":
-                # Detect pygame events for quiting the game
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
@@ -59,9 +61,7 @@ def main():
         else:
             print(f"Episode {episode} truncated ...")
         
-        episode += 1
-
-    print(f"Success rate: {success_episodes/args.test_episodes:.2f}")
+    print(f"Success rate: {success_episodes/episode:.2f}")
 
     env.close()
 

@@ -41,7 +41,7 @@ class TankWar(gym.Env):
         self.max_enemy_bullets = self.max_enemies * 3
 
         # The reward when the player kills an enemy
-        self.enemy_killed_reward = 30
+        self.enemy_killed_reward = 1000
 
         # The reward when the player is killed by the enemies
         self.player_killed_reward = -100
@@ -50,7 +50,7 @@ class TankWar(gym.Env):
         self.player_shoot_reward = 1
 
         # The reward when the player is constrained by the border
-        self.player_on_border_reward = -2
+        self.player_on_border_reward = -0.1
 
         # The minimum difference between player and border coordinate
         self.border = 23
@@ -277,6 +277,8 @@ class TankWar(gym.Env):
         else:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.2
 
+        enemy_n = 4
+
         return min(enemy_n, max_enemies), \
                TankWar._fps_to_speed(enemy_speed, render_fps), enemy_shoot_intvl
 
@@ -355,7 +357,7 @@ class TankWar(gym.Env):
 
     def step(self, action: int | None):
         self.steps += 1
-        reward = 0
+        reward = 0.1 * self.steps
         terminated = False
 
         if self.pygame_initialized:
@@ -391,12 +393,12 @@ class TankWar(gym.Env):
             elif action == 9:  # Shoot while not moving
                 player_shoot = True
 
-            # player_x, player_y = self.player.rect.center
-            # if player_x == self.border and player_dx == -1 or \
-            #         player_y == self.border and player_dy == -1 or \
-            #         player_x == self.window_width - self.border and player_dx == 1 or \
-            #         player_y == self.window_height - self.border and player_dy == 1:
-            #     reward += self.player_on_border_reward
+            player_x, player_y = self.player.rect.center
+            if player_x == self.border and player_dx == -1 or \
+                    player_y == self.border and player_dy == -1 or \
+                    player_x == self.window_width - self.border and player_dx == 1 or \
+                    player_y == self.window_height - self.border and player_dy == 1:
+                reward += self.player_on_border_reward * self.steps
 
             if action != 4 and action != 9:
                 # Update the player's location
