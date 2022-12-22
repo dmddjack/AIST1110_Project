@@ -435,7 +435,7 @@ class TankWar(gym.Env):
             # and a probability of 2% (based on a framerate of 30)
             if self.difficulty == 0:
                 if (self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 2 and
-                        self.np_random.random() < self._fps_to_prob(0.02)):
+                        self.np_random.random() < self._fps_to_prob(0.02, self.metadata["render_fps"])):
                     enemy_new_angle = self.np_random.choice(
                         [angle for angle in self.angles if angle != enemy.angle]
                     )
@@ -445,7 +445,7 @@ class TankWar(gym.Env):
             # Improves rotation AI of enemy
             elif self.difficulty == 1:
                 if (self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 1 and
-                        self.np_random.random() < self._fps_to_prob(0.02)):
+                        self.np_random.random() < self._fps_to_prob(0.02, self.metadata["render_fps"])):
                     dir_inx = np.argmax([abs(player_y - enemy_y), abs(player_x - enemy_x)])
                     # print([abs(player_x - enemy_x), abs(player_y - enemy_y)])
                     enemy_new_angle = 90 * dir_inx + \
@@ -625,14 +625,15 @@ class TankWar(gym.Env):
         # print(reward) if reward != 0 else None
         return observation, reward, terminated, False, info
 
-    def _fps_to_prob(self, original_prob: float) -> float:
+    @staticmethod
+    def _fps_to_prob(original_prob: float, render_fps: int) -> float:
         """
         An internal function that converts the original probability, 
         which was based on a framerate of 30, to a probability that 
         fits any framerate.
         """
 
-        return 30 * original_prob / self.metadata["render_fps"]
+        return 30 * original_prob / render_fps
 
     def _player_shoot(self, angle: int) -> None:
         """
@@ -676,7 +677,7 @@ class TankWar(gym.Env):
         if (len(self.enemy_bullets) < self.max_enemy_bullets and
                 self.steps - enemy.last_shoot >= \
                 self.metadata["render_fps"] * interval and
-                self.np_random.random() < self._fps_to_prob(0.05)):
+                self.np_random.random() < self._fps_to_prob(0.05, self.metadata["render_fps"])):
             enemy.last_shoot = self.steps
 
             # Create a new bullet for the enemy
