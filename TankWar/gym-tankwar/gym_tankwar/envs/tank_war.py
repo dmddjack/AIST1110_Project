@@ -438,7 +438,7 @@ class TankWar(gym.Env):
                     enemy.last_rotate = self.steps
             # Rotates an enemy with an interval of not less than 1 seconds
             # and a probability of 2% (based on a framerate of 30)
-            # Improves rotation AI
+            # Improves rotation AI of enemy
             elif self.difficulty == 1:
                 if (self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 1 and
                         self.np_random.random() < self._fps_to_prob(0.02)):
