@@ -103,13 +103,13 @@ class RLModel:
                 kernel_initializer=init
             )
         )
-        # model.add(
-        #     keras.layers.Dense(
-        #         32,
-        #         activation='relu',
-        #         kernel_initializer=init
-        #     )
-        # )
+        model.add(
+            keras.layers.Dense(
+                128,
+                activation='relu',
+                kernel_initializer=init
+            )
+        )
         model.add(
             keras.layers.Dense(
                 128,

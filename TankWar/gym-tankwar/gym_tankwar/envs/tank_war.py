@@ -410,6 +410,7 @@ class TankWar(gym.Env):
                     # Make the player's engine sound louder
                     self.tank_engine_sound.set_volume(0.9)
 
+                # Get penalty if the player keeps touching border
                 if touches_border:
                     reward += self.player_on_border_reward
             """
@@ -470,15 +471,18 @@ class TankWar(gym.Env):
                 dy=enemy_dy,
                 new_angle=enemy_new_angle
             )
-
+            # Get penalty of the player is too close to the bot
             distance = abs(enemy_x - player_x) + abs(enemy_y - player_y)
             if distance < 100:
-                reward += -1 / distance
+                reward += -5 / distance
+
+            # Get reward if the bullet shot by player is close to the bot
             for bullet in self.player_bullets:
                 distance = (bullet.rect.centerx - enemy_x) + abs(bullet.rect.centery - enemy_y)
                 if 0 < distance < 100:
-                    reward += 1 / distance
+                    reward += 2 / distance
 
+            # Get reward if the direction of player shoot is towards the enemy. Get penalty otherwise.
             if player_shoot:
                 angles = (np.sign([player_y - enemy_y, player_x - enemy_x]) + 1) * 90 + np.array([0, 90])
                 if self.player.angle in angles:
@@ -536,10 +540,11 @@ class TankWar(gym.Env):
                         bullet.rect.top >= self.window_height):
                     bullet.kill()
 
-        # for bullet in self.enemy_bullets:
-        #     distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
-        #     if 0 < distance < 20:
-        #         reward += -1 / distance
+        # Get penalty if the player is too close to the enemy bullets
+        for bullet in self.enemy_bullets:
+            distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
+            if 0 < distance < 50:
+                reward += -5 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
 
