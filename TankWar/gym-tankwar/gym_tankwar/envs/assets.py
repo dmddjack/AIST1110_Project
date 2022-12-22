@@ -53,13 +53,14 @@ class _Movable(pygame.sprite.Sprite):
 
     def get_observation(self) -> np.ndarray:
         """A function that returns the movable's location."""
-        direction = [0]*4
-        direction[self.angle//90] = 1
+        # direction = [0]*4
+        # direction[self.angle//90] = 1
         return np.array(
             (
                 self.rect.center[0] / self.window_width, 
                 self.rect.center[1] / self.window_height, 
-                *direction,
+                # *direction,
+                self.angle / 360,
                 self.speed / _Movable.max_speed,
             ),
             dtype=np.float32,

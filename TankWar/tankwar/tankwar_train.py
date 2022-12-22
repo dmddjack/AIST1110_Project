@@ -58,8 +58,9 @@ class RLModel:
                     predicted = self.main_model.predict(state_reshaped, verbose=0)
                     action = np.argmax(predicted)
                 new_state, reward, terminated, truncated, info = self.env.step(action)
+                if action == 4 or action == 9:
+                    reward += -.2
                 self.replay_memory.append([state, action, reward, new_state, terminated])
-
                 if steps_to_update_target_model % 30 == 0 or (terminated or truncated):
                     self._train(terminated)
 
@@ -80,7 +81,8 @@ class RLModel:
                         steps_to_update_target_model = 0
 
                     break
-                gc.collect()
+            gc.collect()
+            keras.backend.clear_session()
 
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
@@ -93,29 +95,29 @@ class RLModel:
         model = keras.Sequential()
         model.add(
             keras.layers.Dense(
-                64, 
+                128,
                 input_shape=self.state_shape, 
                 activation='relu', 
                 kernel_initializer=init
             )
         )
+        # model.add(
+        #     keras.layers.Dense(
+        #         32,
+        #         activation='relu',
+        #         kernel_initializer=init
+        #     )
+        # )
         model.add(
             keras.layers.Dense(
-                32,
+                128,
                 activation='relu',
                 kernel_initializer=init
             )
         )
         model.add(
             keras.layers.Dense(
-                32,
-                activation='relu',
-                kernel_initializer=init
-            )
-        )
-        model.add(
-            keras.layers.Dense(
-                16,
+                64,
                 activation='relu',
                 kernel_initializer=init
             )
@@ -136,9 +138,9 @@ class RLModel:
         return model
 
     def _train(self, terminated):
-        learning_rate = 0.7
+        learning_rate = 0.1
         discount_factor = 0.618
-        batch_size = 128
+        batch_size = 64
         min_replay_size = 1_000
 
         if len(self.replay_memory) < min_replay_size:
