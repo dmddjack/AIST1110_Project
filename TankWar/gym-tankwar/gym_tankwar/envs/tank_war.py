@@ -41,10 +41,10 @@ class TankWar(gym.Env):
         self.max_enemy_bullets = self.max_enemies * 3
 
         # The reward when the player kills an enemy
-        self.enemy_killed_reward = 10
+        self.enemy_killed_reward = 50
 
         # The reward when the player is killed by the enemies
-        self.player_killed_reward = -5
+        self.player_killed_reward = -10
 
         # The reward when the player is constrained by the border
         self.player_on_border_reward = -.2

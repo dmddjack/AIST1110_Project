@@ -58,8 +58,11 @@ class RLModel:
                     predicted = self.main_model.predict(state_reshaped, verbose=0)
                     action = np.argmax(predicted)
                 new_state, reward, terminated, truncated, info = self.env.step(action)
+                
+                reward += .05
                 if action == 4 or action == 9:
                     reward += -.2
+                # print(action)
                 self.replay_memory.append([state, action, reward, new_state, terminated])
                 if steps_to_update_target_model % 30 == 0 or (terminated or truncated):
                     self._train(terminated)
