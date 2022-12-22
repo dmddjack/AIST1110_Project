@@ -33,7 +33,7 @@ def main():
             action = np.argmax(predicted)
             state, reward, terminated, truncated, info = env.step(action) # take action and get reward
             total_testing_rewards += reward    
-            if terminated or total_testing_rewards >= 15: # End the episode
+            if terminated or total_testing_rewards >= 1500: # End the episode
                 print(f"Episode {episode} succeeded in {step + 1} steps ...")
                 success_episodes += 1
                 break
