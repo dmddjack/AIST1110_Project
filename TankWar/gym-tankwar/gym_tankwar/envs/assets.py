@@ -11,6 +11,7 @@ audios_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audios")
 
 
 class _Movable(pygame.sprite.Sprite):
+    max_speed = 14
     def __init__(
             self,
             window_width: int,
@@ -27,6 +28,7 @@ class _Movable(pygame.sprite.Sprite):
         self.window_height = window_height
         self.angle = start_angle
         self.speed = speed
+
 
         # Load the image and convert it into a Surface
         self.surf = pygame.image.load(image_path)
@@ -51,15 +53,18 @@ class _Movable(pygame.sprite.Sprite):
 
     def get_observation(self) -> np.ndarray:
         """A function that returns the movable's location."""
-
+        direction = [0]*4
+        direction[self.angle//90] = 1
         return np.array(
             (
                 self.rect.center[0] / self.window_width, 
                 self.rect.center[1] / self.window_height, 
-                self.angle / 360, 
+                *direction,
+                self.speed / _Movable.max_speed,
             ),
             dtype=np.float32,
         )
+
 
 
 # We need to create class _Bullet before class _Tank 
