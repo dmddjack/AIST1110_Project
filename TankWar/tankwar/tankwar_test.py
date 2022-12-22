@@ -40,7 +40,7 @@ def main():
             
             if terminated or total_testing_rewards >= 1500: # End the episode
 
-                print(f"Episode {episode} succeeded in {step + 1} steps ...")
+                print(f"Episode {episode:<4d} succeeded in {step+1:<4d} steps with score = {info['score']}")
                 success_episodes += 1
                 break
         else:
