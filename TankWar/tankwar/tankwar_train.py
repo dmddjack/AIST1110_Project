@@ -22,7 +22,7 @@ class RLModel:
         self.epsilon = 1
         self.max_epsilon = 1
         self.min_epsilon = 0.01
-        self.decay = 0.01
+        self.decay = 0.02
 
         self.env = env
         self.state_shape = state_shape
@@ -86,6 +86,7 @@ class RLModel:
             gc.collect()
             keras.backend.clear_session()
 
+            print("Epsilon:", self.epsilon)
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
