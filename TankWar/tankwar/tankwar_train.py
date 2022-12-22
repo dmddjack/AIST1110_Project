@@ -1,17 +1,19 @@
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
-
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import random
 from collections import deque
 
 import gym
 import gym_tankwar
+import gc
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from tensorflow import keras
-
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+# tf.debugging.set_log_device_placement(True)
 from cmdargs import args
 
 
@@ -37,7 +39,7 @@ class RLModel:
 
         print(self.target_model.summary())
 
-        self.replay_memory = deque(maxlen=100_000)
+        self.replay_memory = deque(maxlen=25_000)
 
         steps_to_update_target_model = 0
         for episode in range(1, 1 + self.train_episodes):
@@ -70,7 +72,7 @@ class RLModel:
 
                     if episode % 10 == 0:
                         self.save(episode)
-                        print(f"Total training rewards = {int(total_training_rewards):<4d} at episode {episode}")
+                    print(f"Total training rewards = {total_training_rewards:<4.1f} at episode {episode}")
 
                     if steps_to_update_target_model >= 500:
                         # print("Copying main network weights to the target network weights")
@@ -78,6 +80,7 @@ class RLModel:
                         steps_to_update_target_model = 0
 
                     break
+                gc.collect()
 
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
@@ -98,18 +101,25 @@ class RLModel:
         )
         model.add(
             keras.layers.Dense(
-                32, 
-                activation='relu', 
+                32,
+                activation='relu',
                 kernel_initializer=init
             )
         )
-        # model.add(
-        #     keras.layers.Dense(
-        #         16, 
-        #         activation='relu', 
-        #         kernel_initializer=init
-        #     )
-        # )
+        model.add(
+            keras.layers.Dense(
+                32,
+                activation='relu',
+                kernel_initializer=init
+            )
+        )
+        model.add(
+            keras.layers.Dense(
+                16,
+                activation='relu',
+                kernel_initializer=init
+            )
+        )
         model.add(
             keras.layers.Dense(
                 self.action_shape, 
@@ -129,7 +139,7 @@ class RLModel:
         learning_rate = 0.7
         discount_factor = 0.618
         batch_size = 128
-        min_replay_size = 10_000
+        min_replay_size = 1_000
 
         if len(self.replay_memory) < min_replay_size:
             return
