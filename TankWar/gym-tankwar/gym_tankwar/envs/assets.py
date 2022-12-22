@@ -92,6 +92,8 @@ class _Bullet(_Movable):
             image_path=image_path,
             resize_ratio=resize_ratio
         )
+        # Count the steps that the bullet survives
+        self.lifetime = 0
 
         # Determine the starting location of the bullet based on 
         # the location and the angle of the tank
@@ -117,7 +119,7 @@ class _Bullet(_Movable):
 
     def move(self) -> None:
         """A function that moves the bullet."""
-
+        self.lifetime += 1
         if self.angle == 0:
             self.rect.move_ip(0, -self.speed)
         elif self.angle == 90:
@@ -126,6 +128,8 @@ class _Bullet(_Movable):
             self.rect.move_ip(0, self.speed)
         else:
             self.rect.move_ip(self.speed, 0)
+
+
 
 
 class _PlayerBullet(_Bullet):
