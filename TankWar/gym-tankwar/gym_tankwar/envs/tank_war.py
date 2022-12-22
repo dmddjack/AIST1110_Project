@@ -46,6 +46,9 @@ class TankWar(gym.Env):
         # The reward when the player is killed by the enemies
         self.player_killed_reward = -10
 
+        # The reward when the player shoots in a correct direction
+        self.shoot_reward = 1
+
         # The reward when the player is constrained by the border
         self.player_on_border_reward = -.2
 
@@ -359,11 +362,12 @@ class TankWar(gym.Env):
             # Set the player's engine sound volume to normal
             self.tank_engine_sound.set_volume(0.4)
 
+        """Step 1: Move the player according to the action"""
+        player_shoot = False
         if action is not None:
-            """Step 1: Move the player according to the action"""
 
             player_dx, player_dy, player_new_angle = 0, 0, self.player.angle
-            player_shoot = False
+
             if action == 0 or action == 5:  # Move up
                 player_dy = -1
                 player_new_angle = 0
@@ -442,10 +446,10 @@ class TankWar(gym.Env):
             elif self.difficulty == 1:
                 if (self.steps - enemy.last_rotate >= self.metadata["render_fps"] * 1 and
                         self.np_random.random() < self._fps_to_prob(0.02)):
-                    direction = np.argmax([abs(player_y - enemy_y), abs(player_x - enemy_x)])
+                    dir_inx = np.argmax([abs(player_y - enemy_y), abs(player_x - enemy_x)])
                     # print([abs(player_x - enemy_x), abs(player_y - enemy_y)])
-                    enemy_new_angle = 90 * direction + \
-                                      90 * (np.sign([(player_y - enemy_y), (player_x - enemy_x)])[direction] + 1)
+                    enemy_new_angle = 90 * dir_inx + \
+                                      90 * (np.sign([(player_y - enemy_y), (player_x - enemy_x)])[dir_inx] + 1)
                     enemy.last_rotate = self.steps
                     # print(enemy_new_angle)
             else:
@@ -471,9 +475,16 @@ class TankWar(gym.Env):
             if distance < 100:
                 reward += -1 / distance
             for bullet in self.player_bullets:
-                distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centerx - player_y)
+                distance = (bullet.rect.centerx - enemy_x) + abs(bullet.rect.centery - enemy_y)
                 if 0 < distance < 100:
                     reward += 1 / distance
+
+            if player_shoot:
+                angles = (np.sign([player_y - enemy_y, player_x - enemy_x]) + 1) * 90 + np.array([0, 90])
+                if self.player.angle in angles:
+                    reward += self.shoot_reward
+                else:
+                    reward -= self.shoot_reward
             # Ensure the enemy does not stuck at the border by 
             # reversing its direction
             if enemy_touches_border:
@@ -524,6 +535,11 @@ class TankWar(gym.Env):
                         bullet.rect.bottom <= 0 or
                         bullet.rect.top >= self.window_height):
                     bullet.kill()
+
+        # for bullet in self.enemy_bullets:
+        #     distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
+        #     if 0 < distance < 20:
+        #         reward += -1 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
 

@@ -39,7 +39,7 @@ class RLModel:
 
         print(self.target_model.summary())
 
-        self.replay_memory = deque(maxlen=25_000)
+        self.replay_memory = deque(maxlen=100_000)
 
         steps_to_update_target_model = 0
         for episode in range(1, 1 + self.train_episodes):
@@ -141,9 +141,9 @@ class RLModel:
         return model
 
     def _train(self, terminated):
-        learning_rate = 0.1
+        learning_rate = 0.5
         discount_factor = 0.618
-        batch_size = 64
+        batch_size = 128
         min_replay_size = 1_000
 
         if len(self.replay_memory) < min_replay_size:
