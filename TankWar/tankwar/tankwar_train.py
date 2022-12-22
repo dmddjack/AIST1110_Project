@@ -171,7 +171,7 @@ class RLModel:
     #     return model.predict(state.reshape([1, state.shape[0]]))[0]
 
     def save(self, episode: int):
-        self.target_model.save(f"models/model_{episode}.h5")
+        self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}.h5")
 
     def plot(self):
         fig = plt.figure()
