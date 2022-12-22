@@ -140,7 +140,7 @@ def main():
                     print(
                         f"Episode {episode:<5d} " \
                         f"succeeded in {step:<5d} " \
-                        f"steps ...\tScore = {score}"
+                        f"steps ...\tReward = {score}"
                     )
                     success_episodes += 1
                 else:
@@ -160,7 +160,7 @@ def main():
         print(
             f"Success rate = {success_episodes / episode:.2f}    " \
             f"Average steps = {total_steps // episode}    " \
-            f"Average score = {total_score / episode:.2f}"
+            f"Average reward = {total_score / episode:.2f}"
         )
 
     env.close()

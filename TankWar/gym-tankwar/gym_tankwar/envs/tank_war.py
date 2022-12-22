@@ -265,7 +265,7 @@ class TankWar(gym.Env):
         """
 
         if score < 5:
-            enemy_n, enemy_speed, enemy_shoot_intvl = 1, 2, 2
+            enemy_n, enemy_speed, enemy_shoot_intvl = 4, 2, 2
         elif score < 10:
             enemy_n, enemy_speed, enemy_shoot_intvl = 2, 2, 2
         elif score < 15:
@@ -510,22 +510,26 @@ class TankWar(gym.Env):
         for enemy in [enemy
                       for enemies in enemy_collision.values()
                       if len(enemies) > 1
-                      for enemy in enemies]:
+                      for enemy in enemies][:2]:
             # Reverse the directions of two enemies when they collide 
             # with each other
-            # enemy_old_angle = enemy.angle
-            # if enemy_old_angle == 0:
-            #     enemy.update(0, 1, 180)
-            # elif enemy_old_angle == 90:
-            #     enemy.update(1, 0, 270)
-            # elif enemy_old_angle == 180:
-            #     enemy.update(0, -1, 0)
-            # else:
-            #     enemy.update(-1, 0, 90)
-            # enemy.last_rotate = self.steps
+            enemy_dx, enemy_dy = 0, 0
+            enemy_new_angle = self.np_random.choice(
+                        [angle for angle in self.angles if angle != enemy.angle]
+                    )
+            if enemy_new_angle == 0:  # Move up
+                enemy_dy = -1
+            elif enemy_new_angle == 90:  # Move left
+                enemy_dx = -1
+            elif enemy_new_angle == 180:  # Move down
+                enemy_dy = 1
+            else:  # Move right
+                enemy_dx = 1
+            enemy.update(enemy_dx, enemy_dy, enemy_new_angle)
+            enemy.last_rotate = self.steps
 
             # Kill the enemy
-            enemy.kill()
+            # enemy.kill()
 
         """Step 6: Move the player's and enemies' bullets"""
 
