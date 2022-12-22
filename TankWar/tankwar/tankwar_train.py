@@ -59,7 +59,7 @@ class RLModel:
                     action = np.argmax(predicted)
                 new_state, reward, terminated, truncated, info = self.env.step(action)
                 
-                reward += .1
+                reward += 1
                 if action == 4 or action == 9:
                     reward += -.2
                 # print(action)

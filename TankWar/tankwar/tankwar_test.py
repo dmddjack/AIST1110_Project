@@ -3,6 +3,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import gym
+import pygame
 import gym_tankwar
 import numpy as np
 from tensorflow import keras
@@ -20,19 +21,31 @@ def main():
         difficulty=args.difficulty,
     )
 
-    if args.mode != "human":
-        env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
-
     env.action_space.seed(args.seed)
 
     model = keras.models.load_model(f"models/{args.file}.h5")
 
     print("Testing started ...")
     success_episodes = 0
-    for episode in range(args.test_episodes):
+    episode = 0
+    running = True
+    while episode < args.test_episodes and running:
         state, info = env.reset()
         total_testing_rewards = 0
         for step in range(args.max_steps):
+            if not running:
+                break
+
+            if args.mode == "human":
+                # Detect pygame events for quiting the game
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+
+                pressed_keys = pygame.key.get_pressed()
+                if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
+                    running = False
+
             predicted = model.predict(state.reshape(1, state.shape[0]), verbose=0)
             action = np.argmax(predicted)
             state, reward, terminated, truncated, info = env.step(action) # take action and get reward
@@ -45,6 +58,8 @@ def main():
                 break
         else:
             print(f"Episode {episode} truncated ...")
+        
+        episode += 1
 
     print(f"Success rate: {success_episodes/args.test_episodes:.2f}")
 

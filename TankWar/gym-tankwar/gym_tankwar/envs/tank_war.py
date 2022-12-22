@@ -44,7 +44,7 @@ class TankWar(gym.Env):
         self.enemy_killed_reward = 30
 
         # The reward when the player is killed by the enemies
-        self.player_killed_reward = -10
+        self.player_killed_reward = -100
 
         # The reward when the player shoots in a correct direction
         self.player_shoot_reward = 1
@@ -471,16 +471,16 @@ class TankWar(gym.Env):
                 dy=enemy_dy,
                 new_angle=enemy_new_angle
             )
-            # Get penalty of the player is too close to the bot
+            # Get penalty of the player is too close to the enemy
             distance = abs(enemy_x - player_x) + abs(enemy_y - player_y)
             if distance < 100:
-                reward += -200 / distance ** 2
+                reward += -1000 / distance
 
-            # Get reward if the bullet shot by player is close to the bot
+            # Get reward if the bullet shot by player is close to the enemy
             for bullet in self.player_bullets:
                 distance = (bullet.rect.centerx - enemy_x) + abs(bullet.rect.centery - enemy_y)
                 if 0 < distance < 100:
-                    reward += 10 / distance ** 2
+                    reward += 10 / distance
 
             # Get reward if the direction of player shoot is towards the enemy. Get penalty otherwise.
             if player_shoot:
@@ -488,7 +488,7 @@ class TankWar(gym.Env):
                 if self.player.angle in angles:
                     reward += self.player_shoot_reward
                 else:
-                    reward -= self.player_shoot_reward
+                    reward += -self.player_shoot_reward
             # Ensure the enemy does not stuck at the border by 
             # reversing its direction
             if enemy_touches_border:
@@ -548,7 +548,7 @@ class TankWar(gym.Env):
         for bullet in self.enemy_bullets:
             distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
             if 0 < distance < 50:
-                reward += -200 / distance ** 2
+                reward += -200 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
 
