@@ -59,7 +59,7 @@ class RLModel:
                     action = np.argmax(predicted)
                 new_state, reward, terminated, truncated, info = self.env.step(action)
                 
-                reward += .05
+                reward += .1
                 if action == 4 or action == 9:
                     reward += -.2
                 # print(action)
@@ -76,7 +76,7 @@ class RLModel:
 
                     if episode % 10 == 0:
                         self.save(episode)
-                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<5d} with score = {info['score']}")
+                    print(f"Total training rewards = {total_training_rewards:<7.1f} at episode {episode:<4d} with score = {info['score']}, steps = {info['steps']}")
 
                     if steps_to_update_target_model >= 500:
                         self.target_model.set_weights(self.main_model.get_weights())
@@ -86,7 +86,7 @@ class RLModel:
             gc.collect()
             keras.backend.clear_session()
 
-            # print("Epsilon:", self.epsilon)
+            print("Epsilon:", self.epsilon)
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()

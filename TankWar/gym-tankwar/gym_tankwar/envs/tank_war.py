@@ -41,7 +41,7 @@ class TankWar(gym.Env):
         self.max_enemy_bullets = self.max_enemies * 3
 
         # The reward when the player kills an enemy
-        self.enemy_killed_reward = 10
+        self.enemy_killed_reward = 30
 
         # The reward when the player is killed by the enemies
         self.player_killed_reward = -10
@@ -474,7 +474,7 @@ class TankWar(gym.Env):
             # Get penalty of the player is too close to the bot
             distance = abs(enemy_x - player_x) + abs(enemy_y - player_y)
             if distance < 100:
-                reward += -100 / distance ** 2
+                reward += -200 / distance ** 2
 
             # Get reward if the bullet shot by player is close to the bot
             for bullet in self.player_bullets:
@@ -548,7 +548,7 @@ class TankWar(gym.Env):
         for bullet in self.enemy_bullets:
             distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
             if 0 < distance < 50:
-                reward += -100 / distance ** 2
+                reward += -200 / distance ** 2
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
 
@@ -627,7 +627,7 @@ class TankWar(gym.Env):
         observation = self._get_observation()
 
         # Create a placeholder for additional information
-        info = {"score": self.score}
+        info = {"score": self.score, "steps": self.steps}
 
         if self.render_mode == "human":
             self._render_frame()
