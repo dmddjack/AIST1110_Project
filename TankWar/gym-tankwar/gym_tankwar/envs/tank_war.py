@@ -265,7 +265,7 @@ class TankWar(gym.Env):
         """
 
         if score < 5:
-            enemy_n, enemy_speed, enemy_shoot_intvl = 2, 2, 2
+            enemy_n, enemy_speed, enemy_shoot_intvl = 1, 2, 2
         elif score < 10:
             enemy_n, enemy_speed, enemy_shoot_intvl = 2, 2, 2
         elif score < 15:
