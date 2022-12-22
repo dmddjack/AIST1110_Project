@@ -359,7 +359,7 @@ class TankWar(gym.Env):
         self.steps += 1
         reward = 0.1 * self.steps
         terminated = False
-
+        # reward = 0
         if self.pygame_initialized:
             # Set the player's engine sound volume to normal
             self.tank_engine_sound.set_volume(0.4)
@@ -393,12 +393,6 @@ class TankWar(gym.Env):
             elif action == 9:  # Shoot while not moving
                 player_shoot = True
 
-            player_x, player_y = self.player.rect.center
-            if player_x == self.border and player_dx == -1 or \
-                    player_y == self.border and player_dy == -1 or \
-                    player_x == self.window_width - self.border and player_dx == 1 or \
-                    player_y == self.window_height - self.border and player_dy == 1:
-                reward += self.player_on_border_reward * self.steps
 
             if action != 4 and action != 9:
                 # Update the player's location

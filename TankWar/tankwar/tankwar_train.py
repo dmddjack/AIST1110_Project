@@ -22,7 +22,7 @@ class RLModel:
         self.epsilon = 1
         self.max_epsilon = 1
         self.min_epsilon = 0.01
-        self.decay = 0.05
+        self.decay = 0.02
 
         self.env = env
         self.state_shape = state_shape
@@ -42,6 +42,7 @@ class RLModel:
         self.replay_memory = deque(maxlen=100_000)
 
         steps_to_update_target_model = 0
+
         for episode in range(1, 1 + self.train_episodes):
             total_training_rewards = 0
             state, info = self.env.reset()
@@ -58,9 +59,9 @@ class RLModel:
                     predicted = self.main_model.predict(state_reshaped, verbose=0)
                     action = np.argmax(predicted)
                 new_state, reward, terminated, truncated, info = self.env.step(action)
-                
-                if action == 4 or action == 9:
-                    reward += -.2
+                #
+                # if action == 4 or action == 9:
+                #     reward += -.2
                 # print(action)
                 self.replay_memory.append([state, action, reward, new_state, terminated])
                 if steps_to_update_target_model % 30 == 0 or (terminated or truncated):
@@ -70,7 +71,7 @@ class RLModel:
                 total_training_rewards += reward
 
                 if terminated or truncated:
-                    self.rewards.append(reward)
+                    self.rewards.append(total_training_rewards)
                     self.epsilons.append(self.epsilon)
 
                     if episode % 10 == 0:
@@ -178,13 +179,13 @@ class RLModel:
     def plot(self):
         fig = plt.figure()
 
-        ax1 = fig.add_subplot(121)
+        ax1 = fig.add_subplot(211)
         ax1.plot(np.arange(1, self.train_episodes + 1), self.rewards)
         ax1.set_title("Rewards over all episodes in training")
         ax1.set_xlabel("Episode")
         ax1.set_ylabel("Reward")
 
-        ax2 = fig.add_subplot(122)
+        ax2 = fig.add_subplot(212)
         ax2.plot(np.arange(1, self.train_episodes + 1), self.epsilons)
         ax2.set_title("Epsilons over all episodes in training")
         ax2.set_xlabel("Episode")
