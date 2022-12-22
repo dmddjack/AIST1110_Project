@@ -5,7 +5,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import random
 from collections import deque
 from itertools import islice
-
+from time import time, gmtime, strftime
 import gym
 import gym_tankwar
 import gc
@@ -16,6 +16,15 @@ from tensorflow import keras
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 # tf.debugging.set_log_device_placement(True)
 from cmdargs import args
+
+
+def timer(start_time, progress, total) -> int:
+    """Use time.time() to get the start time. Print the current progress and the estimated time.
+    Return value updates the progress variable. Written for ESTR 2018 project."""
+    print(f"Progress: {progress}/{total} ({progress / total * 100}%)")
+    print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time() - start_time))}")
+    print(f"Estimated time: {strftime(f'%H:%M:%S', gmtime((time() - start_time) / (progress / total)))}")
+    # return progress + 1
 
 
 class RLModel:
@@ -43,15 +52,16 @@ class RLModel:
         self.replay_memory = deque(maxlen=20_000)
 
         steps_to_update_target_model = 0
-        time = 2
+        time_intvl = 2 * args.fps
         total_score, total_steps = 0, 0
+        start_time = time()
         for episode in range(1, 1 + self.train_episodes):
             total_training_rewards = 0
             state, info = self.env.reset()
 
             terminated, truncated = False, False
-            reward_interval = deque(maxlen=args.fps * time)
-            reward_interval_shoot = deque(maxlen=args.fps * time)
+            reward_interval = deque(maxlen=time_intvl)
+            reward_interval_shoot = deque(maxlen=time_intvl)
             step = 0
             while not (terminated or truncated):
                 steps_to_update_target_model += 1
@@ -74,31 +84,32 @@ class RLModel:
                 self.replay_memory.append([state, action, reward, new_state, terminated])
                 if info["bullet lifetime"] is not None:
                     # print(reward_interval)
-                    if info["bullet lifetime"] <= args.fps * time:
+                    if info["bullet lifetime"] <= time_intvl:
                         reward_interval_shoot[-info["bullet lifetime"]] += 500
                     else:
                         self.replay_memory[-info["bullet lifetime"]][2] += 500
 
-                if step > args.fps * time:
-                    self.replay_memory[-args.fps * time][2] = reward_mean + reward_interval_shoot[0]
+                if step > time_intvl:
+                    self.replay_memory[-time_intvl][2] = reward_mean + reward_interval_shoot[0]
                 if steps_to_update_target_model % 15 == 0 or (terminated or truncated):
                     self._train(terminated)
                 # try:
-                #     print(self.replay_memory[-args.fps * time][1:3]) if self.replay_memory[-args.fps * time][1] > 4 else None
+                #     print(self.replay_memory[-time_intvl][1:3]) if self.replay_memory[-time_intvl][1] > 4 else None
                 # except IndexError:
                 #     pass
                 state = new_state
                 total_training_rewards += reward
 
                 if terminated or truncated:
-                    for i in range(1, min(args.fps * time, step) + 1):
+                    for i in range(1, min(time_intvl, step) + 1):
                         self.replay_memory[-i][2] = np.array(list(islice(reward_interval, i-1, None))).mean() + \
                                                     reward_interval_shoot[i-1]
                     self.rewards.append(total_training_rewards)
                     self.epsilons.append(self.epsilon)
 
-                    if episode % 10 == 0:
+                    if episode % 25 == 0:
                         self.save(episode)
+                    timer(start_time, episode, self.train_episodes)
                     print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<4d} "
                           f"with score = {info['score']}, steps = {info['steps']}")
                     total_score += info['score']
@@ -112,6 +123,7 @@ class RLModel:
             keras.backend.clear_session()
 
             print("Epsilon:", self.epsilon)
+            print("==============================================")
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
