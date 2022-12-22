@@ -618,7 +618,7 @@ class TankWar(gym.Env):
         observation = self._get_observation()
 
         # Create a placeholder for additional information
-        info = {}
+        info = {"score": self.score}
 
         if self.render_mode == "human":
             self._render_frame()

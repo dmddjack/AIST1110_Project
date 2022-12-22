@@ -76,10 +76,9 @@ class RLModel:
 
                     if episode % 10 == 0:
                         self.save(episode)
-                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode}")
+                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<5d} with score = {info['score']}")
 
                     if steps_to_update_target_model >= 500:
-                        # print("Copying main network weights to the target network weights")
                         self.target_model.set_weights(self.main_model.get_weights())
                         steps_to_update_target_model = 0
 
