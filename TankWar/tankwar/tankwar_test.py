@@ -53,7 +53,7 @@ def main():
             state, reward, terminated, truncated, info = env.step(action) # take action and get reward
             total_testing_rewards += reward
             
-            if terminated or total_testing_rewards >= 1500: # End the episode
+            if terminated or total_testing_rewards >= 15000: # End the episode
 
                 print(f"Episode {episode:<4d} succeeded in {step+1:<4d} steps with score = {info['score']}")
                 success_episodes += 1
