@@ -52,7 +52,7 @@ class RLModel:
         self.replay_memory = deque(maxlen=20_000)
 
         steps_to_update_target_model = 0
-        time_intvl = 2 * args.fps
+        time_intvl = 1 * args.fps
         total_score, total_steps = 0, 0
         start_time = time()
         for episode in range(1, 1 + self.train_episodes):
