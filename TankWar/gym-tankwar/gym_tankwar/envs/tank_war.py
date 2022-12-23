@@ -361,6 +361,14 @@ class TankWar(gym.Env):
 
         return 30 * original_speed // render_fps
 
+    @staticmethod
+    def _get_distance(p: int, x1: int, y1: int, x2: int, y2: int) -> float:
+        """
+        An internal function that calculates l_p norm.
+        """
+        
+        return (abs(x1 - x2) ** p + abs(y1 - y2) ** p) ** (1 / p)
+
     def step(self, action: int | None):
         self.steps += 1
         reward = 0.03 * np.sqrt(self.steps)
@@ -474,13 +482,13 @@ class TankWar(gym.Env):
             )
 
             # Get penalty of the player is too close to the enemy
-            distance = abs(enemy_x - player_x) + abs(enemy_y - player_y)
+            distance = self._get_distance(2, enemy_x, enemy_y, player_x, player_y)
             if distance < 50:
                 reward += -1000 / distance
 
             # Get reward if the bullet shot by player is close to the enemy
             for bullet in self.player_bullets:
-                distance = (bullet.rect.centerx - enemy_x) + abs(bullet.rect.centery - enemy_y)
+                distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, enemy_x, enemy_y)
                 if 0 < distance < 20:
                     reward += 10 / distance
 
@@ -550,7 +558,7 @@ class TankWar(gym.Env):
 
         # Get penalty if the player is too close to the enemy bullets
         for bullet in self.enemy_bullets:
-            distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
+            distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, player_x, player_y)
             if 0 < distance < 20:
                 reward += -200 / distance
 
@@ -590,7 +598,7 @@ class TankWar(gym.Env):
                 self.player,
                 self.enemies,
                 dokill=True,
-        ) or
+            ) or
                 pygame.sprite.spritecollide(
                     self.player,
                     self.enemy_bullets,

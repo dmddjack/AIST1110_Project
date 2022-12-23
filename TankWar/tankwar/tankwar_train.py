@@ -272,10 +272,16 @@ def main():
     np.random.seed(args.seed)
     tf.random.set_seed(args.seed)
 
+    observation_space_shape = env.observation_space.shape
+    action_space_size = env.action_space.n
+
+    print("Shape of observation space:", observation_space_shape)
+    print("Size of action space      :", action_space_size)
+
     my_model = RLModel(
         env, 
-        env.observation_space.shape, 
-        env.action_space.n, 
+        observation_space_shape, 
+        action_space_size, 
         args.train_episodes, 
         args.seed
     )
