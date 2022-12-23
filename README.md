@@ -40,12 +40,12 @@ Project Name: Tank War
 1. Press "q" or "Escape" to quit (except tankwar_play_v2.py)
 
 ## TO-DO
-- [ ] Handle situations when different enemies touch one another \
+- [x] Handle situations when different enemies touch one another \
   ***The current handling method is to kill both enemies. It would be better to reverse their directions.***
-- [ ] Use DQN to train a model
+- [x] Use DQN to train a model
 
 ## Ideas
-- [ ] Difficulty
+- [x] Difficulty
 - [ ] Block
 - [ ] Animations
 - [ ] Multiple scenes
@@ -54,7 +54,7 @@ Project Name: Tank War
 ## Report
 
 ### Length
-- Word: 5 pages
+- Word: 5 pages(stick to this)
 - PowerPoint: 10-20 pages
 
 ### Content
