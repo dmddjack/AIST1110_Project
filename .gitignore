@@ -135,3 +135,6 @@ TankWar/tankwar/models/model_*
 
 # sample env
 sample
+
+# zip file
+*.zip
