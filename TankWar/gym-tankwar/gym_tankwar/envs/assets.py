@@ -11,7 +11,9 @@ audios_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audios")
 
 
 class _Movable(pygame.sprite.Sprite):
+    # Max. speed is the player's bullet's speed in 15-FPS mode
     max_speed = 14
+
     def __init__(
             self,
             window_width: int,
@@ -52,7 +54,8 @@ class _Movable(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect(center=(start_x, start_y))
 
     def get_observation(self) -> np.ndarray:
-        """A function that returns the movable's location."""
+        """A function that returns the movable's information."""
+
         # direction = [0]*4
         # direction[self.angle//90] = 1
         return np.array(

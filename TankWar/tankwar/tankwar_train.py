@@ -72,6 +72,7 @@ class RLModel:
         for episode in range(1, 1 + self.train_episodes):
             total_training_rewards = 0
             state, info = self.env.reset()
+            # state, info = self.env.reset(seed=args.seed)
 
             terminated, truncated = False, False
             reward_interval = deque(maxlen=time_intvl)
@@ -127,7 +128,7 @@ class RLModel:
 
                     timer(start_time, episode, self.train_episodes)
                     print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
-                          f"with score = {info['score']}, steps = {info['steps']}")
+                          f"with score = {info['score']:<2d}, steps = {info['steps']}")
                     total_score += info['score']
                     total_steps += info['steps']
                     if steps_to_update_target_model >= 400:
@@ -141,11 +142,11 @@ class RLModel:
             keras.backend.clear_session()
 
             print("Epsilon:", self.epsilon)
-            print("==============================================")
+            print("=" * 40)
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
-        print(f"avg score:{total_score/self.train_episodes}, avg steps:{total_steps/self.train_episodes}")
+        print(f"Avg score: {total_score/self.train_episodes}, Avg steps: {total_steps/self.train_episodes}")
 
     def _agent(self):
         learning_rate = 0.001
@@ -239,7 +240,6 @@ class RLModel:
         ax1 = fig.add_subplot(211)
         ax1.plot(np.arange(1, self.train_episodes + 1), self.rewards)
         ax1.set_title("Rewards over all episodes in training")
-        ax1.set_xlabel("Episode")
         ax1.set_ylabel("Reward")
 
         ax2 = fig.add_subplot(212)

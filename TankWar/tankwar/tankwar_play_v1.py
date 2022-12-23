@@ -141,10 +141,9 @@ def main():
                 if terminated:
                     print(
                         f"Episode {episode:<5d} " 
-                        f"succeeded in {step:<5d} " 
+                        f"completed in {step:<5d} " 
                         f"steps.\tReward = {rewards}, "
                         f"score = {info['score']}"
-
                     )
                     success_episodes += 1
                 else:

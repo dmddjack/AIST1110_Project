@@ -42,7 +42,7 @@ def main():
             if not running:
                 break
 
-            # Detect events for quitting the game
+            # Detect events and pressed keys for quitting the game
             if args.mode == "human":
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -59,7 +59,7 @@ def main():
             
             if terminated or total_testing_rewards >= 15000: # End the episode
                 print(f"Episode {episode:<{len(str(args.test_episodes))}d} "
-                      f"succeeded in {step+1:<{len(str(args.max_steps))}d} "
+                      f"completed in {step+1:<{len(str(args.max_steps))}d} "
                       f"steps with score = {info['score']}")
                 success_episodes += 1
                 break
