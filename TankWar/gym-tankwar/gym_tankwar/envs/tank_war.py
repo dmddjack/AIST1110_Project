@@ -12,12 +12,15 @@ class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
     def __init__(self, render_mode: str | None,
-                 starting_hp: int, difficulty: int) -> None:
+                 starting_hp: int, difficulty: int, full_enemy: bool) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
         # The difficulty of AI
         self.difficulty = difficulty
+
+        # Whether or not use all enemies
+        self.full_enemy = full_enemy
 
         # The size of the pygame window
         self.window_width, self.window_height = 450, 350
@@ -216,6 +219,7 @@ class TankWar(gym.Env):
             heart = Heart(self.window_width, i)
             self.hearts.add(heart)
 
+        # Get observation
         observation = self._get_observation()
 
         # Create a placeholder for additional information
@@ -260,8 +264,7 @@ class TankWar(gym.Env):
         # Add the new player to self.all_sprites
         self.all_sprites.add(self.player)
 
-    @staticmethod
-    def _score_to_enemy(score: int, max_enemies: int, render_fps: int) -> tuple[int, int, float]:
+    def _score_to_enemy(self, score: int) -> tuple[int, int, float]:
         """
         An internal function that maps the current score to the behaviour 
         of the enemies.
@@ -280,10 +283,12 @@ class TankWar(gym.Env):
         else:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.2
 
-        # enemy_n = 4
+        if self.full_enemy:
+            enemy_n = self.max_enemies
 
-        return min(enemy_n, max_enemies), \
-               TankWar._fps_to_speed(enemy_speed, render_fps), enemy_shoot_intvl
+        return min(enemy_n, self.max_enemies), \
+               TankWar._fps_to_speed(enemy_speed, self.metadata["render_fps"]), \
+               enemy_shoot_intvl
 
     def _create_enemy(self) -> tuple[int, float]:
         """
@@ -291,10 +296,7 @@ class TankWar(gym.Env):
         random locations on the borders.
         """
 
-        enemy_n, enemy_speed, enemy_shoot_intvl = \
-            self._score_to_enemy(self.score,
-                                 self.max_enemies,
-                                 self.metadata["render_fps"])
+        enemy_n, enemy_speed, enemy_shoot_intvl = self._score_to_enemy(self.score)
         for _ in range(enemy_n - len(self.enemies)):
             # Keep recreating an enemy until it does not collide 
             # with the player or other enemies

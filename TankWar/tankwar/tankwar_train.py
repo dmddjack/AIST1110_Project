@@ -1,18 +1,23 @@
+#!/usr/bin/env python3
+
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+
+import gc
 import random
 from collections import deque
 from itertools import islice
-from time import time, gmtime, strftime
+from time import gmtime, strftime, time
+
 import gym
 import gym_tankwar
-import gc
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 from tensorflow import keras
+
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 # tf.debugging.set_log_device_placement(True)
 from cmdargs import args
@@ -21,7 +26,7 @@ from cmdargs import args
 def timer(start_time, progress, total) -> int:
     """Use time.time() to get the start time. Print the current progress and the estimated time.
     Return value updates the progress variable. Written for ESTR 2018 project."""
-    print(f"Progress: {progress}/{total} ({progress / total * 100}%)")
+    print(f"Progress: {progress}/{total} ({progress/total*100:.2f}%)")
     print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time() - start_time))}")
     print(f"Estimated time: {strftime(f'%H:%M:%S', gmtime((time() - start_time) / (progress / total)))}")
     # return progress + 1
@@ -110,7 +115,7 @@ class RLModel:
                     if episode % 25 == 0:
                         self.save(episode)
                     timer(start_time, episode, self.train_episodes)
-                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<4d} "
+                    print(f"Total training rewards = {total_training_rewards:<7.1f} at episode {episode:<4d} "
                           f"with score = {info['score']}, steps = {info['steps']}")
                     total_score += info['score']
                     total_steps += info['steps']
@@ -144,14 +149,7 @@ class RLModel:
         )
         model.add(
             keras.layers.Dense(
-                128,
-                activation='relu',
-                kernel_initializer=init
-            )
-        )
-        model.add(
-            keras.layers.Dense(
-                128,
+                64,
                 activation='relu',
                 kernel_initializer=init
             )
@@ -159,6 +157,13 @@ class RLModel:
         model.add(
             keras.layers.Dense(
                 64,
+                activation='relu',
+                kernel_initializer=init
+            )
+        )
+        model.add(
+            keras.layers.Dense(
+                32,
                 activation='relu',
                 kernel_initializer=init
             )
@@ -245,6 +250,7 @@ def main():
         render_mode=args.mode, 
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
+        full_enemy=args.full_enemy,
     )
     env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
 

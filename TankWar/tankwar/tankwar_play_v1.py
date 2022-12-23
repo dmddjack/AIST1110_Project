@@ -80,7 +80,8 @@ def main():
         "gym_tankwar/TankWar-v0",
         render_mode=render_mode,
         starting_hp=args.starting_hp,
-        difficulty=args.difficulty
+        difficulty=args.difficulty,
+        full_enemy=args.full_enemy,
     )
 
     if args.mode != "human":

@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
+
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+
 import gym
-import pygame
 import gym_tankwar
 import numpy as np
+import pygame
 from tensorflow import keras
 
 from cmdargs import args
@@ -19,6 +22,7 @@ def main():
         render_mode=args.mode, 
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
+        full_enemy=args.full_enemy,
     )
 
     env.action_space.seed(args.seed)

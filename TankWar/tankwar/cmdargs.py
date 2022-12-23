@@ -33,5 +33,7 @@ parser.add_argument("-f", "--file", type=str,
 parser.add_argument("-d", "--difficulty", type=int, 
                     help="The difficulty of AI",
                     default=0)
+parser.add_argument("-fe", "--full_enemy", action="store_true", 
+                    help="Use all enemies")
 args = parser.parse_args()
 print(args)

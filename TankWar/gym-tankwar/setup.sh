@@ -1,1 +1,1 @@
-pip install -e . --user
+pip install -e .
