@@ -61,13 +61,16 @@ class TankWar(gym.Env):
         # The minimum difference between player and border coordinate
         self.border = 23
 
-        # size of observation space of each tank
+        # Size of observation space of each tank
         self.obs_size = 4
+
+        # Constant to fill empty observation space
+        self.empty_space = -1
 
         # Normalized observation: all tanks' and bullets' location, angle, speed, 
         # and the player's cannon's remaining reloading time
         self.observation_space = spaces.Box(
-            low=0,
+            low=-1,
             high=1,
             shape=((1 + self.max_player_bullets + self.max_enemies + self.max_enemy_bullets) * self.obs_size + 1,),
             dtype=np.float32,
@@ -109,12 +112,12 @@ class TankWar(gym.Env):
                 (0, self.max_player_bullets * self.obs_size \
                  - len(player_bullets_observation)),
                 "constant",
-                constant_values=(0,),
+                constant_values=(self.empty_space,),
             )
         else:
             player_bullets_observation = np.full(
                 (self.max_player_bullets * self.obs_size,),
-                0,
+                self.empty_space,
                 dtype=np.float32,
             )
 
@@ -127,12 +130,12 @@ class TankWar(gym.Env):
                 enemies_observation,
                 (0, self.max_enemies * self.obs_size - len(enemies_observation)),
                 "constant",
-                constant_values=(0,),
+                constant_values=(self.empty_space,),
             )
         else:
             enemies_observation = np.full(
                 (self.max_enemies * self.obs_size,),
-                0,
+                self.empty_space,
                 dtype=np.float32,
             )
 
@@ -146,12 +149,12 @@ class TankWar(gym.Env):
                 (0, self.max_enemy_bullets * self.obs_size \
                  - len(enemy_bullets_observation)),
                 "constant",
-                constant_values=(0,),
+                constant_values=(self.empty_space,),
             )
         else:
             enemy_bullets_observation = np.full(
                 (self.max_enemy_bullets * self.obs_size,),
-                0,
+                self.empty_space,
                 dtype=np.float32,
             )
 
@@ -179,7 +182,7 @@ class TankWar(gym.Env):
             dtype=np.float32,
         )
 
-        # print(observation.shape)  # For testing purposes
+        # print(observation)  # For testing purposes
 
         return observation
 
@@ -362,7 +365,7 @@ class TankWar(gym.Env):
         self.steps += 1
         reward = 0.03 * np.sqrt(self.steps)
         terminated = False
-        # reward = 0
+        
         if self.pygame_initialized:
             # Set the player's engine sound volume to normal
             self.tank_engine_sound.set_volume(0.4)
@@ -370,7 +373,6 @@ class TankWar(gym.Env):
         """Step 1: Move the player according to the action"""
         player_shoot = False
         if action is not None:
-
             player_dx, player_dy, player_new_angle = 0, 0, self.player.angle
 
             if action == 0 or action == 5:  # Move up
@@ -396,7 +398,6 @@ class TankWar(gym.Env):
             elif action == 9:  # Shoot while not moving
                 player_shoot = True
 
-
             if action != 4 and action != 9:
                 # Update the player's location
                 touches_border, _ = self.player.update(
@@ -412,6 +413,7 @@ class TankWar(gym.Env):
                 # Get penalty if the player keeps touching border
                 if touches_border:
                     reward += self.player_on_border_reward * np.sqrt(self.steps)
+
             """
             Step 2: Shoot a bullet from the player's location if player_shoot 
             is true
@@ -470,15 +472,16 @@ class TankWar(gym.Env):
                 dy=enemy_dy,
                 new_angle=enemy_new_angle
             )
+
             # Get penalty of the player is too close to the enemy
             distance = abs(enemy_x - player_x) + abs(enemy_y - player_y)
-            if distance < 100:
+            if distance < 50:
                 reward += -1000 / distance
 
             # Get reward if the bullet shot by player is close to the enemy
             for bullet in self.player_bullets:
                 distance = (bullet.rect.centerx - enemy_x) + abs(bullet.rect.centery - enemy_y)
-                if 0 < distance < 100:
+                if 0 < distance < 20:
                     reward += 10 / distance
 
             # Get reward if the direction of player shoot is towards the enemy. Get penalty otherwise.
@@ -548,7 +551,7 @@ class TankWar(gym.Env):
         # Get penalty if the player is too close to the enemy bullets
         for bullet in self.enemy_bullets:
             distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
-            if 0 < distance < 50:
+            if 0 < distance < 20:
                 reward += -200 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
