@@ -482,12 +482,12 @@ class TankWar(gym.Env):
                     reward += 10 / distance
 
             # Get reward if the direction of player shoot is towards the enemy. Get penalty otherwise.
-            # if player_shoot:
-            #     angles = (np.sign([enemy_y - player_y, enemy_x - player_x]) + 1) * 90 + np.array([0, 90])
-            #     if self.player.angle in angles:
-            #         reward += self.player_shoot_reward
-            #     else:
-            #         reward += -self.player_shoot_reward
+            if player_shoot:
+                angles = (np.sign([enemy_y - player_y, enemy_x - player_x]) + 1) * 90 + np.array([0, 90])
+                if self.player.angle in angles:
+                    reward += self.player_shoot_reward
+                else:
+                    reward += -self.player_shoot_reward
             # Ensure the enemy does not stuck at the border by 
             # reversing its direction
             if enemy_touches_border:
@@ -542,14 +542,14 @@ class TankWar(gym.Env):
                         bullet.rect.bottom <= 0 or
                         bullet.rect.top >= self.window_height):
                     bullet.kill()
-                    # if bullets == self.player_bullets:
-                    #     reward += self.player_miss_reward
+                    if bullets == self.player_bullets:
+                        reward += self.player_miss_reward
 
         # Get penalty if the player is too close to the enemy bullets
-        # for bullet in self.enemy_bullets:
-        #     distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
-        #     if 0 < distance < 50:
-        #         reward += -200 / distance
+        for bullet in self.enemy_bullets:
+            distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
+            if 0 < distance < 50:
+                reward += -200 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
         bullet_lifetime = None

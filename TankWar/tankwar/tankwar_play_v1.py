@@ -97,7 +97,8 @@ def main():
     success_episodes = 0
     running = True
     step = 0
-    score = 0
+    rewards = 0
+    total_rewards = 0
     total_score = 0
     total_steps = 0
     action = None
@@ -130,37 +131,40 @@ def main():
             observation, reward, terminated, truncated, info = env.step(action)
 
             step += 1
-            score += reward
+            rewards += reward
 
             if terminated or truncated:
-                observation, info = env.reset(seed=args.seed)
+                observation, reset_info = env.reset(seed=args.seed)
 
                 # Print the episode's final result
                 if terminated:
                     print(
-                        f"Episode {episode:<5d} " \
-                        f"succeeded in {step:<5d} " \
-                        f"steps ...\tReward = {score}"
+                        f"Episode {episode:<5d} " 
+                        f"succeeded in {step:<5d} " 
+                        f"steps.\tReward = {rewards}, "
+                        f"score = {info['score']}"
+
                     )
                     success_episodes += 1
                 else:
                     print(
-                        f"Episode {episode:<5d} " \
-                        f"truncated ...\t\t\tScore = {score}"
+                        f"Episode {episode:<5d} " 
+                        f"truncated ...\t\t\treward = {rewards}"
                     )
 
                 episode += 1
                 total_steps += step
                 step = 0
-                total_score += score
-                score = 0
+                total_score += info['score']
+                total_rewards += rewards
+                rewards = 0
 
     if episode > 0:
         # Print success rate of all episodes
         print(
             f"Success rate = {success_episodes / episode:.2f}    " \
             f"Average steps = {total_steps // episode}    " \
-            f"Average reward = {total_score / episode:.2f}"
+            f"Average reward = {total_rewards / episode:.2f}"
         )
 
     env.close()
