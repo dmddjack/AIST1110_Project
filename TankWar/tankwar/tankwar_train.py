@@ -41,7 +41,7 @@ class RLModel:
         self.seed = seed
 
     def run(self):
-        self.rewards, self.epsilons = [], []
+        self.rewards, self.epsilons, self.scores, self.steps = [], [], [], []
 
         self.main_model = self._agent()
         self.target_model = self._agent()
@@ -57,7 +57,7 @@ class RLModel:
         start_time = time()
         for episode in range(1, 1 + self.train_episodes):
             total_training_rewards = 0
-            state, info = self.env.reset()
+            state, reset_info = self.env.reset()
 
             terminated, truncated = False, False
             reward_interval = deque(maxlen=time_intvl)
@@ -106,6 +106,8 @@ class RLModel:
                                                     reward_interval_shoot[i-1]
                     self.rewards.append(total_training_rewards)
                     self.epsilons.append(self.epsilon)
+                    self.scores.append(info['score'])
+                    self.steps.append(info['steps'])
 
                     if episode % 25 == 0:
                         self.save(episode)
@@ -218,17 +220,36 @@ class RLModel:
     def plot(self):
         fig = plt.figure()
 
-        ax1 = fig.add_subplot(211)
-        ax1.plot(np.arange(1, self.train_episodes + 1), self.rewards)
+        ax1 = fig.add_subplot(221)
+        x = np.arange(1, self.train_episodes + 1)
+        ax1.plot(x, self.rewards, "o")
+        m, b = np.polyfit(x, self.rewards, 1)
+        ax1.plot(x, m * x + b)
         ax1.set_title("Rewards over all episodes in training")
         ax1.set_xlabel("Episode")
         ax1.set_ylabel("Reward")
 
-        ax2 = fig.add_subplot(212)
-        ax2.plot(np.arange(1, self.train_episodes + 1), self.epsilons)
-        ax2.set_title("Epsilons over all episodes in training")
+        ax2 = fig.add_subplot(222)
+        ax2.plot(x, self.scores, "o")
+        m, b = np.polyfit(x, self.scores, 1)
+        ax2.plot(x, m * x + b)
+        ax2.set_title("Scores over all episodes in training")
         ax2.set_xlabel("Episode")
-        ax2.set_ylabel("Epsilon")
+        ax2.set_ylabel("Scores")
+
+        ax3 = fig.add_subplot(223)
+        ax3.plot(x, self.steps, "o")
+        m, b = np.polyfit(x, self.steps, 1)
+        ax3.plot(x, m * x + b)
+        ax3.set_title("Steps over all episodes in training")
+        ax3.set_xlabel("Episode")
+        ax3.set_ylabel("Steps")
+
+        ax4 = fig.add_subplot(224)
+        ax4.plot(np.arange(1, self.train_episodes + 1), self.epsilons)
+        ax4.set_title("Epsilons over all episodes in training")
+        ax4.set_xlabel("Episode")
+        ax4.set_ylabel("Epsilon")
 
         plt.show()
 
