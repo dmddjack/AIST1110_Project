@@ -70,7 +70,7 @@ class TankWar(gym.Env):
         # Normalized observation: all tanks' and bullets' location, angle, speed, 
         # and the player's cannon's remaining reloading time
         self.observation_space = spaces.Box(
-            low=-1,
+            low=min(self.empty_space, 0),
             high=1,
             shape=((1 + self.max_player_bullets + self.max_enemies + self.max_enemy_bullets) * self.obs_size + 1,),
             dtype=np.float32,
@@ -363,10 +363,8 @@ class TankWar(gym.Env):
 
     @staticmethod
     def _get_distance(p: int, x1: int, y1: int, x2: int, y2: int) -> float:
-        """
-        An internal function that calculates l_p norm.
-        """
-        
+        """An internal function that calculates l_p norm."""
+
         return (abs(x1 - x2) ** p + abs(y1 - y2) ** p) ** (1 / p)
 
     def step(self, action: int | None):
@@ -488,7 +486,7 @@ class TankWar(gym.Env):
 
             # Get reward if the bullet shot by player is close to the enemy
             for bullet in self.player_bullets:
-                distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, enemy_x, enemy_y)
+                distance = self._get_distance(10, bullet.rect.centerx, bullet.rect.centery, enemy_x, enemy_y)
                 if 0 < distance < 20:
                     reward += 10 / distance
 
@@ -558,8 +556,8 @@ class TankWar(gym.Env):
 
         # Get penalty if the player is too close to the enemy bullets
         for bullet in self.enemy_bullets:
-            distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, player_x, player_y)
-            if 0 < distance < 20:
+            distance = self._get_distance(10, bullet.rect.centerx, bullet.rect.centery, player_x, player_y)
+            if 0 < distance < 50:
                 reward += -200 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
