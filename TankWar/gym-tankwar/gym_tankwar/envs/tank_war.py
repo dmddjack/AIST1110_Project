@@ -64,10 +64,8 @@ class TankWar(gym.Env):
         # size of observation space of each tank
         self.obs_size = 4
 
-        # Normalized observation: the player's location, 
-        # the player's bullets' location, 
-        # enemies' locations, enemy's bullets' locations, 
-        # player's cannon's remaining reloading time
+        # Normalized observation: all tanks' and bullets' location, angle, speed, 
+        # and the player's cannon's remaining reloading time
         self.observation_space = spaces.Box(
             low=0,
             high=1,
@@ -116,7 +114,7 @@ class TankWar(gym.Env):
         else:
             player_bullets_observation = np.full(
                 (self.max_player_bullets * self.obs_size,),
-                -1,
+                0,
                 dtype=np.float32,
             )
 
@@ -134,7 +132,7 @@ class TankWar(gym.Env):
         else:
             enemies_observation = np.full(
                 (self.max_enemies * self.obs_size,),
-                -1,
+                0,
                 dtype=np.float32,
             )
 
@@ -153,7 +151,7 @@ class TankWar(gym.Env):
         else:
             enemy_bullets_observation = np.full(
                 (self.max_enemy_bullets * self.obs_size,),
-                -1,
+                0,
                 dtype=np.float32,
             )
 
@@ -563,7 +561,7 @@ class TankWar(gym.Env):
                 reward += self.enemy_killed_reward
                 self.score += 1
                 bullet_lifetime = bullet.lifetime
-                print(f"lifetime: {bullet.lifetime}")
+                # print(f"lifetime: {bullet.lifetime}")
                 bullet.kill()
 
                 if self.pygame_initialized:

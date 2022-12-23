@@ -24,16 +24,21 @@ from cmdargs import args
 
 
 def timer(start_time, progress, total) -> int:
-    """Use time.time() to get the start time. Print the current progress and the estimated time.
-    Return value updates the progress variable. Written for ESTR 2018 project."""
+    """
+    Use time.time() to get the start time. Print the current progress and the estimated time.
+    Return value updates the progress variable. Written for ESTR 2018 project.
+    """
+
     print(f"Progress: {progress}/{total} ({progress/total*100:.2f}%)")
     print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time() - start_time))}")
     print(f"Estimated time: {strftime(f'%H:%M:%S', gmtime((time() - start_time) / (progress / total)))}")
+
     # return progress + 1
 
 
 class RLModel:
     def __init__(self, env: gym.Env, state_shape, action_shape, train_episodes: int, seed: int | None = None):
+        # Initialize variables that determine the behaviour of the searching of the action space
         self.epsilon = 1
         self.max_epsilon = 1
         self.min_epsilon = 0.01
@@ -48,10 +53,14 @@ class RLModel:
     def run(self):
         self.rewards, self.epsilons = [], []
 
+        # Initialize the two models
         self.main_model = self._agent()
         self.target_model = self._agent()
+
+        # Copy main_model's weights to target_model
         self.target_model.set_weights(self.main_model.get_weights())
 
+        # Print the summary of the target model
         print(self.target_model.summary())
 
         self.replay_memory = deque(maxlen=20_000)
@@ -112,10 +121,12 @@ class RLModel:
                     self.rewards.append(total_training_rewards)
                     self.epsilons.append(self.epsilon)
 
+                    # Save the target model for every 25 episodes
                     if episode % 25 == 0:
                         self.save(episode)
+
                     timer(start_time, episode, self.train_episodes)
-                    print(f"Total training rewards = {total_training_rewards:<7.1f} at episode {episode:<4d} "
+                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
                           f"with score = {info['score']}, steps = {info['steps']}")
                     total_score += info['score']
                     total_steps += info['steps']
@@ -124,6 +135,8 @@ class RLModel:
                         steps_to_update_target_model = 0
 
                     break
+
+            # Garbage collection for memory issue
             gc.collect()
             keras.backend.clear_session()
 
