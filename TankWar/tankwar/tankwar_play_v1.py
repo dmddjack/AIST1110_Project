@@ -11,10 +11,10 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action):
     """An internal function that maps pressed key(s) to an action"""
 
     def filter_dir(keys):
-        dir_ = (keys[pygame.K_UP] or keys[pygame.K_w],    # Going up
-               keys[pygame.K_DOWN] or keys[pygame.K_s],   # Going down
-               keys[pygame.K_LEFT] or keys[pygame.K_a],   # Going left
-               keys[pygame.K_RIGHT] or keys[pygame.K_d])  # Going right
+        dir_ = (keys[pygame.K_UP] or keys[pygame.K_w],     # Going up
+                keys[pygame.K_DOWN] or keys[pygame.K_s],   # Going down
+                keys[pygame.K_LEFT] or keys[pygame.K_a],   # Going left
+                keys[pygame.K_RIGHT] or keys[pygame.K_d])  # Going right
         actions = []
         # if keys[4]:
         #     for i, value in enumerate(keys[:4]):
@@ -69,6 +69,7 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action):
                     action_space.remove(action)
             if not action_space:
                 return last_action + 5 * shoot
+
     return action_space[0] + 5 * shoot
 
 
@@ -83,6 +84,7 @@ def main():
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
         full_enemy=args.full_enemy,
+        ending=True
     )
 
     if args.mode != "human":
@@ -93,21 +95,17 @@ def main():
 
     env.action_space.seed(args.seed)
 
-    observation, info = env.reset(seed=args.seed)
+    observation, reset_info = env.reset(seed=args.seed)
 
     episode = 0
     success_episodes = 0
     running = True
     step = 0
     rewards = 0
-    total_rewards = 0
-    total_score = 0
-    total_steps = 0
+    total_rewards = total_score = total_steps = 0
     action = None
     pressed_keys = None
     while running and episode < args.episodes:
-        episode += 1
-
         if args.mode == "human":
             # Detect pygame events for quiting the game
             for event in pygame.event.get():
@@ -138,28 +136,43 @@ def main():
             rewards += reward
 
             if terminated or truncated:
-                observation, reset_info = env.reset(seed=args.seed)
-
                 # Print the episode's final result
                 if terminated:
                     print(
-                        f"Episode {episode:<5d} " 
+                        f"Episode {episode:<{len(str(args.episodes))}d} " 
                         f"completed in {step:<5d} " 
-                        f"steps.\tReward = {rewards}, "
+                        f"steps with reward = {rewards:<8.1f}, "
                         f"score = {info['score']}"
                     )
                     success_episodes += 1
                 else:
                     print(
-                        f"Episode {episode:<5d} " 
-                        f"truncated ...\t\t\treward = {rewards}"
+                        f"Episode {episode:<{len(str(args.episodes))}d} " 
+                        f"truncated with reward = {rewards:<8.1f}, "
+                        f"score = {info['score']}"
                     )
 
+                episode += 1
                 total_steps += step
                 step = 0
-                total_score += info['score']
+                total_score += info["score"]
                 total_rewards += rewards
                 rewards = 0
+
+                done = False if args.mode == "human" else True
+
+                if args.mode == "human":
+                    pressed_keys = pygame.key.get_pressed()
+                    if pressed_keys[pygame.K_r]:
+                        done = True
+
+                    elif pressed_keys[pygame.K_q]:
+                        running = False
+                        done = True
+
+                # Reset the environment
+                if done:
+                    observation, reset_info = env.reset(seed=args.seed)
 
     if episode > 0:
         print(
