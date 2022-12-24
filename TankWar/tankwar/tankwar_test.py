@@ -34,7 +34,7 @@ def main():
     total_score = total_step = 0
     episode = 0
     running = True
-    while episode < args.test_episodes and running:
+    while running and episode < args.test_episodes:
         episode += 1
 
         state, info = env.reset()
@@ -58,7 +58,7 @@ def main():
             state, reward, terminated, truncated, info = env.step(action) # take action and get reward
             total_testing_rewards += reward
             
-            if terminated or total_testing_rewards >= 15000: # End the episode
+            if terminated or total_testing_rewards >= 50000: # End the episode
                 success_episodes += 1
                 total_score += info["score"]
                 total_step += step
