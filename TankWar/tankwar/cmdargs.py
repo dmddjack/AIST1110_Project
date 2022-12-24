@@ -11,6 +11,12 @@ parser.add_argument("-sh", "--starting_hp", type=int,
 parser.add_argument("-s", "--seed", type=int, 
                     help="The seed for random number generator",
                     default=None)
+parser.add_argument("-d", "--difficulty", type=int, 
+                    help="The difficulty of AI",
+                    choices=(0, 1), metavar="[0, 1]",
+                    default=0)
+parser.add_argument("-fe", "--full_enemy", action="store_true", 
+                    help="Use all enemies")
 parser.add_argument("-e", "--episodes", type=int, 
                     help="The number of episodes", 
                     default=1000)
@@ -30,8 +36,5 @@ parser.add_argument("-fps", "--fps", type=int,
 parser.add_argument("-f", "--file", type=str, 
                     help="The file name of the HDF5 model file",
                     default=None)
-parser.add_argument("-d", "--difficulty", type=int, 
-                    help="The difficulty of AI",
-                    default=0)
 args = parser.parse_args()
 print(args)

@@ -12,12 +12,15 @@ class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
     def __init__(self, render_mode: str | None,
-                 starting_hp: int, difficulty: int) -> None:
+                 starting_hp: int, difficulty: int, full_enemy: bool) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
         # The difficulty of AI
         self.difficulty = difficulty
+
+        # Whether or not use all enemies
+        self.full_enemy = full_enemy
 
         # The size of the pygame window
         self.window_width, self.window_height = 450, 350
@@ -58,15 +61,16 @@ class TankWar(gym.Env):
         # The minimum difference between player and border coordinate
         self.border = 23
 
-        # size of observation space of each tank
+        # Size of observation space of each tank
         self.obs_size = 4
 
-        # Normalized observation: the player's location, 
-        # the player's bullets' location, 
-        # enemies' locations, enemy's bullets' locations, 
-        # player's cannon's remaining reloading time
+        # Constant to fill empty observation space
+        self.empty_space = -1
+
+        # Normalized observation: all tanks' and bullets' location, angle, speed, 
+        # and the player's cannon's remaining reloading time
         self.observation_space = spaces.Box(
-            low=0,
+            low=min(self.empty_space, 0),
             high=1,
             shape=((1 + self.max_player_bullets + self.max_enemies + self.max_enemy_bullets) * self.obs_size + 1,),
             dtype=np.float32,
@@ -108,12 +112,12 @@ class TankWar(gym.Env):
                 (0, self.max_player_bullets * self.obs_size \
                  - len(player_bullets_observation)),
                 "constant",
-                constant_values=(0,),
+                constant_values=(self.empty_space,),
             )
         else:
             player_bullets_observation = np.full(
                 (self.max_player_bullets * self.obs_size,),
-                -1,
+                self.empty_space,
                 dtype=np.float32,
             )
 
@@ -126,12 +130,12 @@ class TankWar(gym.Env):
                 enemies_observation,
                 (0, self.max_enemies * self.obs_size - len(enemies_observation)),
                 "constant",
-                constant_values=(0,),
+                constant_values=(self.empty_space,),
             )
         else:
             enemies_observation = np.full(
                 (self.max_enemies * self.obs_size,),
-                -1,
+                self.empty_space,
                 dtype=np.float32,
             )
 
@@ -145,12 +149,12 @@ class TankWar(gym.Env):
                 (0, self.max_enemy_bullets * self.obs_size \
                  - len(enemy_bullets_observation)),
                 "constant",
-                constant_values=(0,),
+                constant_values=(self.empty_space,),
             )
         else:
             enemy_bullets_observation = np.full(
                 (self.max_enemy_bullets * self.obs_size,),
-                -1,
+                self.empty_space,
                 dtype=np.float32,
             )
 
@@ -178,7 +182,7 @@ class TankWar(gym.Env):
             dtype=np.float32,
         )
 
-        # print(observation.shape)  # For testing purposes
+        # print(observation)  # For testing purposes
 
         return observation
 
@@ -216,6 +220,7 @@ class TankWar(gym.Env):
             heart = Heart(self.window_width, i)
             self.hearts.add(heart)
 
+        # Get observation
         observation = self._get_observation()
 
         # Create a placeholder for additional information
@@ -260,8 +265,7 @@ class TankWar(gym.Env):
         # Add the new player to self.all_sprites
         self.all_sprites.add(self.player)
 
-    @staticmethod
-    def _score_to_enemy(score: int, max_enemies: int, render_fps: int) -> tuple[int, int, float]:
+    def _score_to_enemy(self, score: int) -> tuple[int, int, float]:
         """
         An internal function that maps the current score to the behaviour 
         of the enemies.
@@ -280,10 +284,12 @@ class TankWar(gym.Env):
         else:
             enemy_n, enemy_speed, enemy_shoot_intvl = 4, 3, 1.2
 
-        # enemy_n = 4
+        if self.full_enemy:
+            enemy_n = self.max_enemies
 
-        return min(enemy_n, max_enemies), \
-               TankWar._fps_to_speed(enemy_speed, render_fps), enemy_shoot_intvl
+        return min(enemy_n, self.max_enemies), \
+               TankWar._fps_to_speed(enemy_speed, self.metadata["render_fps"]), \
+               enemy_shoot_intvl
 
     def _create_enemy(self) -> tuple[int, float]:
         """
@@ -291,10 +297,7 @@ class TankWar(gym.Env):
         random locations on the borders.
         """
 
-        enemy_n, enemy_speed, enemy_shoot_intvl = \
-            self._score_to_enemy(self.score,
-                                 self.max_enemies,
-                                 self.metadata["render_fps"])
+        enemy_n, enemy_speed, enemy_shoot_intvl = self._score_to_enemy(self.score)
         for _ in range(enemy_n - len(self.enemies)):
             # Keep recreating an enemy until it does not collide 
             # with the player or other enemies
@@ -358,11 +361,17 @@ class TankWar(gym.Env):
 
         return 30 * original_speed // render_fps
 
+    @staticmethod
+    def _get_distance(p: int, x1: int, y1: int, x2: int, y2: int) -> float:
+        """An internal function that returns l_p norm."""
+
+        return (abs(x1 - x2) ** p + abs(y1 - y2) ** p) ** (1 / p)
+
     def step(self, action: int | None):
         self.steps += 1
         reward = 0.03 * np.sqrt(self.steps)
         terminated = False
-        # reward = 0
+        
         if self.pygame_initialized:
             # Set the player's engine sound volume to normal
             self.tank_engine_sound.set_volume(0.4)
@@ -370,7 +379,6 @@ class TankWar(gym.Env):
         """Step 1: Move the player according to the action"""
         player_shoot = False
         if action is not None:
-
             player_dx, player_dy, player_new_angle = 0, 0, self.player.angle
 
             if action == 0 or action == 5:  # Move up
@@ -396,7 +404,6 @@ class TankWar(gym.Env):
             elif action == 9:  # Shoot while not moving
                 player_shoot = True
 
-
             if action != 4 and action != 9:
                 # Update the player's location
                 touches_border, _ = self.player.update(
@@ -412,6 +419,7 @@ class TankWar(gym.Env):
                 # Get penalty if the player keeps touching border
                 if touches_border:
                     reward += self.player_on_border_reward * np.sqrt(self.steps)
+
             """
             Step 2: Shoot a bullet from the player's location if player_shoot 
             is true
@@ -431,6 +439,7 @@ class TankWar(gym.Env):
             enemy.speed = enemy_speed
             enemy_dx, enemy_dy, enemy_new_angle = 0, 0, enemy.angle
             enemy_x, enemy_y = enemy.rect.center
+
             # Rotates an enemy with an interval of not less than 2 seconds 
             # and a probability of 2% (based on a framerate of 30)
             if self.difficulty == 0:
@@ -440,6 +449,7 @@ class TankWar(gym.Env):
                         [angle for angle in self.angles if angle != enemy.angle]
                     )
                     enemy.last_rotate = self.steps
+
             # Rotates an enemy with an interval of not less than 1 seconds
             # and a probability of 2% (based on a framerate of 30)
             # Improves rotation AI of enemy
@@ -452,8 +462,6 @@ class TankWar(gym.Env):
                                       90 * (np.sign([(player_y - enemy_y), (player_x - enemy_x)])[dir_inx] + 1)
                     enemy.last_rotate = self.steps
                     # print(enemy_new_angle)
-            else:
-                raise ValueError
 
             if enemy_new_angle == 0:  # Move up
                 enemy_dy = -1
@@ -470,16 +478,17 @@ class TankWar(gym.Env):
                 dy=enemy_dy,
                 new_angle=enemy_new_angle
             )
+
             # Get penalty of the player is too close to the enemy
-            distance = abs(enemy_x - player_x) + abs(enemy_y - player_y)
+            distance = self._get_distance(2, enemy_x, enemy_y, player_x, player_y)
             if distance < 100:
                 reward += -1000 / distance
 
             # Get reward if the bullet shot by player is close to the enemy
             for bullet in self.player_bullets:
-                distance = (bullet.rect.centerx - enemy_x) + abs(bullet.rect.centery - enemy_y)
-                if 0 < distance < 100:
-                    reward += 10 / distance
+                distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, enemy_x, enemy_y)
+                if 0 < distance < 50:
+                    reward += 100 / distance
 
             # Get reward if the direction of player shoot is towards the enemy. Get penalty otherwise.
             if player_shoot:
@@ -506,10 +515,11 @@ class TankWar(gym.Env):
         enemy_collision = pygame.sprite.groupcollide(
             self.enemies, self.enemies, dokilla=False, dokillb=False
         )
-        for enemy in [enemy
-                      for enemies in enemy_collision.values()
-                      if len(enemies) > 1
-                      for enemy in enemies][:2]:
+        collided_enemies = [enemy
+                            for enemies in enemy_collision.values()
+                            if len(enemies) > 1
+                            for enemy in enemies]
+        for enemy in collided_enemies[:len(collided_enemies)//2]:
             # Reverse the directions of two enemies when they collide 
             # with each other
             enemy_dx, enemy_dy = 0, 0
@@ -517,13 +527,13 @@ class TankWar(gym.Env):
                         [angle for angle in self.angles if angle != enemy.angle]
                     )
             if enemy_new_angle == 0:  # Move up
-                enemy_dy = -1
+                enemy_dy = -2
             elif enemy_new_angle == 90:  # Move left
-                enemy_dx = -1
+                enemy_dx = -2
             elif enemy_new_angle == 180:  # Move down
-                enemy_dy = 1
+                enemy_dy = 2
             else:  # Move right
-                enemy_dx = 1
+                enemy_dx = 2
             enemy.update(enemy_dx, enemy_dy, enemy_new_angle)
             enemy.last_rotate = self.steps
 
@@ -547,9 +557,9 @@ class TankWar(gym.Env):
 
         # Get penalty if the player is too close to the enemy bullets
         for bullet in self.enemy_bullets:
-            distance = (bullet.rect.centerx - player_x) + abs(bullet.rect.centery - player_y)
+            distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, player_x, player_y)
             if 0 < distance < 50:
-                reward += -200 / distance
+                reward += -1000 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
         bullet_lifetime = None
@@ -561,7 +571,7 @@ class TankWar(gym.Env):
                 reward += self.enemy_killed_reward
                 self.score += 1
                 bullet_lifetime = bullet.lifetime
-                print(f"lifetime: {bullet.lifetime}")
+                # print(f"lifetime: {bullet.lifetime}")
                 bullet.kill()
 
                 if self.pygame_initialized:
@@ -587,7 +597,7 @@ class TankWar(gym.Env):
                 self.player,
                 self.enemies,
                 dokill=True,
-        ) or
+            ) or
                 pygame.sprite.spritecollide(
                     self.player,
                     self.enemy_bullets,

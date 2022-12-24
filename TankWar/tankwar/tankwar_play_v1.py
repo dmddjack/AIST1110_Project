@@ -32,6 +32,7 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action):
 
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
         return None
+
     last_action_space = filter_dir(last_pressed_keys)
     action_space = filter_dir(pressed_keys)
     shoot = pressed_keys[pygame.K_SPACE]
@@ -80,7 +81,8 @@ def main():
         "gym_tankwar/TankWar-v0",
         render_mode=render_mode,
         starting_hp=args.starting_hp,
-        difficulty=args.difficulty
+        difficulty=args.difficulty,
+        full_enemy=args.full_enemy,
     )
 
     if args.mode != "human":
@@ -93,7 +95,7 @@ def main():
 
     observation, info = env.reset(seed=args.seed)
 
-    episode = 1
+    episode = 0
     success_episodes = 0
     running = True
     step = 0
@@ -103,7 +105,9 @@ def main():
     total_steps = 0
     action = None
     pressed_keys = None
-    while running and episode <= args.episodes:
+    while running and episode < args.episodes:
+        episode += 1
+
         if args.mode == "human":
             # Detect pygame events for quiting the game
             for event in pygame.event.get():
@@ -140,10 +144,9 @@ def main():
                 if terminated:
                     print(
                         f"Episode {episode:<5d} " 
-                        f"succeeded in {step:<5d} " 
+                        f"completed in {step:<5d} " 
                         f"steps.\tReward = {rewards}, "
                         f"score = {info['score']}"
-
                     )
                     success_episodes += 1
                 else:
@@ -152,7 +155,6 @@ def main():
                         f"truncated ...\t\t\treward = {rewards}"
                     )
 
-                episode += 1
                 total_steps += step
                 step = 0
                 total_score += info['score']
@@ -160,11 +162,10 @@ def main():
                 rewards = 0
 
     if episode > 0:
-        # Print success rate of all episodes
         print(
-            f"Success rate = {success_episodes / episode:.2f}    " \
-            f"Average steps = {total_steps // episode}    " \
-            f"Average reward = {total_rewards / episode:.2f}"
+            f"Completion rate = {success_episodes/episode:.2f}, "
+            f"Avg score = {total_rewards/episode:.2f}, "
+            f"Avg steps = {total_steps/episode:.2f}"
         )
 
     env.close()

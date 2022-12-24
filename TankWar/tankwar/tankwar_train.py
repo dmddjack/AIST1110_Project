@@ -1,38 +1,42 @@
+#!/usr/bin/env python3
+
+# Code reference: https://github.com/mswang12/minDQN/blob/main/minDQN.py
+
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+
+import gc
 import random
 from collections import deque
+from datetime import datetime
 from itertools import islice
-from time import time, gmtime, strftime
+from time import gmtime, strftime, time
+
 import gym
 import gym_tankwar
-import gc
-import numpy as np
-import tensorflow as tf
 import matplotlib.pyplot as plt
+import numpy as np
+import pygame
+import tensorflow as tf
 from tensorflow import keras
+
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 # tf.debugging.set_log_device_placement(True)
 from cmdargs import args
 
 
-def timer(start_time, progress, total) -> int:
-    """Use time.time() to get the start time. Print the current progress and the estimated time.
-    Return value updates the progress variable. Written for ESTR 2018 project."""
-    print(f"Progress: {progress}/{total} ({progress / total * 100}%)")
-    print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time() - start_time))}")
-    print(f"Estimated time: {strftime(f'%H:%M:%S', gmtime((time() - start_time) / (progress / total)))}")
-    # return progress + 1
-
-
 class RLModel:
     def __init__(self, env: gym.Env, state_shape, action_shape, train_episodes: int, seed: int | None = None):
+        # Initialize variables that determine the behaviour of the searching of the action space
         self.epsilon = 1
         self.max_epsilon = 1
         self.min_epsilon = 0.01
         self.decay = 0.01
+
+        # Number of neurons for each layer
+        self.neurons = (256, 128, 128, 64, 32)
 
         self.env = env
         self.state_shape = state_shape
@@ -43,27 +47,49 @@ class RLModel:
     def run(self):
         self.rewards, self.epsilons, self.scores, self.steps = [], [], [], []
 
-        self.main_model = self._agent()
-        self.target_model = self._agent()
+
+        # Initialize the two models
+        self.main_model = self._agent(self.neurons)
+        self.target_model = self._agent(self.neurons)
+
+        # Copy main_model's weights to target_model
         self.target_model.set_weights(self.main_model.get_weights())
 
+        # Print the summary of the target model
         print(self.target_model.summary())
 
         self.replay_memory = deque(maxlen=20_000)
 
         steps_to_update_target_model = 0
         time_intvl = 1 * args.fps
-        total_score, total_steps = 0, 0
         start_time = time()
-        for episode in range(1, 1 + self.train_episodes):
+        episode = 0
+        running = True
+        while episode < self.train_episodes and running:
+            episode += 1
             total_training_rewards = 0
+
             state, reset_info = self.env.reset()
+
 
             terminated, truncated = False, False
             reward_interval = deque(maxlen=time_intvl)
             reward_interval_shoot = deque(maxlen=time_intvl)
             step = 0
             while not (terminated or truncated):
+                if not running:
+                    break
+
+                # Detect events and pressed keys for quitting the game
+                if args.mode == "human":
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            running = False
+
+                    pressed_keys = pygame.key.get_pressed()
+                    if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
+                        running = False
+
                 steps_to_update_target_model += 1
                 step += 1
                 random_num = np.random.rand()
@@ -109,62 +135,46 @@ class RLModel:
                     self.scores.append(info['score'])
                     self.steps.append(info['steps'])
 
+                    # Save the target model for every 25 episodes
                     if episode % 25 == 0:
                         self.save(episode)
-                    timer(start_time, episode, self.train_episodes)
-                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<4d} "
-                          f"with score = {info['score']}, steps = {info['steps']}")
-                    total_score += info['score']
-                    total_steps += info['steps']
+
+                    self._timer(start_time, episode, self.train_episodes)
+                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
+                          f"with score = {info['score']:<2d}, steps = {info['steps']}")
+                    self.scores.append(info["score"])
+                    self.steps.append(info["steps"])
                     if steps_to_update_target_model >= 400:
                         self.target_model.set_weights(self.main_model.get_weights())
                         steps_to_update_target_model = 0
 
                     break
+
+            # Garbage collection for memory issue
             gc.collect()
             keras.backend.clear_session()
 
             print("Epsilon:", self.epsilon)
-            print("==============================================")
+            print("=" * 40)
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
-        print(f"avg score:{total_score/self.train_episodes}, avg steps:{total_steps/self.train_episodes}")
+        print(f"Avg score: {self._average(self.scores):.2f}, Avg steps: {self._average(self.steps):.2f}")
 
-    def _agent(self):
+    def _agent(self, neurons):
         learning_rate = 0.001
 
         init = tf.keras.initializers.HeUniform(seed=self.seed)
         model = keras.Sequential()
-        model.add(
-            keras.layers.Dense(
-                128,
-                input_shape=self.state_shape, 
-                activation='relu', 
-                kernel_initializer=init
+        for neuron in neurons:
+            model.add(
+                keras.layers.Dense(
+                    neuron,
+                    input_shape=self.state_shape, 
+                    activation='relu', 
+                    kernel_initializer=init
+                )
             )
-        )
-        model.add(
-            keras.layers.Dense(
-                128,
-                activation='relu',
-                kernel_initializer=init
-            )
-        )
-        model.add(
-            keras.layers.Dense(
-                128,
-                activation='relu',
-                kernel_initializer=init
-            )
-        )
-        model.add(
-            keras.layers.Dense(
-                64,
-                activation='relu',
-                kernel_initializer=init
-            )
-        )
         model.add(
             keras.layers.Dense(
                 self.action_shape, 
@@ -188,12 +198,13 @@ class RLModel:
 
         if len(self.replay_memory) < min_replay_size:
             return
+
         # start_inx = random.randint(0, len(self.replay_memory) - batch_size)
         # mini_batch = list(islice(self.replay_memory, start_inx, start_inx+batch_size))
         mini_batch = random.sample(self.replay_memory, batch_size)
-        current_states = np.array([transition[0] for transition in mini_batch])
+        current_states = np.array([batch[0] for batch in mini_batch])
         current_qs_list = self.main_model.predict(current_states, verbose=0)
-        new_current_states = np.array([transition[3] for transition in mini_batch])
+        new_current_states = np.array([batch[3] for batch in mini_batch])
         future_qs_list = self.target_model.predict(new_current_states, verbose=0)
 
         x, y = [], []
@@ -211,20 +222,19 @@ class RLModel:
 
         self.main_model.fit(np.array(x), np.array(y), batch_size=batch_size, verbose=0, shuffle=True)
 
-    # def get_qs(self, model, state, step):
-    #     return model.predict(state.reshape([1, state.shape[0]]))[0]
-
     def save(self, episode: int):
         self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}.h5")
 
     def plot(self):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(10, 8))
+
 
         ax1 = fig.add_subplot(221)
         x = np.arange(1, self.train_episodes + 1)
         ax1.plot(x, self.rewards, "o")
         m, b = np.polyfit(x, self.rewards, 1)
         ax1.plot(x, m * x + b)
+
         ax1.set_title("Rewards over all episodes in training")
         ax1.set_xlabel("Episode")
         ax1.set_ylabel("Reward")
@@ -251,7 +261,27 @@ class RLModel:
         ax4.set_xlabel("Episode")
         ax4.set_ylabel("Epsilon")
 
+
         plt.show()
+
+    @staticmethod
+    def _timer(start_time, progress, total) -> None:
+        """
+        An internal function that prints the current progress, time elapsed 
+        and ETA.
+        """
+
+        time_elapsed = time() - start_time
+        
+        print(f"Progress: {progress}/{total} ({progress/total*100:.2f}%)")
+        print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
+        print(f"Estimated time remaining: {strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
+
+    @staticmethod
+    def _average(lst: list[int | float]) -> float:
+        """An internal function that returns the average of a list of numbers"""
+
+        return sum(lst) / len(lst)
 
 
 def main():
@@ -266,6 +296,7 @@ def main():
         render_mode=args.mode, 
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
+        full_enemy=args.full_enemy,
     )
     env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
 
@@ -274,10 +305,16 @@ def main():
     np.random.seed(args.seed)
     tf.random.set_seed(args.seed)
 
+    observation_space_shape = env.observation_space.shape
+    action_space_size = env.action_space.n
+
+    print("Shape of observation space:", observation_space_shape)
+    print("Size of action space      :", action_space_size)
+
     my_model = RLModel(
         env, 
-        env.observation_space.shape, 
-        env.action_space.n, 
+        observation_space_shape, 
+        action_space_size, 
         args.train_episodes, 
         args.seed
     )

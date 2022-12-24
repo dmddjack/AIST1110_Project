@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
+
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+
 import gym
-import pygame
 import gym_tankwar
 import numpy as np
+import pygame
 from tensorflow import keras
 
 from cmdargs import args
@@ -19,6 +22,7 @@ def main():
         render_mode=args.mode, 
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
+        full_enemy=args.full_enemy,
     )
 
     env.action_space.seed(args.seed)
@@ -27,6 +31,7 @@ def main():
 
     print("Testing started ...")
     success_episodes = 0
+    total_score = total_step = 0
     episode = 0
     running = True
     while episode < args.test_episodes and running:
@@ -34,11 +39,11 @@ def main():
 
         state, info = env.reset()
         total_testing_rewards = 0
-        for step in range(args.max_steps):
+        for step in range(1, args.max_steps + 1):
             if not running:
                 break
 
-            # Detect events for quitting the game
+            # Detect events and pressed keys for quitting the game
             if args.mode == "human":
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -54,14 +59,19 @@ def main():
             total_testing_rewards += reward
             
             if terminated or total_testing_rewards >= 15000: # End the episode
-
-                print(f"Episode {episode:<4d} succeeded in {step+1:<4d} steps with score = {info['score']}")
                 success_episodes += 1
+                total_score += info["score"]
+                total_step += step
+                print(f"Episode {episode:<{len(str(args.test_episodes))}d} "
+                      f"completed in {step:<{len(str(args.max_steps))}d} "
+                      f"steps with score = {info['score']}")
                 break
+
         else:
             print(f"Episode {episode} truncated ...")
         
-    print(f"Success rate: {success_episodes/episode:.2f}")
+    print(f"Completion rate: {success_episodes/episode:.2f}")
+    print(f"Avg score: {total_score/success_episodes:.2f}, Avg steps: {total_step/success_episodes:.2f}")
 
     env.close()
 
