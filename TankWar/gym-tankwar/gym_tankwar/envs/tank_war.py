@@ -363,7 +363,7 @@ class TankWar(gym.Env):
 
     @staticmethod
     def _get_distance(p: int, x1: int, y1: int, x2: int, y2: int) -> float:
-        """An internal function that calculates l_p norm."""
+        """An internal function that returns l_p norm."""
 
         return (abs(x1 - x2) ** p + abs(y1 - y2) ** p) ** (1 / p)
 

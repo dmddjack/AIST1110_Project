@@ -271,6 +271,8 @@ class RLModel:
 
     @staticmethod
     def _average(lst: list[int | float]) -> float:
+        """An internal function that returns the average of a list of numbers"""
+        
         return sum(lst) / len(lst)
 
 
