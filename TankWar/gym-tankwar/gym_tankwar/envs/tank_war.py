@@ -439,6 +439,7 @@ class TankWar(gym.Env):
             enemy.speed = enemy_speed
             enemy_dx, enemy_dy, enemy_new_angle = 0, 0, enemy.angle
             enemy_x, enemy_y = enemy.rect.center
+
             # Rotates an enemy with an interval of not less than 2 seconds 
             # and a probability of 2% (based on a framerate of 30)
             if self.difficulty == 0:
@@ -448,6 +449,7 @@ class TankWar(gym.Env):
                         [angle for angle in self.angles if angle != enemy.angle]
                     )
                     enemy.last_rotate = self.steps
+
             # Rotates an enemy with an interval of not less than 1 seconds
             # and a probability of 2% (based on a framerate of 30)
             # Improves rotation AI of enemy
@@ -460,8 +462,6 @@ class TankWar(gym.Env):
                                       90 * (np.sign([(player_y - enemy_y), (player_x - enemy_x)])[dir_inx] + 1)
                     enemy.last_rotate = self.steps
                     # print(enemy_new_angle)
-            else:
-                raise ValueError
 
             if enemy_new_angle == 0:  # Move up
                 enemy_dy = -1
@@ -481,14 +481,14 @@ class TankWar(gym.Env):
 
             # Get penalty of the player is too close to the enemy
             distance = self._get_distance(2, enemy_x, enemy_y, player_x, player_y)
-            if distance < 50:
+            if distance < 100:
                 reward += -1000 / distance
 
             # Get reward if the bullet shot by player is close to the enemy
             for bullet in self.player_bullets:
-                distance = self._get_distance(10, bullet.rect.centerx, bullet.rect.centery, enemy_x, enemy_y)
-                if 0 < distance < 20:
-                    reward += 10 / distance
+                distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, enemy_x, enemy_y)
+                if 0 < distance < 50:
+                    reward += 100 / distance
 
             # Get reward if the direction of player shoot is towards the enemy. Get penalty otherwise.
             if player_shoot:
@@ -556,9 +556,9 @@ class TankWar(gym.Env):
 
         # Get penalty if the player is too close to the enemy bullets
         for bullet in self.enemy_bullets:
-            distance = self._get_distance(10, bullet.rect.centerx, bullet.rect.centery, player_x, player_y)
+            distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, player_x, player_y)
             if 0 < distance < 50:
-                reward += -200 / distance
+                reward += -1000 / distance
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
         bullet_lifetime = None

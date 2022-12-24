@@ -13,6 +13,7 @@ parser.add_argument("-s", "--seed", type=int,
                     default=None)
 parser.add_argument("-d", "--difficulty", type=int, 
                     help="The difficulty of AI",
+                    choices=(0, 1), metavar="[0, 1]",
                     default=0)
 parser.add_argument("-fe", "--full_enemy", action="store_true", 
                     help="Use all enemies")

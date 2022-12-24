@@ -15,6 +15,7 @@ import gym
 import gym_tankwar
 import matplotlib.pyplot as plt
 import numpy as np
+import pygame
 import tensorflow as tf
 from tensorflow import keras
 
@@ -69,7 +70,10 @@ class RLModel:
         time_intvl = 1 * args.fps
         total_score, total_steps = 0, 0
         start_time = time()
-        for episode in range(1, 1 + self.train_episodes):
+        episode = 0
+        running = True
+        while episode < self.train_episodes and running:
+            episode += 1
             total_training_rewards = 0
             state, info = self.env.reset()
             # state, info = self.env.reset(seed=args.seed)
@@ -79,6 +83,19 @@ class RLModel:
             reward_interval_shoot = deque(maxlen=time_intvl)
             step = 0
             while not (terminated or truncated):
+                if not running:
+                    break
+
+                # Detect events and pressed keys for quitting the game
+                if args.mode == "human":
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            running = False
+
+                    pressed_keys = pygame.key.get_pressed()
+                    if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
+                        running = False
+
                 steps_to_update_target_model += 1
                 step += 1
                 random_num = np.random.rand()

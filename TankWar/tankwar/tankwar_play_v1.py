@@ -32,6 +32,7 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action):
 
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
         return None
+        
     last_action_space = filter_dir(last_pressed_keys)
     action_space = filter_dir(pressed_keys)
     shoot = pressed_keys[pygame.K_SPACE]
