@@ -24,19 +24,6 @@ print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 from cmdargs import args
 
 
-def timer(start_time, progress, total) -> int:
-    """
-    Use time.time() to get the start time. Print the current progress and the estimated time.
-    Return value updates the progress variable. Written for ESTR 2018 project.
-    """
-
-    print(f"Progress: {progress}/{total} ({progress/total*100:.2f}%)")
-    print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time() - start_time))}")
-    print(f"Estimated time: {strftime(f'%H:%M:%S', gmtime((time() - start_time) / (progress / total)))}")
-
-    # return progress + 1
-
-
 class RLModel:
     def __init__(self, env: gym.Env, state_shape, action_shape, train_episodes: int, seed: int | None = None):
         # Initialize variables that determine the behaviour of the searching of the action space
@@ -143,7 +130,7 @@ class RLModel:
                     if episode % 25 == 0:
                         self.save(episode)
 
-                    timer(start_time, episode, self.train_episodes)
+                    self._timer(start_time, episode, self.train_episodes)
                     print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
                           f"with score = {info['score']:<2d}, steps = {info['steps']}")
                     total_score += info['score']
@@ -266,6 +253,19 @@ class RLModel:
         ax2.set_ylabel("Epsilon")
 
         plt.show()
+
+    @staticmethod
+    def _timer(start_time, progress, total) -> None:
+        """
+        An internal function that prints the current progress, time elapsed 
+        and ETA.
+        """
+
+        time_elapsed = time() - start_time
+        
+        print(f"Progress: {progress}/{total} ({progress/total*100:.2f}%)")
+        print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
+        print(f"ETA: {strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
 
 
 def main():
