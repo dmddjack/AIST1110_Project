@@ -192,12 +192,13 @@ class RLModel:
 
         if len(self.replay_memory) < min_replay_size:
             return
+
         # start_inx = random.randint(0, len(self.replay_memory) - batch_size)
         # mini_batch = list(islice(self.replay_memory, start_inx, start_inx+batch_size))
         mini_batch = random.sample(self.replay_memory, batch_size)
-        current_states = np.array([transition[0] for transition in mini_batch])
+        current_states = np.array([batch[0] for batch in mini_batch])
         current_qs_list = self.main_model.predict(current_states, verbose=0)
-        new_current_states = np.array([transition[3] for transition in mini_batch])
+        new_current_states = np.array([batch[3] for batch in mini_batch])
         future_qs_list = self.target_model.predict(new_current_states, verbose=0)
 
         x, y = [], []
@@ -214,9 +215,6 @@ class RLModel:
             y.append(current_qs)
 
         self.main_model.fit(np.array(x), np.array(y), batch_size=batch_size, verbose=0, shuffle=True)
-
-    # def get_qs(self, model, state, step):
-    #     return model.predict(state.reshape([1, state.shape[0]]))[0]
 
     def save(self, episode: int):
         self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}.h5")
@@ -272,7 +270,7 @@ class RLModel:
     @staticmethod
     def _average(lst: list[int | float]) -> float:
         """An internal function that returns the average of a list of numbers"""
-        
+
         return sum(lst) / len(lst)
 
 
