@@ -183,7 +183,8 @@ class RLModel:
             )
         )
         model.compile(
-            loss=tf.keras.losses.Huber(), 
+            loss=tf.keras.losses.Huber(),
+            # loss=tf.keras.losses.MeanSquaredError(reduction="auto", name="mean_squared_error"),
             optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate), 
             metrics=['accuracy']
         )
@@ -261,7 +262,7 @@ class RLModel:
         ax4.set_xlabel("Episode")
         ax4.set_ylabel("Epsilon")
 
-
+        plt.savefig(f"training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
         plt.show()
 
     @staticmethod
