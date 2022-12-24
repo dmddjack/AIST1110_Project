@@ -265,7 +265,7 @@ class RLModel:
         
         print(f"Progress: {progress}/{total} ({progress/total*100:.2f}%)")
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
-        print(f"ETA: {strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
+        print(f"Estimated time remaining: {strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
 
 
 def main():
