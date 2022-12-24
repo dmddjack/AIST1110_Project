@@ -43,7 +43,7 @@ class RLModel:
         self.seed = seed
 
     def run(self):
-        self.rewards, self.epsilons = [], []
+        self.rewards, self.scores, self.steps, self.epsilons = [], [], [], []
 
         # Initialize the two models
         self.main_model = self._agent(self.neurons)
@@ -59,7 +59,6 @@ class RLModel:
 
         steps_to_update_target_model = 0
         time_intvl = 1 * args.fps
-        total_score, total_steps = 0, 0
         start_time = time()
         episode = 0
         running = True
@@ -137,8 +136,8 @@ class RLModel:
                     self._timer(start_time, episode, self.train_episodes)
                     print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
                           f"with score = {info['score']:<2d}, steps = {info['steps']}")
-                    total_score += info["score"]
-                    total_steps += info["steps"]
+                    self.scores.append(info["score"])
+                    self.steps.append(info["steps"])
                     if steps_to_update_target_model >= 400:
                         self.target_model.set_weights(self.main_model.get_weights())
                         steps_to_update_target_model = 0
@@ -154,7 +153,7 @@ class RLModel:
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
-        print(f"Avg score: {total_score/self.train_episodes:.2f}, Avg steps: {total_steps/self.train_episodes:.2f}")
+        print(f"Avg score: {self._average(self.scores):.2f}, Avg steps: {self._average(self.steps):.2f}")
 
     def _agent(self, neurons):
         learning_rate = 0.001
@@ -225,17 +224,33 @@ class RLModel:
     def plot(self):
         fig = plt.figure(figsize=(10, 8))
 
-        ax1 = fig.add_subplot(211)
-        ax1.plot(np.arange(1, self.train_episodes + 1), self.rewards)
+        x = np.arange(1, self.train_episodes + 1)
+
+        ax1 = fig.add_subplot(221)
+        ax1.plot(x, self.rewards)
         ax1.set_title("Rewards over all episodes in training")
         ax1.set_xlabel("Episode")
         ax1.set_ylabel("Reward")
 
-        ax2 = fig.add_subplot(212)
-        ax2.plot(np.arange(1, self.train_episodes + 1), self.epsilons)
-        ax2.set_title("Epsilons over all episodes in training")
+        ax2 = fig.add_subplot(222)
+        ax2.plot(x, self.scores)
+        ax2.set_title("Scores over all episodes in training")
         ax2.set_xlabel("Episode")
-        ax2.set_ylabel("Epsilon")
+        ax2.set_ylabel("Score")
+
+        ax3 = fig.add_subplot(223)
+        ax3.plot(x, self.steps)
+        ax3.set_title("Steps over all episodes in training")
+        ax3.set_xlabel("Episode")
+        ax3.set_ylabel("Step")
+
+        ax4 = fig.add_subplot(224)
+        ax4.plot(x, self.epsilons)
+        ax4.set_title("Epsilons over all episodes in training")
+        ax4.set_xlabel("Episode")
+        ax4.set_ylabel("Epsilon")
+
+        fig.tight_layout()
 
         plt.savefig(f"training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
 
@@ -253,6 +268,10 @@ class RLModel:
         print(f"Progress: {progress}/{total} ({progress/total*100:.2f}%)")
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
         print(f"Estimated time remaining: {strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
+
+    @staticmethod
+    def _average(lst: list[int | float]) -> float:
+        return sum(lst) / len(lst)
 
 
 def main():
