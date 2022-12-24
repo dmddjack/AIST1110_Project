@@ -5,14 +5,14 @@ import numpy as np
 import pygame
 from gym import spaces
 
-from .assets import Audios, Background, Enemy, Heart, Player
+from .assets import Audios, Background, Black, Enemy, Heart, Player
 
 
 class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
     def __init__(self, render_mode: str | None,
-                 starting_hp: int, difficulty: int, full_enemy: bool) -> None:
+                 starting_hp: int, difficulty: int, full_enemy: bool, ending: bool = False) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
@@ -21,6 +21,9 @@ class TankWar(gym.Env):
 
         # Whether or not use all enemies
         self.full_enemy = full_enemy
+
+        # Whether or not show ending scene
+        self.ending = ending
 
         # The size of the pygame window
         self.window_width, self.window_height = 450, 350
@@ -643,7 +646,7 @@ class TankWar(gym.Env):
         info = {"score": self.score, "steps": self.steps, "bullet lifetime": bullet_lifetime}
 
         if self.render_mode == "human":
-            self._render_frame()
+            self._render_frame(terminated)
         # print(reward) if reward != 0 else None
         return observation, reward, terminated, False, info
 
@@ -721,7 +724,7 @@ class TankWar(gym.Env):
         if self.render_mode == "rgb_array":
             return self._render_frame()
 
-    def _render_frame(self) -> np.ndarray | None:
+    def _render_frame(self, terminated: bool = False) -> np.ndarray | None:
         if not self.pygame_initialized:
             # Initialize pygame
             pygame.init()
@@ -812,6 +815,13 @@ class TankWar(gym.Env):
                     10,
                 ),
             )
+
+        if terminated and self.ending:
+            black = Black()
+            canvas.blit(black.surf, (0, 0))
+
+            ending_keys_surf = self.font.render("Press [R] to restart, [Q] to quit", True, (255, 255, 255))
+            canvas.blit(ending_keys_surf, (220, 50))
 
         if self.render_mode == "human":
             # Draw the canvas to the pygame window
