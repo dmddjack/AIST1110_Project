@@ -46,6 +46,7 @@ Project Name: Tank War
 - [ ] Add sufficient comments in all scripts
 - [ ] Change variables names in tankwar_train.py
 - [ ] Delete unnecessary codes in all scripts
+- [ ] Solve enemy collision bug
 
 ## Ideas
 - [x] Difficulty
