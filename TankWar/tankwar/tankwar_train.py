@@ -140,7 +140,7 @@ class RLModel:
                         self.save(episode)
 
                     self._timer(start_time, episode, self.train_episodes)
-                    print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
+                    print(f"Total training reward = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
                           f"with score = {info['score']:<2d}, steps = {info['steps']}")
                     self.scores.append(info["score"])
                     self.steps.append(info["steps"])
@@ -261,7 +261,10 @@ class RLModel:
         ax4.set_xlabel("Episode")
         ax4.set_ylabel("Epsilon")
 
+        # Save the figure
+        plt.savefig(f"training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
 
+        # Show the figure
         plt.show()
 
     @staticmethod
