@@ -8,6 +8,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import gc
 import random
 from collections import deque
+from datetime import datetime
 from itertools import islice
 from time import gmtime, strftime, time
 
@@ -222,11 +223,12 @@ class RLModel:
         self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}.h5")
 
     def plot(self):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(10, 8))
 
         ax1 = fig.add_subplot(211)
         ax1.plot(np.arange(1, self.train_episodes + 1), self.rewards)
         ax1.set_title("Rewards over all episodes in training")
+        ax1.set_xlabel("Episode")
         ax1.set_ylabel("Reward")
 
         ax2 = fig.add_subplot(212)
@@ -235,7 +237,7 @@ class RLModel:
         ax2.set_xlabel("Episode")
         ax2.set_ylabel("Epsilon")
 
-        plt.savefig("training_result.png")
+        plt.savefig(f"training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
 
         plt.show()
 
