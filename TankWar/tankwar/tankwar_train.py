@@ -32,6 +32,9 @@ class RLModel:
         self.min_epsilon = 0.01
         self.decay = 0.01
 
+        # Number of neurons for each layer
+        self.neurons = (256, 128, 128, 64, 32)
+
         self.env = env
         self.state_shape = state_shape
         self.action_shape = action_shape
@@ -42,8 +45,8 @@ class RLModel:
         self.rewards, self.epsilons = [], []
 
         # Initialize the two models
-        self.main_model = self._agent()
-        self.target_model = self._agent()
+        self.main_model = self._agent(self.neurons)
+        self.target_model = self._agent(self.neurons)
 
         # Copy main_model's weights to target_model
         self.target_model.set_weights(self.main_model.get_weights())
@@ -133,8 +136,8 @@ class RLModel:
                     self._timer(start_time, episode, self.train_episodes)
                     print(f"Total training rewards = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
                           f"with score = {info['score']:<2d}, steps = {info['steps']}")
-                    total_score += info['score']
-                    total_steps += info['steps']
+                    total_score += info["score"]
+                    total_steps += info["steps"]
                     if steps_to_update_target_model >= 400:
                         self.target_model.set_weights(self.main_model.get_weights())
                         steps_to_update_target_model = 0
@@ -150,42 +153,22 @@ class RLModel:
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
-        print(f"Avg score: {total_score/self.train_episodes}, Avg steps: {total_steps/self.train_episodes}")
+        print(f"Avg score: {total_score/self.train_episodes:.2f}, Avg steps: {total_steps/self.train_episodes:.2f}")
 
-    def _agent(self):
+    def _agent(self, neurons):
         learning_rate = 0.001
 
         init = tf.keras.initializers.HeUniform(seed=self.seed)
         model = keras.Sequential()
-        model.add(
-            keras.layers.Dense(
-                128,
-                input_shape=self.state_shape, 
-                activation='relu', 
-                kernel_initializer=init
+        for neuron in neurons:
+            model.add(
+                keras.layers.Dense(
+                    neuron,
+                    input_shape=self.state_shape, 
+                    activation='relu', 
+                    kernel_initializer=init
+                )
             )
-        )
-        model.add(
-            keras.layers.Dense(
-                64,
-                activation='relu',
-                kernel_initializer=init
-            )
-        )
-        model.add(
-            keras.layers.Dense(
-                64,
-                activation='relu',
-                kernel_initializer=init
-            )
-        )
-        model.add(
-            keras.layers.Dense(
-                32,
-                activation='relu',
-                kernel_initializer=init
-            )
-        )
         model.add(
             keras.layers.Dense(
                 self.action_shape, 
@@ -251,6 +234,8 @@ class RLModel:
         ax2.set_title("Epsilons over all episodes in training")
         ax2.set_xlabel("Episode")
         ax2.set_ylabel("Epsilon")
+
+        plt.savefig("training_result.png")
 
         plt.show()
 

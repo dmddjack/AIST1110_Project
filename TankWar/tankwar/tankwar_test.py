@@ -31,6 +31,7 @@ def main():
 
     print("Testing started ...")
     success_episodes = 0
+    total_score = total_step = 0
     episode = 0
     running = True
     while episode < args.test_episodes and running:
@@ -38,7 +39,7 @@ def main():
 
         state, info = env.reset()
         total_testing_rewards = 0
-        for step in range(args.max_steps):
+        for step in range(1, args.max_steps + 1):
             if not running:
                 break
 
@@ -58,16 +59,19 @@ def main():
             total_testing_rewards += reward
             
             if terminated or total_testing_rewards >= 15000: # End the episode
-                print(f"Episode {episode:<{len(str(args.test_episodes))}d} "
-                      f"completed in {step+1:<{len(str(args.max_steps))}d} "
-                      f"steps with score = {info['score']}")
                 success_episodes += 1
+                total_score += info["score"]
+                total_step += step
+                print(f"Episode {episode:<{len(str(args.test_episodes))}d} "
+                      f"completed in {step:<{len(str(args.max_steps))}d} "
+                      f"steps with score = {info['score']}")
                 break
 
         else:
             print(f"Episode {episode} truncated ...")
         
-    print(f"Success rate: {success_episodes/episode:.2f}")
+    print(f"Completion rate: {success_episodes/episode:.2f}")
+    print(f"Avg score: {total_score/success_episodes:.2f}, Avg steps: {total_step/success_episodes:.2f}")
 
     env.close()
 
