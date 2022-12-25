@@ -139,7 +139,8 @@ sample
 # zip file
 *.zip
 
-#training result pic
+# training result pic
 *training result/
 
+# generated cropped explosion image
 TankWar/gym-tankwar/gym_tankwar/envs/images/explosion/explosion_*.png
