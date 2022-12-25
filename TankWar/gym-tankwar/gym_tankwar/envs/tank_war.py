@@ -612,7 +612,10 @@ class TankWar(gym.Env):
 
             # Kill the player
             self.player.kill()
-            self.tank_engine_sound.set_volume(0)
+
+            # Set volume of engine sound to 0
+            if self.pygame_initialized and self.render_mode == "human":
+                self.tank_engine_sound.set_volume(0)
 
             if self.pygame_initialized and self.render_mode == "human":
                 # Play the explosion sound effect
