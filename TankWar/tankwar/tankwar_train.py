@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# Code reference: https://github.com/mswang12/minDQN/blob/main/minDQN.py
+# Script reference: https://github.com/mswang12/minDQN/blob/main/minDQN.py
+
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
 
