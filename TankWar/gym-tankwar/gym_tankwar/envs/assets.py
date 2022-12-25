@@ -472,4 +472,4 @@ class Black:
         super().__init__()
 
         self.surf = pygame.image.load(self.image_path)
-        self.surf.set_alpha(200)
+        self.surf.set_alpha(160)
