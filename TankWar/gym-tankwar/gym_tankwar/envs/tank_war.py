@@ -801,8 +801,8 @@ class TankWar(gym.Env):
         if self.player.last_shoot != 0:
             reload_bar_len = max(
                 0,
-                80 * (self.metadata["render_fps"] * self.player_shoot_intvl \
-                      - (self.steps - self.player.last_shoot)) \
+                80 * (self.metadata["render_fps"] * self.player_shoot_intvl
+                      - (self.steps - self.player.last_shoot))
                 // (self.metadata["render_fps"] * self.player_shoot_intvl),
             )
             pygame.draw.rect(
