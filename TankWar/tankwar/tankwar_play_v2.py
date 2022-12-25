@@ -29,7 +29,7 @@ def main():
         (pygame.K_a,): 2,
         (pygame.K_RIGHT,): 3,
         (pygame.K_d,): 3,
-        (pygame.K_SPACE,): 4,
+        (pygame.NOEVENT,): 4,
         (pygame.K_UP, pygame.K_SPACE): 5,
         (pygame.K_w, pygame.K_SPACE): 5,
         (pygame.K_DOWN, pygame.K_SPACE): 6,
@@ -38,7 +38,7 @@ def main():
         (pygame.K_a, pygame.K_SPACE): 7,
         (pygame.K_RIGHT, pygame.K_SPACE): 8,
         (pygame.K_d, pygame.K_SPACE): 8,
-        (pygame.NOEVENT,): 9,
+        (pygame.K_SPACE,): 9,
     }
 
     play.play(
