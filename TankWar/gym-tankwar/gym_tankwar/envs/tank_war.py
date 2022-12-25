@@ -58,10 +58,10 @@ class TankWar(gym.Env):
         self.player_killed_reward = -1000
 
         # The reward when the player shoots in a correct direction
-        self.player_shoot_reward = 10
+        self.player_shoot_reward = 100
 
         # The reward when the player shoots misses all targets
-        self.player_miss_reward = -10
+        self.player_miss_reward = -100
 
         # The reward when the player is constrained by the border
         self.player_on_border_reward = -0.1
@@ -508,7 +508,7 @@ class TankWar(gym.Env):
             # Get penalty of the player is too close to the enemy
             distance = self._get_distance(2, enemy_x, enemy_y, player_x, player_y)
             if distance < 100:
-                reward += -1000 / distance
+                reward += -1000 / distance / len(self.enemies)
 
             # Get reward if the bullet shot by player is close to the enemy
             for bullet in self.player_bullets:
@@ -583,7 +583,7 @@ class TankWar(gym.Env):
         for bullet in self.enemy_bullets:
             distance = self._get_distance(2, bullet.rect.centerx, bullet.rect.centery, player_x, player_y)
             if 0 < distance < 50:
-                reward += -1000 / distance
+                reward += -1000 / distance / len(self.enemy_bullets)
 
         """Step 7: Remove the player's bullet if it hits an enemy"""
         bullet_lifetime = None
@@ -594,7 +594,7 @@ class TankWar(gym.Env):
                             dokill=True)
             if enemies_hit:
                 for enemy in enemies_hit:
-                    reward += self.enemy_killed_reward
+                    reward += self.enemy_killed_reward * len(self.enemies)
                     self.score += 1
                     bullet_lifetime = bullet.lifetime
                     self._create_explosion(enemy)
@@ -631,7 +631,7 @@ class TankWar(gym.Env):
                     self.enemy_bullets,
                     dokill=True
                 )):
-            reward += self.player_killed_reward
+            reward += self.player_killed_reward / len(self.enemies)
             self.hp -= 1
 
             # Kill the player
