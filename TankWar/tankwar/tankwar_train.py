@@ -44,7 +44,7 @@ class RLModel:
         self.min_epsilon = 0.01
         self.decay = 0.03
 
-        self.time_intvl_factor = 1
+        self.time_intvl_factor = 1.5
 
         # Number of neurons for each layer
         self.neurons = (256, 128, 128, 64, 32)
@@ -261,7 +261,7 @@ class RLModel:
         ax2.plot(x, self.scores, "o")
         m, b = np.polyfit(x, self.scores, 1)
         ax2.plot(x, m * x + b)
-        ax2.set_title("Scores over all episodes in training")
+        ax2.set_title(f"Scores over all episodes in training | Average: {self._average(self.scores):.2f}")
         ax2.set_xlabel("Episode")
         ax2.set_ylabel("Scores")
 
@@ -270,7 +270,7 @@ class RLModel:
         ax3.plot(x, self.steps, "o")
         m, b = np.polyfit(x, self.steps, 1)
         ax3.plot(x, m * x + b)
-        ax3.set_title("Steps over all episodes in training")
+        ax3.set_title(f"Steps over all episodes in training | Average: {self._average(self.steps):.2f}")
         ax3.set_xlabel("Episode")
         ax3.set_ylabel("Steps")
 
