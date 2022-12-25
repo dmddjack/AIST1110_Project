@@ -12,7 +12,8 @@ class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
     def __init__(self, render_mode: str | None,
-                 starting_hp: int, difficulty: int, full_enemy: bool, ending: bool = False) -> None:
+                 starting_hp: int, difficulty: int, 
+                 full_enemy: bool, ending: bool = False) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
@@ -822,13 +823,15 @@ class TankWar(gym.Env):
             canvas.blit(black.surf, (0, 0))
 
             ending_text = pygame.font.SysFont("Garamond", 50).render("GAME OVER", True, (255, 255, 255))
-            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 25))
+            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 35))
             canvas.blit(ending_text, ending_text_rect)
+
             ending_text = self.font.render("Press [R] to restart", True, (255, 255, 255))
-            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 15))
+            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 5))
             canvas.blit(ending_text, ending_text_rect)
+
             ending_text = self.font.render("Press [Q] or [Esc] to quit", True, (255, 255, 255))
-            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 45))
+            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 35))
             canvas.blit(ending_text, ending_text_rect)
 
         if self.render_mode == "human":

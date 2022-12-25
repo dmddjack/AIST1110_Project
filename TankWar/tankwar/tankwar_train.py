@@ -28,8 +28,10 @@ from cmdargs import args
 
 
 class RLModel:
-    def __init__(self, env: gym.Env, state_shape, action_shape, train_episodes: int, seed: int | None = None):
-        # Initialize variables that determine the behaviour of the searching of the action space
+    def __init__(self, env: gym.Env, state_shape, action_shape, 
+                 train_episodes: int, seed: int | None = None) -> None:
+        # Initialize variables that determine the behaviour of 
+        # the searching of the action space
         self.epsilon = 1
         self.max_epsilon = 1
         self.min_epsilon = 0.01
@@ -44,9 +46,8 @@ class RLModel:
         self.train_episodes = train_episodes
         self.seed = seed
 
-    def run(self):
+    def run(self) -> None:
         self.rewards, self.epsilons, self.scores, self.steps = [], [], [], []
-
 
         # Initialize the two models
         self.main_model = self._agent(self.neurons)
@@ -70,7 +71,6 @@ class RLModel:
             total_training_rewards = 0
 
             state, reset_info = self.env.reset()
-
 
             terminated, truncated = False, False
             reward_interval = deque(maxlen=time_intvl)
@@ -161,7 +161,7 @@ class RLModel:
         
         print(f"Avg score: {self._average(self.scores):.2f}, Avg steps: {self._average(self.steps):.2f}")
 
-    def _agent(self, neurons):
+    def _agent(self, neurons: tuple[int]):
         learning_rate = 0.001
 
         init = tf.keras.initializers.HeUniform(seed=self.seed)
@@ -194,7 +194,7 @@ class RLModel:
 
         return model
 
-    def _train(self, terminated):
+    def _train(self, terminated) -> None:
         learning_rate = 0.7
         discount_factor = 0.618
         batch_size = 512
@@ -226,10 +226,10 @@ class RLModel:
 
         self.main_model.fit(np.array(x), np.array(y), batch_size=batch_size, verbose=0, shuffle=True)
 
-    def save(self, episode: int):
+    def save(self, episode: int) -> None:
         self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}.h5")
 
-    def plot(self):
+    def plot(self) -> None:
         fig = plt.figure(figsize=(10, 8))
 
         x = np.arange(1, self.train_episodes + 1)
