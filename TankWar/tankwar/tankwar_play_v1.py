@@ -30,11 +30,11 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | No
             actions.append(4)  # stand still
         return actions
 
-    if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
+    if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:  # Keys for quitting the game
         return None
-    if pressed_keys[pygame.K_r]:
+    if pressed_keys[pygame.K_r]:  # Key for restarting the game
         return -100
-    if pressed_keys[pygame.K_RETURN]:
+    if pressed_keys[pygame.K_RETURN]:  # Key for starting the game
         return -200
 
     last_action_space = filter_dir(last_pressed_keys)
@@ -171,6 +171,7 @@ def main():
                 observation, reset_info = env.reset(seed=args.seed)
 
         if action is not None:
+            # Apply action to the environment
             observation, reward, terminated, truncated, info = env.step(action)
 
             step += 1
@@ -193,6 +194,7 @@ def main():
                         f"score = {info['score']}"
                     )
 
+                # Keep counting variables
                 episode += 1
                 total_steps += step
                 total_score += info["score"]

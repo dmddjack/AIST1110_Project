@@ -222,6 +222,8 @@ class RLModel:
                 max_future_q = reward
             
             current_qs = current_qs_list[idx]
+
+            # Update Q-value
             current_qs[action] = (1 - learning_rate) * current_qs[action] + learning_rate * max_future_q
 
             x.append(state)
@@ -230,9 +232,13 @@ class RLModel:
         self.main_model.fit(np.array(x), np.array(y), batch_size=batch_size, verbose=0, shuffle=True)
 
     def save(self, episode: int) -> None:
+        """A method that save the target model."""
+
         self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}.h5")
 
     def plot(self) -> None:
+        """A method that plots rewards, scores, steps and epsilons wrt training episodes."""
+
         fig = plt.figure(figsize=(10, 8))
 
         x = np.arange(1, self.train_episodes + 1)

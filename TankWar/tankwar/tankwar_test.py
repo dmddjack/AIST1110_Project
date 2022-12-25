@@ -53,8 +53,10 @@ def main():
                 if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
                     running = False
 
+            # Get action from the model
             predicted = model.predict(state.reshape(1, state.shape[0]), verbose=0)
             action = np.argmax(predicted)
+            
             state, reward, terminated, truncated, info = env.step(action) # take action and get reward
             total_testing_rewards += reward
             
