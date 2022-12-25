@@ -44,7 +44,7 @@ class RLModel:
         self.min_epsilon = 0.01
         self.decay = 0.03
 
-        self.time_intvl_factor = 1.5
+        self.time_intvl_factor = 1
 
         # Number of neurons for each layer
         self.neurons = (256, 128, 128, 64, 32)
@@ -146,7 +146,7 @@ class RLModel:
                     self._timer(start_time, episode, self.train_episodes)
 
                     # Print episode's training result
-                    print(f"Total training reward = {total_training_rewards:<8.1f} "
+                    print(f"Total training reward = {total_training_rewards:<9.2f} "
                           f"at episode {episode:<{len(str(args.train_episodes))}d} "
                           f"with score = {info['score']:<2d}, steps = {info['steps']}")
 
@@ -197,8 +197,8 @@ class RLModel:
         )
 
         model.compile(
-            loss=tf.keras.losses.Huber(),
-            # loss=tf.keras.losses.MeanSquaredError(reduction="auto", name="mean_squared_error"),
+            # loss=tf.keras.losses.Huber(),
+            loss=tf.keras.losses.MeanSquaredError(reduction="auto", name="mean_squared_error"),
             optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
             metrics=['accuracy']
         )
