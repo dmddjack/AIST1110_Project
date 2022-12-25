@@ -102,9 +102,11 @@ def main():
     episode = 0
     success_episodes = 0
     running = True
-    step = 0
     rewards = 0
-    total_rewards = total_score = total_steps = 0
+    total_rewards = 0
+    total_score = 0
+    step = 0
+    total_steps = 0
     action = None
     pressed_keys = None
     gameover = False
@@ -190,7 +192,6 @@ def main():
                 rewards = 0
 
                 gameover = True
-                    
 
     if episode > 0:
         print(

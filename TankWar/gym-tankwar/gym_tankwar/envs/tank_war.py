@@ -229,8 +229,8 @@ class TankWar(gym.Env):
         # Create a placeholder for additional information
         info = {}
 
-        if self.render_mode == "human":
-            self._render_frame()
+        # if self.render_mode == "human":
+        self._render_frame()
 
         return observation, info
 
@@ -375,7 +375,7 @@ class TankWar(gym.Env):
         reward = 0.03 * np.sqrt(self.steps)
         terminated = False
         
-        if self.pygame_initialized:
+        if self.pygame_initialized and self.render_mode == "human":
             # Set the player's engine sound volume to normal
             self.tank_engine_sound.set_volume(0.4)
 
@@ -415,7 +415,7 @@ class TankWar(gym.Env):
                     new_angle=player_new_angle
                 )
 
-                if self.pygame_initialized:
+                if self.pygame_initialized and self.render_mode == "human":
                     # Make the player's engine sound louder
                     self.tank_engine_sound.set_volume(0.9)
 
@@ -577,7 +577,7 @@ class TankWar(gym.Env):
                 # print(f"lifetime: {bullet.lifetime}")
                 bullet.kill()
 
-                if self.pygame_initialized:
+                if self.pygame_initialized and self.render_mode == "human":
                     # Play the explosion sound effect
                     self.explosion_sound.play()
 
@@ -612,7 +612,7 @@ class TankWar(gym.Env):
             # Kill the player
             self.player.kill()
 
-            if self.pygame_initialized:
+            if self.pygame_initialized and self.render_mode == "human":
                 # Play the explosion sound effect
                 self.explosion_sound.play()
 
@@ -645,8 +645,8 @@ class TankWar(gym.Env):
         # Create a placeholder for additional information
         info = {"score": self.score, "steps": self.steps, "bullet lifetime": bullet_lifetime}
 
-        if self.render_mode == "human":
-            self._render_frame(terminated)
+        # if self.render_mode == "human":
+        self._render_frame(terminated)
         # print(reward) if reward != 0 else None
         return observation, reward, terminated, False, info
 
@@ -688,7 +688,7 @@ class TankWar(gym.Env):
             self.player_bullets.add(player_bullet)
             self.all_sprites.add(player_bullet)
 
-            if self.pygame_initialized:
+            if self.pygame_initialized and self.render_mode == "human":
                 # Play the cannon firing sound effect
                 self.cannon_fire_sound.play()
 
@@ -700,7 +700,7 @@ class TankWar(gym.Env):
         """
 
         if (len(self.enemy_bullets) < self.max_enemy_bullets and
-                self.steps - enemy.last_shoot >= \
+                self.steps - enemy.last_shoot >=
                 self.metadata["render_fps"] * interval and
                 self.np_random.random() < self._fps_to_prob(0.05, self.metadata["render_fps"])):
             enemy.last_shoot = self.steps
@@ -728,25 +728,25 @@ class TankWar(gym.Env):
         if not self.pygame_initialized:
             # Initialize pygame
             pygame.init()
+            if self.render_mode == "human":
+                # Initialize sound module
+                pygame.mixer.init()
 
-            # Initialize sound module
-            pygame.mixer.init()
+                # Load and play the background music
+                pygame.mixer.music.load(Audios.background_music)
+                pygame.mixer.music.play(loops=-1)
 
-            # Load and play the background music
-            pygame.mixer.music.load(Audios.background_music)
-            pygame.mixer.music.play(loops=-1)
+                # Load and keep looping the tank engine sound effect
+                self.tank_engine_sound = pygame.mixer.Sound(Audios.tank_engine_sound)
+                self.tank_engine_sound.set_volume(0.4)
+                self.tank_engine_sound.play(loops=-1)
 
-            # Load and keep looping the tank engine sound effect
-            self.tank_engine_sound = pygame.mixer.Sound(Audios.tank_engine_sound)
-            self.tank_engine_sound.set_volume(0.4)
-            self.tank_engine_sound.play(loops=-1)
+                # Load the cannon firing sound effect
+                self.cannon_fire_sound = pygame.mixer.Sound(Audios.cannon_fire_sound)
 
-            # Load the cannon firing sound effect
-            self.cannon_fire_sound = pygame.mixer.Sound(Audios.cannon_fire_sound)
-
-            # Load the explosion sound effect
-            self.explosion_sound = pygame.mixer.Sound(Audios.explosion_sound)
-            self.explosion_sound.set_volume(0.8)
+                # Load the explosion sound effect
+                self.explosion_sound = pygame.mixer.Sound(Audios.explosion_sound)
+                self.explosion_sound.set_volume(0.8)
 
             self.pygame_initialized = True
 
@@ -796,7 +796,7 @@ class TankWar(gym.Env):
         )
         canvas.blit(time_surf, (5, 25))
 
-        # Display the player's cannon's remaining reloading time as a 
+        # Display the player's cannon's remaining reloading time as a
         # shrinking rectangle
         if self.player.last_shoot != 0:
             reload_bar_len = max(
