@@ -27,7 +27,7 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | No
             if value:
                 actions.append(i)
         if not actions:
-            actions.append(4)  # stand still
+            actions.append(4)  # stand still, no action
         return actions
 
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:  # Keys for quitting the game
