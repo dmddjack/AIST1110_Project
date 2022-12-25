@@ -373,9 +373,11 @@ class Explosion(pygame.sprite.Sprite):
     # Code source: https://github.com/russs123/Explosion/blob/main/explosion.py
     def __init__(self, obj):
         pygame.sprite.Sprite.__init__(self)
+
         self.images = []
         if not os.path.exists(os.path.join(images_path, "explosion/explosion_0.png")):
             self.crop_img()
+
         for num in range(1, len([name for name in os.listdir(os.path.join(images_path, "explosion/"))]) - 1, 4):
             # Choose a sampled subset of all images to increase animation speed
             image_path = os.path.join(images_path, f"explosion/explosion_{num}.png")
@@ -385,6 +387,7 @@ class Explosion(pygame.sprite.Sprite):
             elif isinstance(obj, _Bullet):
                 img = pygame.transform.scale(img, (20, 20))
             self.images.append(img)
+
         self.index = 0
         self.surf = self.images[self.index]
         self.rect = self.surf.get_rect()
@@ -392,7 +395,7 @@ class Explosion(pygame.sprite.Sprite):
         self.counter = 0
 
     def update(self, explosion_speed=4):
-        # update explosion animation
+        # Update explosion animation
         self.counter += 1
 
         if self.counter >= explosion_speed and self.index < len(self.images) - 1:
@@ -400,15 +403,16 @@ class Explosion(pygame.sprite.Sprite):
             self.index += 1
             self.surf = self.images[self.index]
 
-        # if the animation is complete, reset animation index
+        # If the animation is completed, reset animation index
         if self.index >= len(self.images) - 1 and self.counter >= explosion_speed:
             self.kill()
 
     @staticmethod
     def crop_img():
         """A tool for cutting the explosion image into pieces"""
-        # Importing Image class from PIL module
-        # Opens a image in RGB mode
+
+        # Import Image class from PIL module and
+        # open the image in RGB mode
         image_path = os.path.join(images_path, "explosion/explosion.png")
         img = Image.open(image_path)
 
