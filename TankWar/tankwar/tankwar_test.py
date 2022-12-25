@@ -28,18 +28,20 @@ def main():
 
     env.action_space.seed(args.seed)
 
+    # Load the model
     model = keras.models.load_model(f"models/{args.file}.h5")
 
     print("Testing started ...")
-    success_episodes = 0
+    episode = success_episodes = 0
     total_score = total_step = 0
-    episode = 0
     running = True
     while running and episode < args.test_episodes:
         episode += 1
-
-        state, info = env.reset()
         total_testing_rewards = 0
+
+        # Reset the environment
+        state, reset_info = env.reset()
+
         for step in range(1, args.max_steps + 1):
             if not running:
                 break
@@ -58,10 +60,12 @@ def main():
             predicted = model.predict(state.reshape(1, state.shape[0]), verbose=0)
             action = np.argmax(predicted)
 
-            state, reward, terminated, truncated, info = env.step(action)  # take action and get reward
+            # Take action and get reward
+            state, reward, terminated, truncated, info = env.step(action)
             total_testing_rewards += reward
 
-            if terminated or total_testing_rewards >= 50000:  # End the episode
+            # End the episode
+            if terminated or total_testing_rewards >= 50000:
                 success_episodes += 1
                 total_score += info["score"]
                 total_step += step
