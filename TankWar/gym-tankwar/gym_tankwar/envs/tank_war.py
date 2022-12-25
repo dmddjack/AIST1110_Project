@@ -534,11 +534,15 @@ class TankWar(gym.Env):
         enemy_collision = pygame.sprite.groupcollide(
             self.enemies, self.enemies, dokilla=False, dokillb=False
         )
-        collided_enemies = [enemy
-                            for enemies in enemy_collision.values()
-                            if len(enemies) > 1
-                            for enemy in enemies]
-        for enemy in collided_enemies[:len(collided_enemies)//2]:
+        collided_enemies = []
+        # print(list(enemy_collision.items()))
+        for target, enemies in enemy_collision.items():
+            if len(enemies) > 1:
+                for enemy in enemies:
+                    if enemy is not target:
+                        collided_enemies.append(enemy)
+
+        for enemy in collided_enemies:
             # Reverse the directions of two enemies when they collide 
             # with each other
             enemy_dx, enemy_dy = 0, 0
