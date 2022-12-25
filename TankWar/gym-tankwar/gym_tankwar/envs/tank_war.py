@@ -633,9 +633,8 @@ class TankWar(gym.Env):
             else:
                 reward += self.player_killed_reward / len(self.enemies) \
                     if len(self.enemies) != 0 else self.player_killed_reward
+
             self.hp -= 1
-
-
 
             # Set volume of engine sound to 0
             if self.pygame_initialized and self.render_mode == "human":
