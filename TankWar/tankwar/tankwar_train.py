@@ -183,7 +183,7 @@ class RLModel:
                     input_shape=self.state_shape,
                     activation='relu',
                     kernel_initializer=init,
-                    name=f"dense_{i}"
+                    name=f"dense_{i}",
                 )
             )
 
@@ -192,7 +192,7 @@ class RLModel:
                 self.action_shape,
                 activation='linear',
                 kernel_initializer=init,
-                name=f"dense_{len(neurons)}"
+                name=f"dense_{len(neurons)}",
             )
         )
 
@@ -200,7 +200,7 @@ class RLModel:
             # loss=tf.keras.losses.Huber(),
             loss=tf.keras.losses.MeanSquaredError(reduction="auto", name="mean_squared_error"),
             optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-            metrics=['accuracy']
+            metrics=['accuracy'],
         )
 
         return model

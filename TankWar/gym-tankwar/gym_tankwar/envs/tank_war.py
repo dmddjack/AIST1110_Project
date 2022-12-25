@@ -625,7 +625,7 @@ class TankWar(gym.Env):
         killed_by_bullet = bool(pygame.sprite.spritecollide(
             self.player,
             self.enemy_bullets,
-            dokill=True
+            dokill=True,
         ))
         if killed_by_enemy or killed_by_bullet:
             if killed_by_enemy:
