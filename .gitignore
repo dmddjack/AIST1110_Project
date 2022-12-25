@@ -138,3 +138,6 @@ sample
 
 # zip file
 *.zip
+
+#training result pic
+*training result/
