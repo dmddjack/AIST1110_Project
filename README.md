@@ -60,8 +60,8 @@ Project Name: Tank War
 ## Report
 
 ### Length
-- Word: 5 pages (stick to this)
-- PowerPoint: 10-20 pages
+- Word: 5 pages
+- ~~PowerPoint: 10-20 pages~~
 
 ### Content
 - Genre
