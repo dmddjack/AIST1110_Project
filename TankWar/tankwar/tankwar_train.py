@@ -61,6 +61,7 @@ class RLModel:
 
         # Print the summary of the target model
         print(self.target_model.summary())
+        print("=" * 60)
 
         self.replay_memory = deque(maxlen=20_000)
 
@@ -161,7 +162,7 @@ class RLModel:
             keras.backend.clear_session()
 
             print("Epsilon:", self.epsilon)
-            print("=" * 40)
+            print("=" * 60)
 
             # Update epsilon
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
