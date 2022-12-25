@@ -52,7 +52,7 @@ Project Name: Tank War
 - [x] Difficulty
 - [ ] Block
 - [ ] Animations
-- [ ] Multiple scenes
+- [x] Multiple scenes
     - [x] Title scene
     - [x] Ending scene
 - [ ] Power ups
