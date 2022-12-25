@@ -51,10 +51,10 @@ class TankWar(gym.Env):
         self.enemy_killed_reward = 1000
 
         # The reward when the player is killed by the enemies
-        self.player_killed_reward = -100
+        self.player_killed_reward = -1000
 
         # The reward when the player shoots in a correct direction
-        self.player_shoot_reward = 1
+        self.player_shoot_reward = 10
 
         # The reward when the player shoots misses all targets
         self.player_miss_reward = -10
