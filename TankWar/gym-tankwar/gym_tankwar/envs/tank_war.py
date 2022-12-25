@@ -34,7 +34,7 @@ class TankWar(gym.Env):
         # The moving speed of the player based on a framerate of 30
         self.player_speed = 4
 
-        # The minimum interval between the player's last shot and next shot
+        # The minimum interval (in second) between the player's last shot and next shot
         self.player_shoot_intvl = 1
 
         # The maximum number of player's bullets
@@ -816,6 +816,7 @@ class TankWar(gym.Env):
                 ),
             )
 
+        # Add ending scene
         if terminated and self.ending:
             black = Black()
             canvas.blit(black.surf, (0, 0))
