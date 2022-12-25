@@ -5,7 +5,7 @@ import numpy as np
 import pygame
 from gym import spaces
 
-from .assets import Audios, Background, Black, Enemy, Heart, Player
+from .assets import Audios, Background, Black, Enemy, Heart, Player, Explosion
 
 
 class TankWar(gym.Env):
@@ -34,6 +34,9 @@ class TankWar(gym.Env):
         # The moving speed of the player based on a framerate of 30
         self.player_speed = 4
 
+        # The speed of explosion. Less is faster.
+        self.explosion_speed = 2
+
         # The minimum interval (in second) between the player's last shot and next shot
         self.player_shoot_intvl = 1
 
@@ -45,6 +48,7 @@ class TankWar(gym.Env):
 
         # The maximum number of enemies' bullets
         self.max_enemy_bullets = self.max_enemies * 3
+
 
         # The reward when the player kills an enemy
         self.enemy_killed_reward = 1000
@@ -218,6 +222,9 @@ class TankWar(gym.Env):
         # Create a sprite group for hearts
         self.hearts = pygame.sprite.Group()
 
+        # Create a sprite group for explosion animations
+        self.explosions = pygame.sprite.Group()
+
         # Create hearts and add them to self.hearts and self.all_sprites
         for i in range(1, self.starting_hp + 1):
             heart = Heart(self.window_width, i)
@@ -353,6 +360,14 @@ class TankWar(gym.Env):
             self.all_sprites.add(enemy)
 
         return enemy_speed, enemy_shoot_intvl
+
+    def _create_explosion(self, obj):
+        """
+        An internal function that creates explosion animation at a given location.
+        """
+        explosion = Explosion(obj)
+        self.explosions.add(explosion)
+        self.all_sprites.add(explosion)
 
     @staticmethod
     def _fps_to_speed(original_speed: int, render_fps: int) -> int:
@@ -567,15 +582,18 @@ class TankWar(gym.Env):
         """Step 7: Remove the player's bullet if it hits an enemy"""
         bullet_lifetime = None
         for bullet in self.player_bullets:
-            if pygame.sprite.spritecollide(
-                    bullet,
-                    self.enemies,
-                    dokill=True):
-                reward += self.enemy_killed_reward
-                self.score += 1
-                bullet_lifetime = bullet.lifetime
-                # print(f"lifetime: {bullet.lifetime}")
-                bullet.kill()
+            enemies_hit = pygame.sprite.spritecollide(
+                            bullet,
+                            self.enemies,
+                            dokill=True)
+            if enemies_hit:
+                for enemy in enemies_hit:
+                    reward += self.enemy_killed_reward
+                    self.score += 1
+                    bullet_lifetime = bullet.lifetime
+                    self._create_explosion(enemy)
+                    # print(f"lifetime: {bullet.lifetime}")
+                    bullet.kill()
 
                 if self.pygame_initialized and self.render_mode == "human":
                     # Play the explosion sound effect
@@ -588,6 +606,7 @@ class TankWar(gym.Env):
                     bullet,
                     self.enemy_bullets,
                     dokill=True):
+                self._create_explosion(bullet)
                 bullet.kill()
 
         """
@@ -610,6 +629,7 @@ class TankWar(gym.Env):
             self.hp -= 1
 
             # Kill the player
+            self._create_explosion(self.player)
             self.player.kill()
 
             if self.pygame_initialized and self.render_mode == "human":
@@ -639,6 +659,10 @@ class TankWar(gym.Env):
         """Step 10: Terminate the episode if self.score >= 26"""
         # if self.score >= 26:
         #     terminated = True
+
+        """Step 11: Update the explosion animation"""
+        if self.render_mode == "human":
+            self.explosions.update(explosion_speed=self._fps_to_speed(self.explosion_speed, self.metadata["render_fps"]))
 
         observation = self._get_observation()
 
@@ -855,3 +879,9 @@ class TankWar(gym.Env):
 
             # Quit pygame
             pygame.quit()
+
+
+
+
+
+
