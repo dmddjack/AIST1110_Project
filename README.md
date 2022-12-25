@@ -31,21 +31,15 @@ Project Name: Tank War
    
           python tankwar_play_v1.py -m human
         
-   or
-   
-          python tankwar_play_v2.py
-        
    to play the game
-        
-1. Press "q" or "Escape" to quit (except tankwar_play_v2.py)
 
 ## TO-DO
 - [x] Handle situations when different enemies touch one another \
   ***The current handling method is to kill both enemies. It would be better to reverse their directions.***
 - [x] Use DQN to train a model
 - [ ] Add sufficient comments in all scripts
-- [ ] Change variables names in tankwar_train.py
-- [ ] Delete unnecessary codes in all scripts
+- [x] Change variables names in tankwar_train.py
+- [x] Delete unnecessary codes in all scripts
 - [x] Solve enemy collision bug
 
 ## Ideas

@@ -15,19 +15,15 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | No
                 keys[pygame.K_DOWN] or keys[pygame.K_s],  # Going down
                 keys[pygame.K_LEFT] or keys[pygame.K_a],  # Going left
                 keys[pygame.K_RIGHT] or keys[pygame.K_d])  # Going right
+
         actions = []
-        # if keys[4]:
-        #     for i, value in enumerate(keys[:4]):
-        #         if value:
-        #             actions.append(i + 5)
-        #     if not actions:
-        #         actions.append(4)
-        # else:
         for i, value in enumerate(dir_):
             if value:
                 actions.append(i)
+
         if not actions:
             actions.append(4)  # stand still, no action
+
         return actions
 
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:  # Keys for quitting the game
@@ -40,29 +36,8 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | No
     last_action_space = filter_dir(last_pressed_keys)
     action_space = filter_dir(pressed_keys)
     shoot = pressed_keys[pygame.K_SPACE]
-    # print(shoot)
+
     if last_action is not None:
-        # action = 4
-        # if not pressed_keys[pygame.K_SPACE]:
-        #     if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
-        #         action = 0
-        #     if pressed_keys[pygame.K_DOWN] or pressed_keys[pygame.K_s]:
-        #         action = 1
-        #     if pressed_keys[pygame.K_LEFT] or pressed_keys[pygame.K_a]:
-        #         action = 2
-        #     if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
-        #         action = 3
-        # else:
-        #     action = 9
-        #     if pressed_keys[pygame.K_UP] or pressed_keys[pygame.K_w]:
-        #         action = 5
-        #     if pressed_keys[pygame.K_DOWN] or pressed_keys[pygame.K_s]:
-        #         action = 6
-        #     if pressed_keys[pygame.K_LEFT] or pressed_keys[pygame.K_a]:
-        #         action = 7
-        #     if pressed_keys[pygame.K_RIGHT] or pressed_keys[pygame.K_d]:
-        #         action = 8
-        # return action
         last_action %= 5
         if last_action_space == action_space and last_action in action_space:
             return last_action + 5 * shoot
@@ -101,11 +76,9 @@ def main():
 
     observation, reset_info = env.reset(seed=args.seed)
 
-    episode = 0
-    success_episodes = 0
+    episode = success_episodes = 0
     running = True
-    rewards = 0
-    step = 0
+    rewards = step = 0
     total_rewards = total_score = total_steps = 0
     action = None
     pressed_keys = None
@@ -171,14 +144,14 @@ def main():
                 observation, reset_info = env.reset(seed=args.seed)
 
         if action is not None:
-            # Apply action to the environment
+            # Take action and get reward
             observation, reward, terminated, truncated, info = env.step(action)
 
             step += 1
             rewards += reward
 
             if terminated or truncated:
-                # Print the episode's final result
+                # Print episode's final result
                 if terminated:
                     print(
                         f"Episode {episode:<{len(str(args.episodes))}d} "
@@ -200,16 +173,18 @@ def main():
                 total_score += info["score"]
                 total_rewards += rewards
 
+                # Reset variables
                 step = 0
                 rewards = 0
 
                 gameover = True
 
     if episode > 0:
+        # Print overall results
         print(
-            f"Completion rate = {success_episodes / episode:.2f}, "
-            f"Avg score = {total_rewards / episode:.2f}, "
-            f"Avg steps = {total_steps / episode:.2f}"
+            f"Completion rate = {success_episodes/episode:.2f}, "
+            f"Avg score = {total_rewards/episode:.2f}, "
+            f"Avg steps = {total_steps/episode:.2f}"
         )
 
     env.close()

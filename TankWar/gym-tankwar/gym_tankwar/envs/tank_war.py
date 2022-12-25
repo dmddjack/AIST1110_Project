@@ -57,10 +57,10 @@ class TankWar(gym.Env):
         self.player_killed_reward = -1000
 
         # The reward when the player shoots in a correct direction
-        self.player_shoot_reward = 100
+        self.player_shoot_reward = 10
 
         # The reward when the player shoots misses all targets
-        self.player_miss_reward = -100
+        self.player_miss_reward = -10
 
         # The reward when the player is constrained by the border
         self.player_on_border_reward = -0.1
@@ -523,6 +523,7 @@ class TankWar(gym.Env):
                     reward += self.player_shoot_reward
                 else:
                     reward += -self.player_shoot_reward
+
             # Ensure the enemy does not stuck at the border by 
             # reversing its direction
             if enemy_touches_border:
@@ -542,7 +543,6 @@ class TankWar(gym.Env):
             self.enemies, self.enemies, dokilla=False, dokillb=False
         )
         collided_enemies = []
-        # print(list(enemy_collision.items()))
         for target, enemies in enemy_collision.items():
             if len(enemies) > 1:
                 for enemy in enemies:
@@ -560,9 +560,6 @@ class TankWar(gym.Env):
             enemy_dx, enemy_dy = self._angle_to_dir(enemy_new_angle)
             enemy.update(enemy_dx * 1, enemy_dy * 1, enemy_new_angle)
             enemy.last_rotate = self.steps
-
-            # Kill the enemy
-            # enemy.kill()
 
         """Step 6: Move the player's and enemies' bullets"""
 
@@ -674,11 +671,7 @@ class TankWar(gym.Env):
             # Remove the leftmost heart
             self.hearts.sprites()[-1].kill()
 
-        """Step 10: Terminate the episode if self.score >= 26"""
-        # if self.score >= 26:
-        #     terminated = True
-
-        """Step 11: Update the explosion animation"""
+        """Step 10: Update the explosion animation"""
         if self.render_mode == "human":
             self.explosions.update(explosion_speed=self.explosion_speed * self.metadata["render_fps"] / 30)
 
@@ -687,9 +680,10 @@ class TankWar(gym.Env):
         # Create a placeholder for additional information
         info = {"score": self.score, "steps": self.steps, "bullet lifetime": bullet_lifetime}
 
-        # if self.render_mode == "human":
         self._render_frame(terminated)
-        # print(reward) if reward != 0 else None
+
+        # print(reward) if reward != 0 else None  # For testing purposes
+
         return observation, reward, terminated, False, info
 
     @staticmethod
@@ -869,10 +863,12 @@ class TankWar(gym.Env):
             if self.steps == 0:
                 canvas.blit(self.black.surf, (0, 0))
 
+                # "TANK WAR"
                 title_text = pygame.font.SysFont("Garamond", 50).render("TANK WAR", True, (255, 255, 255))
                 title_text_rect = title_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 20))
                 canvas.blit(title_text, title_text_rect)
 
+                # "Press [Enter] to play"
                 beginning_text = self.font.render("Press [Enter] to play", True, (255, 255, 255))
                 beginning_text_rect = beginning_text.get_rect(
                     center=(self.window_width / 2, self.window_height / 2 + 20))
@@ -882,14 +878,17 @@ class TankWar(gym.Env):
             elif terminated:
                 canvas.blit(self.black.surf, (0, 0))
 
+                # "GAME OVER"
                 ending_text = pygame.font.SysFont("Garamond", 50).render("GAME OVER", True, (255, 255, 255))
                 ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 35))
                 canvas.blit(ending_text, ending_text_rect)
 
+                # "Press [R] to restart"
                 ending_text = self.font.render("Press [R] to restart", True, (255, 255, 255))
                 ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 5))
                 canvas.blit(ending_text, ending_text_rect)
 
+                # "Press [Q] or [Esc] to quit"
                 ending_text = self.font.render("Press [Q] or [Esc] to quit", True, (255, 255, 255))
                 ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 35))
                 canvas.blit(ending_text, ending_text_rect)
