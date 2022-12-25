@@ -54,7 +54,7 @@ Project Name: Tank War
 - [ ] Animations
 - [ ] Multiple scenes
     - [ ] Title scene
-    - [ ] Ending scene
+    - [x] Ending scene
 - [ ] Power ups
 
 ## Report
