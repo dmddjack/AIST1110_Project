@@ -158,6 +158,7 @@ class RLModel:
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
+        
         print(f"Avg score: {self._average(self.scores):.2f}, Avg steps: {self._average(self.steps):.2f}")
 
     def _agent(self, neurons):
@@ -165,6 +166,7 @@ class RLModel:
 
         init = tf.keras.initializers.HeUniform(seed=self.seed)
         model = keras.Sequential()
+
         for neuron in neurons:
             model.add(
                 keras.layers.Dense(
@@ -174,6 +176,7 @@ class RLModel:
                     kernel_initializer=init
                 )
             )
+
         model.add(
             keras.layers.Dense(
                 self.action_shape, 
@@ -181,6 +184,7 @@ class RLModel:
                 kernel_initializer=init
             )
         )
+
         model.compile(
             loss=tf.keras.losses.Huber(),
             # loss=tf.keras.losses.MeanSquaredError(reduction="auto", name="mean_squared_error"),
@@ -228,13 +232,12 @@ class RLModel:
     def plot(self):
         fig = plt.figure(figsize=(10, 8))
 
+        x = np.arange(1, self.train_episodes + 1)
 
         ax1 = fig.add_subplot(221)
-        x = np.arange(1, self.train_episodes + 1)
         ax1.plot(x, self.rewards, "o")
         m, b = np.polyfit(x, self.rewards, 1)
         ax1.plot(x, m * x + b)
-
         ax1.set_title("Rewards over all episodes in training")
         ax1.set_xlabel("Episode")
         ax1.set_ylabel("Reward")
@@ -256,10 +259,13 @@ class RLModel:
         ax3.set_ylabel("Steps")
 
         ax4 = fig.add_subplot(224)
-        ax4.plot(np.arange(1, self.train_episodes + 1), self.epsilons)
+        ax4.plot(x, self.epsilons)
         ax4.set_title("Epsilons over all episodes in training")
         ax4.set_xlabel("Episode")
         ax4.set_ylabel("Epsilon")
+
+        # Adjust the padding between subplots
+        fig.tight_layout()
 
         # Save the figure
         plt.savefig(f"training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)

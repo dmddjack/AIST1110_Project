@@ -402,3 +402,13 @@ class Audios:
     # Sound source: https://opengameart.org/content/9-explosion-sounds
     # License: http://creativecommons.org/licenses/by-sa/3.0/
     explosion_sound = os.path.join(audios_path, "explosion.wav")
+
+
+class Black:
+    image_path = os.path.join(images_path, "black.png")
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.surf = pygame.image.load(self.image_path)
+        self.surf.set_alpha(200)

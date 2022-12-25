@@ -43,18 +43,24 @@ Project Name: Tank War
 - [x] Handle situations when different enemies touch one another \
   ***The current handling method is to kill both enemies. It would be better to reverse their directions.***
 - [x] Use DQN to train a model
+- [ ] Add sufficient comments in all scripts
+- [ ] Change variables names in tankwar_train.py
+- [ ] Delete unnecessary codes in all scripts
+- [ ] Solve enemy collision bug
 
 ## Ideas
 - [x] Difficulty
 - [ ] Block
 - [ ] Animations
 - [ ] Multiple scenes
+    - [ ] Title scene
+    - [x] Ending scene
 - [ ] Power ups
 
 ## Report
 
 ### Length
-- Word: 5 pages(stick to this)
+- Word: 5 pages (stick to this)
 - PowerPoint: 10-20 pages
 
 ### Content
