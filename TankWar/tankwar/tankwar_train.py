@@ -268,7 +268,7 @@ class RLModel:
         fig.tight_layout()
 
         # Save the figure
-        plt.savefig(f"training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
+        plt.savefig(f"training result/training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
 
         # Show the figure
         plt.show()
