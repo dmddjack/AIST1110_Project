@@ -662,7 +662,7 @@ class TankWar(gym.Env):
 
         """Step 11: Update the explosion animation"""
         if self.render_mode == "human":
-            self.explosions.update(explosion_speed=self._fps_to_speed(self.explosion_speed, self.metadata["render_fps"]))
+            self.explosions.update(explosion_speed=self.explosion_speed * self.metadata["render_fps"] / 30)
 
         observation = self._get_observation()
 
