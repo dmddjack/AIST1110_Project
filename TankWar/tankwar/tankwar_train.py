@@ -176,13 +176,14 @@ class RLModel:
         init = tf.keras.initializers.HeUniform(seed=self.seed)
         model = keras.Sequential()
 
-        for neuron in neurons:
+        for i, neuron in enumerate(neurons):
             model.add(
                 keras.layers.Dense(
                     neuron,
                     input_shape=self.state_shape,
                     activation='relu',
-                    kernel_initializer=init
+                    kernel_initializer=init,
+                    name=f"dense_{i}"
                 )
             )
 
@@ -190,7 +191,8 @@ class RLModel:
             keras.layers.Dense(
                 self.action_shape,
                 activation='linear',
-                kernel_initializer=init
+                kernel_initializer=init,
+                name=f"dense_{len(neurons)}"
             )
         )
 
