@@ -21,7 +21,6 @@ import numpy as np
 import pygame
 import tensorflow as tf
 from tensorflow import keras
-# tf.debugging.set_log_device_placement(True)
 
 from cmdargs import args
 
@@ -44,6 +43,8 @@ class RLModel:
         self.min_epsilon = 0.01
         self.decay = 0.03
 
+        self.time_intvl_factor = 1
+
         # Number of neurons for each layer
         self.neurons = (256, 128, 128, 64, 32)
 
@@ -63,7 +64,7 @@ class RLModel:
         self.replay_memory = deque(maxlen=20_000)
 
         steps_to_update_target_model = 0
-        time_intvl = int(.5 * args.fps)
+        time_intvl = int(self.time_intvl_factor * args.fps)
         start_time = time()
         episode = 0
         running = True
@@ -71,6 +72,7 @@ class RLModel:
             episode += 1
             total_training_rewards = 0
 
+            # Reset the environment
             state, reset_info = self.env.reset()
 
             terminated, truncated = False, False
@@ -93,6 +95,8 @@ class RLModel:
 
                 steps_to_update_target_model += 1
                 step += 1
+
+                # Pick action either randomly or not
                 random_num = np.random.rand()
                 if random_num <= self.epsilon:
                     action = self.env.action_space.sample()
@@ -100,17 +104,15 @@ class RLModel:
                     state_reshaped = state.reshape((1, state.shape[0]))
                     predicted = self.main_model.predict(state_reshaped, verbose=0)
                     action = np.argmax(predicted)
+
+                # Take action and get reward
                 new_state, reward, terminated, truncated, info = self.env.step(action)
-                #
-                # if action == 4 or action == 9:
-                #     reward += -.2
-                # print(action)
+
                 reward_interval_shoot.append(0)
                 reward_interval.append(reward)
                 reward_mean = np.array(reward_interval).mean()
                 self.replay_memory.append([state, action, reward, new_state, terminated])
                 if info["bullet lifetime"] is not None:
-                    # print(reward_interval)
                     if info["bullet lifetime"] <= time_intvl:
                         reward_interval_shoot[-info["bullet lifetime"]] += 500
                     else:
@@ -120,10 +122,7 @@ class RLModel:
                     self.replay_memory[-time_intvl][2] = reward_mean + reward_interval_shoot[0]
                 if steps_to_update_target_model % 15 == 0 or (terminated or truncated):
                     self._train(terminated)
-                # try:
-                #     print(self.replay_memory[-time_intvl][1:3]) if self.replay_memory[-time_intvl][1] > 4 else None
-                # except IndexError:
-                #     pass
+
                 state = new_state
                 total_training_rewards += reward
 
@@ -140,10 +139,13 @@ class RLModel:
                     if episode % 25 == 0:
                         self.save(episode)
 
+                    # Print progress wrt time
                     self._timer(start_time, episode, self.train_episodes)
-                    print(
-                        f"Total training reward = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
-                        f"with score = {info['score']:<2d}, steps = {info['steps']}")
+
+                    # Print episode's training result
+                    print(f"Total training reward = {total_training_rewards:<8.1f} "
+                          f"at episode {episode:<{len(str(args.train_episodes))}d} "
+                          f"with score = {info['score']:<2d}, steps = {info['steps']}")
 
                     if steps_to_update_target_model >= 400:
                         self.target_model.set_weights(self.main_model.get_weights())
@@ -207,22 +209,20 @@ class RLModel:
         if len(self.replay_memory) < min_replay_size:
             return
 
-        # start_inx = random.randint(0, len(self.replay_memory) - batch_size)
-        # mini_batch = list(islice(self.replay_memory, start_inx, start_inx+batch_size))
-        mini_batch = random.sample(self.replay_memory, batch_size)
-        current_states = np.array([batch[0] for batch in mini_batch])
-        current_qs_list = self.main_model.predict(current_states, verbose=0)
-        new_current_states = np.array([batch[3] for batch in mini_batch])
-        future_qs_list = self.target_model.predict(new_current_states, verbose=0)
+        sampled_batch = random.sample(self.replay_memory, batch_size)
+        old_states = np.array([batch[0] for batch in sampled_batch])
+        old_qs_list = self.main_model.predict(old_states, verbose=0)
+        new_states = np.array([batch[3] for batch in sampled_batch])
+        new_qs_list = self.target_model.predict(new_states, verbose=0)
 
         x, y = [], []
-        for idx, (state, action, reward, new_state, terminated) in enumerate(mini_batch):
+        for idx, (state, action, reward, new_state, terminated) in enumerate(sampled_batch):
             if not terminated:
-                max_future_q = reward + discount_factor * np.max(future_qs_list[idx])
+                max_future_q = reward + discount_factor * np.max(new_qs_list[idx])
             else:
                 max_future_q = reward
 
-            current_qs = current_qs_list[idx]
+            current_qs = old_qs_list[idx]
 
             # Update Q-value
             current_qs[action] = (1 - learning_rate) * current_qs[action] + learning_rate * max_future_q
@@ -244,6 +244,7 @@ class RLModel:
 
         x = np.arange(1, self.train_episodes + 1)
 
+        # Plot rewards
         ax1 = fig.add_subplot(221)
         ax1.plot(x, self.rewards, "o")
         m, b = np.polyfit(x, self.rewards, 1)
@@ -252,6 +253,7 @@ class RLModel:
         ax1.set_xlabel("Episode")
         ax1.set_ylabel("Reward")
 
+        # Plot scores
         ax2 = fig.add_subplot(222)
         ax2.plot(x, self.scores, "o")
         m, b = np.polyfit(x, self.scores, 1)
@@ -260,6 +262,7 @@ class RLModel:
         ax2.set_xlabel("Episode")
         ax2.set_ylabel("Scores")
 
+        # Plot steps
         ax3 = fig.add_subplot(223)
         ax3.plot(x, self.steps, "o")
         m, b = np.polyfit(x, self.steps, 1)
@@ -268,6 +271,7 @@ class RLModel:
         ax3.set_xlabel("Episode")
         ax3.set_ylabel("Steps")
 
+        # Plot epsilons
         ax4 = fig.add_subplot(224)
         ax4.plot(x, self.epsilons)
         ax4.set_title("Epsilons over all episodes in training")
