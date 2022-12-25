@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 import pygame
+from PIL import Image
 
 # Code source: https://stackoverflow.com/questions/595305/how-do-i-get-the-path-of-the-python-script-i-am-running-in
 images_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
@@ -30,7 +31,6 @@ class _Movable(pygame.sprite.Sprite):
         self.window_height = window_height
         self.angle = start_angle
         self.speed = speed
-
 
         # Load the image and convert it into a Surface
         self.surf = pygame.image.load(image_path)
@@ -60,8 +60,8 @@ class _Movable(pygame.sprite.Sprite):
         # direction[self.angle//90] = 1
         return np.array(
             (
-                self.rect.center[0] / self.window_width, 
-                self.rect.center[1] / self.window_height, 
+                self.rect.center[0] / self.window_width,
+                self.rect.center[1] / self.window_height,
                 # *direction,
                 self.angle / 360,
                 self.speed / _Movable.max_speed,
@@ -70,8 +70,7 @@ class _Movable(pygame.sprite.Sprite):
         )
 
 
-
-# We need to create class _Bullet before class _Tank 
+# We need to create class _Bullet before class _Tank
 # because the latter one uses the former one.
 class _Bullet(_Movable):
     def __init__(
@@ -103,18 +102,18 @@ class _Bullet(_Movable):
         if angle == 0:
             start_x = tank_center[0] + 1  # The "+1" is for pixel adjustment
             start_y = tank_center[1] - tank_size[1] // 2 \
-                - self.surf.get_height() // 2
+                      - self.surf.get_height() // 2
         elif angle == 90:
             start_x = tank_center[0] - tank_size[0] // 2 \
-                - self.surf.get_width() // 2
+                      - self.surf.get_width() // 2
             start_y = tank_center[1]
         elif angle == 180:
             start_x = tank_center[0]
             start_y = tank_center[1] + tank_size[1] // 2 \
-                + self.surf.get_height() // 2
+                      + self.surf.get_height() // 2
         else:
             start_x = tank_center[0] + tank_size[0] // 2 \
-                + self.surf.get_width() // 2
+                      + self.surf.get_width() // 2
             start_y = tank_center[1]
 
         # Utilize the calculated starting location
@@ -131,8 +130,6 @@ class _Bullet(_Movable):
             self.rect.move_ip(0, self.speed)
         else:
             self.rect.move_ip(self.speed, 0)
-
-
 
 
 class _PlayerBullet(_Bullet):
@@ -248,8 +245,8 @@ class _Tank(_Movable):
 
         return touches_border, list(set(correction_angles))
 
-    def update(self, dx: int, dy: int, 
-            new_angle: int) -> tuple[bool, list[int]]:
+    def update(self, dx: int, dy: int,
+               new_angle: int) -> tuple[bool, list[int]]:
         """
         A function that rotates the tank (if necessary) and 
         moves the tank
@@ -370,7 +367,72 @@ class Heart(pygame.sprite.Sprite):
             )
         )
 
-    
+
+class Explosion(pygame.sprite.Sprite):
+    # Image source: http://gushh.net/blog/free-game-sprites-explosion-4/
+    # Code source: https://github.com/russs123/Explosion/blob/main/explosion.py
+    def __init__(self, obj):
+        pygame.sprite.Sprite.__init__(self)
+        self.images = []
+        if not os.path.exists(os.path.join(images_path, "explosion/explosion_0.png")):
+            self.crop_img()
+        for num in range(1, len([name for name in os.listdir( os.path.join(images_path, "explosion/"))]) - 1, 4):
+            # choosing a sampled subset of all images to increase animation speed
+            image_path = os.path.join(images_path, f"explosion/explosion_{num}.png")
+            img = pygame.image.load(image_path)
+            if isinstance(obj, _Tank):
+                img = pygame.transform.scale(img, (80, 80))
+            elif isinstance(obj, _Bullet):
+                img = pygame.transform.scale(img, (20, 20))
+            self.images.append(img)
+        self.index = 0
+        self.surf = self.images[self.index]
+        self.rect = self.surf.get_rect()
+        self.rect.center = obj.rect.center
+        self.counter = 0
+
+    def update(self, explosion_speed=4):
+        # update explosion animation
+        self.counter += 1
+
+        if self.counter >= explosion_speed and self.index < len(self.images) - 1:
+            self.counter = 0
+            self.index += 1
+            self.surf = self.images[self.index]
+
+        # if the animation is complete, reset animation index
+        if self.index >= len(self.images) - 1 and self.counter >= explosion_speed:
+            self.kill()
+
+    @staticmethod
+    def crop_img():
+        """A tool for cutting the explosion image into pieces"""
+        # Importing Image class from PIL module
+        # Opens a image in RGB mode
+        image_path = os.path.join(images_path, "explosion/explosion.png")
+        img = Image.open(image_path)
+
+        # Size of the image in pixels (size of original image)
+        width, height = img.size
+
+        # Setting the points for cropped image
+        height_step = height / 8
+        width_step = width / 8
+        for index in range(0, 38+1):
+            i = index // 8
+            j = index % 8
+
+            left = j * width_step
+            top = i * height_step
+            right = left + width_step
+            bottom = top + height_step
+            # Cropped image of above dimension
+            image_path = os.path.join(images_path, f"explosion/explosion_{index}.png")
+            img_cropped = img.crop((left, top, right, bottom))
+            img_cropped.save(image_path)
+
+
+
 class Background(pygame.sprite.Sprite):
     # Image source: https://opengameart.org/content/backgrounds-topdown-games
     # License: https://creativecommons.org/licenses/by/3.0/
