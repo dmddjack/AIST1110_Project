@@ -377,6 +377,7 @@ class Explosion(pygame.sprite.Sprite):
         if not os.path.exists(os.path.join(images_path, "explosion/explosion_0.png")):
             self.crop_img()
         for num in range(1, len([name for name in os.listdir( os.path.join(images_path, "explosion/"))]) - 1, 4):
+            # choosing a sampled subset of all images to increase animation speed
             image_path = os.path.join(images_path, f"explosion/explosion_{num}.png")
             img = pygame.image.load(image_path)
             if isinstance(obj, _Tank):
