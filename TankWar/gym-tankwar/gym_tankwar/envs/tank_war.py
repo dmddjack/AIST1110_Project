@@ -821,8 +821,15 @@ class TankWar(gym.Env):
             black = Black()
             canvas.blit(black.surf, (0, 0))
 
-            ending_keys_surf = self.font.render("Press [R] to restart, [Q] or [Esc] to quit", True, (255, 255, 255))
-            canvas.blit(ending_keys_surf, (70, 160))
+            ending_text = pygame.font.SysFont("Garamond", 50).render("GAME OVER", True, (255, 255, 255))
+            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 25))
+            canvas.blit(ending_text, ending_text_rect)
+            ending_text = self.font.render("Press [R] to restart", True, (255, 255, 255))
+            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 15))
+            canvas.blit(ending_text, ending_text_rect)
+            ending_text = self.font.render("Press [Q] or [Esc] to quit", True, (255, 255, 255))
+            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 45))
+            canvas.blit(ending_text, ending_text_rect)
 
         if self.render_mode == "human":
             # Draw the canvas to the pygame window
