@@ -284,7 +284,7 @@ class RLModel:
         fig.tight_layout()
 
         # Save the figure
-        plt.savefig(f"training result/training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
+        plt.savefig(f"training_results/training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
 
         # Show the figure
         plt.show()
@@ -314,6 +314,10 @@ def main():
     # Make a directory to store target models if necessary
     if not os.path.isdir("models"):
         os.mkdir("models")
+
+    # Make a directory to store training results if necessary
+    if not os.path.isdir("training_results"):
+        os.mkdir("training_results")
 
     assert args.mode != "human_rand"
 
