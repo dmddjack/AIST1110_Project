@@ -2,6 +2,7 @@
 
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
@@ -18,8 +19,8 @@ def main():
     assert args.mode != "human_rand"
 
     env = gym.make(
-        "gym_tankwar/TankWar-v0", 
-        render_mode=args.mode, 
+        "gym_tankwar/TankWar-v0",
+        render_mode=args.mode,
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
         full_enemy=args.full_enemy,
@@ -56,11 +57,11 @@ def main():
             # Get action from the model
             predicted = model.predict(state.reshape(1, state.shape[0]), verbose=0)
             action = np.argmax(predicted)
-            
-            state, reward, terminated, truncated, info = env.step(action) # take action and get reward
+
+            state, reward, terminated, truncated, info = env.step(action)  # take action and get reward
             total_testing_rewards += reward
-            
-            if terminated or total_testing_rewards >= 50000: # End the episode
+
+            if terminated or total_testing_rewards >= 50000:  # End the episode
                 success_episodes += 1
                 total_score += info["score"]
                 total_step += step
@@ -71,9 +72,9 @@ def main():
 
         else:
             print(f"Episode {episode} truncated ...")
-        
-    print(f"Completion rate: {success_episodes/episode:.2f}")
-    print(f"Avg score: {total_score/success_episodes:.2f}, Avg steps: {total_step/success_episodes:.2f}")
+
+    print(f"Completion rate: {success_episodes / episode:.2f}")
+    print(f"Avg score: {total_score / success_episodes:.2f}, Avg steps: {total_step / success_episodes:.2f}")
 
     env.close()
 

@@ -418,7 +418,7 @@ class Explosion(pygame.sprite.Sprite):
         # Setting the points for cropped image
         height_step = height / 8
         width_step = width / 8
-        for index in range(0, 38+1):
+        for index in range(0, 38 + 1):
             i = index // 8
             j = index % 8
 

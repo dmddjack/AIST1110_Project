@@ -12,7 +12,7 @@ class TankWar(gym.Env):
     metadata = {"render_modes": ("human", "rgb_array"), "render_fps": 30}
 
     def __init__(self, render_mode: str | None,
-                 starting_hp: int, difficulty: int, 
+                 starting_hp: int, difficulty: int,
                  full_enemy: bool, extra_scene: bool = False) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
@@ -404,7 +404,7 @@ class TankWar(gym.Env):
         self.steps += 1
         reward = 0.03 * np.sqrt(self.steps)
         terminated = False
-        
+
         if self.pygame_initialized and self.render_mode == "human":
             # Set the player's engine sound volume to normal
             self.tank_engine_sound.set_volume(0.4)
@@ -555,8 +555,8 @@ class TankWar(gym.Env):
             enemy_dx, enemy_dy = self._angle_to_dir(enemy.angle)
             enemy.update(-enemy_dx * 2, -enemy_dy * 2, enemy.angle)
             enemy_new_angle = self.np_random.choice(
-                        [angle for angle in self.angles if angle != enemy.angle]
-                    )
+                [angle for angle in self.angles if angle != enemy.angle]
+            )
             enemy_dx, enemy_dy = self._angle_to_dir(enemy_new_angle)
             enemy.update(enemy_dx * 1, enemy_dy * 1, enemy_new_angle)
             enemy.last_rotate = self.steps
@@ -589,9 +589,9 @@ class TankWar(gym.Env):
         bullet_lifetime = None
         for bullet in self.player_bullets:
             enemies_hit = pygame.sprite.spritecollide(
-                            bullet,
-                            self.enemies,
-                            dokill=True)
+                bullet,
+                self.enemies,
+                dokill=True)
             if enemies_hit:
                 for enemy in enemies_hit:
                     reward += self.enemy_killed_reward * (len(self.enemies) + 1)
@@ -621,15 +621,15 @@ class TankWar(gym.Env):
         episode if self.hp == 0
         """
         killed_by_enemy = bool(pygame.sprite.spritecollide(
-                        self.player,
-                        self.enemies,
-                        dokill=True,
-                        ))
+            self.player,
+            self.enemies,
+            dokill=True,
+        ))
         killed_by_bullet = bool(pygame.sprite.spritecollide(
-                        self.player,
-                        self.enemy_bullets,
-                        dokill=True
-                        ))
+            self.player,
+            self.enemy_bullets,
+            dokill=True
+        ))
         if killed_by_enemy or killed_by_bullet:
             if killed_by_enemy:
                 reward += self.player_killed_reward / (len(self.enemies) + 1)
@@ -844,7 +844,7 @@ class TankWar(gym.Env):
                 reload_bar_len = max(
                     0,
                     80 * (self.metadata["render_fps"] * self.player_shoot_intvl
-                        - (self.steps - self.player.last_shoot))
+                          - (self.steps - self.player.last_shoot))
                     // (self.metadata["render_fps"] * self.player_shoot_intvl),
                 )
                 pygame.draw.rect(
@@ -867,9 +867,10 @@ class TankWar(gym.Env):
                 title_text = pygame.font.SysFont("Garamond", 50).render("TANK WAR", True, (255, 255, 255))
                 title_text_rect = title_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 20))
                 canvas.blit(title_text, title_text_rect)
-                
+
                 beginning_text = self.font.render("Press [Enter] to play", True, (255, 255, 255))
-                beginning_text_rect = beginning_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 20))
+                beginning_text_rect = beginning_text.get_rect(
+                    center=(self.window_width / 2, self.window_height / 2 + 20))
                 canvas.blit(beginning_text, beginning_text_rect)
 
             # Ending

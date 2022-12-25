@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # Code reference: https://github.com/mswang12/minDQN/blob/main/minDQN.py
-
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
@@ -29,7 +29,7 @@ print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 
 class RLModel:
-    def __init__(self, env: gym.Env, state_shape, action_shape, 
+    def __init__(self, env: gym.Env, state_shape, action_shape,
                  train_episodes: int, seed: int | None = None) -> None:
         self.env = env
         self.state_shape = state_shape
@@ -129,8 +129,8 @@ class RLModel:
 
                 if terminated or truncated:
                     for i in range(1, min(time_intvl, step) + 1):
-                        self.replay_memory[-i][2] = np.array(list(islice(reward_interval, i-1, None))).mean() + \
-                                                    reward_interval_shoot[i-1]
+                        self.replay_memory[-i][2] = np.array(list(islice(reward_interval, i - 1, None))).mean() + \
+                                                    reward_interval_shoot[i - 1]
                     self.rewards.append(total_training_rewards)
                     self.epsilons.append(self.epsilon)
                     self.scores.append(info['score'])
@@ -141,8 +141,9 @@ class RLModel:
                         self.save(episode)
 
                     self._timer(start_time, episode, self.train_episodes)
-                    print(f"Total training reward = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
-                          f"with score = {info['score']:<2d}, steps = {info['steps']}")
+                    print(
+                        f"Total training reward = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
+                        f"with score = {info['score']:<2d}, steps = {info['steps']}")
 
                     if steps_to_update_target_model >= 400:
                         self.target_model.set_weights(self.main_model.get_weights())
@@ -161,7 +162,7 @@ class RLModel:
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
-        
+
         print(f"Avg score: {self._average(self.scores):.2f}, Avg steps: {self._average(self.steps):.2f}")
 
     def _agent(self, neurons: tuple[int]):
@@ -174,16 +175,16 @@ class RLModel:
             model.add(
                 keras.layers.Dense(
                     neuron,
-                    input_shape=self.state_shape, 
-                    activation='relu', 
+                    input_shape=self.state_shape,
+                    activation='relu',
                     kernel_initializer=init
                 )
             )
 
         model.add(
             keras.layers.Dense(
-                self.action_shape, 
-                activation='linear', 
+                self.action_shape,
+                activation='linear',
                 kernel_initializer=init
             )
         )
@@ -191,7 +192,7 @@ class RLModel:
         model.compile(
             loss=tf.keras.losses.Huber(),
             # loss=tf.keras.losses.MeanSquaredError(reduction="auto", name="mean_squared_error"),
-            optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate), 
+            optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
             metrics=['accuracy']
         )
 
@@ -220,7 +221,7 @@ class RLModel:
                 max_future_q = reward + discount_factor * np.max(future_qs_list[idx])
             else:
                 max_future_q = reward
-            
+
             current_qs = current_qs_list[idx]
 
             # Update Q-value
@@ -290,10 +291,11 @@ class RLModel:
         """
 
         time_elapsed = time() - start_time
-        
-        print(f"Progress: {progress}/{total} ({progress/total*100:.2f}%)")
+
+        print(f"Progress: {progress}/{total} ({progress / total * 100:.2f}%)")
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
-        print(f"Estimated time remaining: {strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
+        print(
+            f"Estimated time remaining: {strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
 
     @staticmethod
     def _average(lst: list[int | float]) -> float:
@@ -310,8 +312,8 @@ def main():
     assert args.mode != "human_rand"
 
     env = gym.make(
-        "gym_tankwar/TankWar-v0", 
-        render_mode=args.mode, 
+        "gym_tankwar/TankWar-v0",
+        render_mode=args.mode,
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
         full_enemy=args.full_enemy,
@@ -330,10 +332,10 @@ def main():
     print("Size of action space      :", action_space_size)
 
     my_model = RLModel(
-        env, 
-        observation_space_shape, 
-        action_space_size, 
-        args.train_episodes, 
+        env,
+        observation_space_shape,
+        action_space_size,
+        args.train_episodes,
         args.seed
     )
     my_model.run()

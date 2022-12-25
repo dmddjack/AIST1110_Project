@@ -11,9 +11,9 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | No
     """An internal function that maps pressed key(s) to an action"""
 
     def filter_dir(keys):
-        dir_ = (keys[pygame.K_UP] or keys[pygame.K_w],     # Going up
-                keys[pygame.K_DOWN] or keys[pygame.K_s],   # Going down
-                keys[pygame.K_LEFT] or keys[pygame.K_a],   # Going left
+        dir_ = (keys[pygame.K_UP] or keys[pygame.K_w],  # Going up
+                keys[pygame.K_DOWN] or keys[pygame.K_s],  # Going down
+                keys[pygame.K_LEFT] or keys[pygame.K_a],  # Going left
                 keys[pygame.K_RIGHT] or keys[pygame.K_d])  # Going right
         actions = []
         # if keys[4]:
@@ -181,15 +181,15 @@ def main():
                 # Print the episode's final result
                 if terminated:
                     print(
-                        f"Episode {episode:<{len(str(args.episodes))}d} " 
-                        f"completed in {step:<5d} " 
+                        f"Episode {episode:<{len(str(args.episodes))}d} "
+                        f"completed in {step:<5d} "
                         f"steps with reward = {rewards:<8.1f}, "
                         f"score = {info['score']}"
                     )
                     success_episodes += 1
                 else:
                     print(
-                        f"Episode {episode:<{len(str(args.episodes))}d} " 
+                        f"Episode {episode:<{len(str(args.episodes))}d} "
                         f"truncated with reward = {rewards:<8.1f}, "
                         f"score = {info['score']}"
                     )
@@ -207,9 +207,9 @@ def main():
 
     if episode > 0:
         print(
-            f"Completion rate = {success_episodes/episode:.2f}, "
-            f"Avg score = {total_rewards/episode:.2f}, "
-            f"Avg steps = {total_steps/episode:.2f}"
+            f"Completion rate = {success_episodes / episode:.2f}, "
+            f"Avg score = {total_rewards / episode:.2f}, "
+            f"Avg steps = {total_steps / episode:.2f}"
         )
 
     env.close()
