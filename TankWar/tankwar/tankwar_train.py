@@ -30,21 +30,21 @@ from cmdargs import args
 class RLModel:
     def __init__(self, env: gym.Env, state_shape, action_shape, 
                  train_episodes: int, seed: int | None = None) -> None:
-        # Initialize variables that determine the behaviour of 
-        # the searching of the action space
-        self.epsilon = 1
-        self.max_epsilon = 1
-        self.min_epsilon = 0.01
-        self.decay = 0.01
-
-        # Number of neurons for each layer
-        self.neurons = (256, 128, 128, 64, 32)
-
         self.env = env
         self.state_shape = state_shape
         self.action_shape = action_shape
         self.train_episodes = train_episodes
         self.seed = seed
+
+        # Initialize variables that determine the behaviour of 
+        # the searching of the action space
+        self.epsilon = 1
+        self.max_epsilon = 1
+        self.min_epsilon = 0.01
+        self.decay = 0.03
+
+        # Number of neurons for each layer
+        self.neurons = (256, 128, 128, 64, 32)
 
     def run(self) -> None:
         self.rewards, self.epsilons, self.scores, self.steps = [], [], [], []
@@ -155,6 +155,8 @@ class RLModel:
 
             print("Epsilon:", self.epsilon)
             print("=" * 40)
+
+            # Update epsilon
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
 
         self.env.close()
