@@ -41,6 +41,10 @@ Project Name: Tank War
 - [x] Change variables names in tankwar_train.py
 - [x] Delete unnecessary codes in all scripts
 - [x] Solve enemy collision bug
+- [ ] Do experiment:
+    - [ ] Time interval
+    - [ ] Huber or MSE loss
+    - [ ] Modify reward
 
 ## Ideas
 - [x] Difficulty
