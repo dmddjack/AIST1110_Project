@@ -372,12 +372,14 @@ class Heart(pygame.sprite.Sprite):
 class Explosion(pygame.sprite.Sprite):
     # Image source: http://gushh.net/blog/free-game-sprites-explosion-4/
     # Code source: https://github.com/russs123/Explosion/blob/main/explosion.py
-    def __init__(self, obj):
+    def __init__(self, obj, terminated=False):
         pygame.sprite.Sprite.__init__(self)
         self.images = []
         if not os.path.exists(os.path.join(images_path, "explosion/explosion_0.png")):
             self.crop_img()
         for num in range(1, len([name for name in os.listdir(os.path.join(images_path, "explosion/"))]) - 1, 4):
+            if terminated:
+                num = 25
             # Choose a sampled subset of all images to increase animation speed
             image_path = os.path.join(images_path, f"explosion/explosion_{num}.png")
             img = pygame.image.load(image_path)
@@ -386,6 +388,7 @@ class Explosion(pygame.sprite.Sprite):
             elif isinstance(obj, _Bullet):
                 img = pygame.transform.scale(img, (20, 20))
             self.images.append(img)
+
         self.index = 0
         self.surf = self.images[self.index]
         self.rect = self.surf.get_rect()
@@ -400,7 +403,6 @@ class Explosion(pygame.sprite.Sprite):
             self.counter = 0
             self.index += 1
             self.surf = self.images[self.index]
-
         # if the animation is complete, reset animation index
         if self.index >= len(self.images) - 1 and self.counter >= explosion_speed:
             self.kill()
@@ -473,4 +475,4 @@ class Black:
         super().__init__()
 
         self.surf = pygame.image.load(self.image_path)
-        self.surf.set_alpha(200)
+        self.surf.set_alpha(160)

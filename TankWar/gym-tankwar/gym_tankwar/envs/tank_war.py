@@ -362,11 +362,11 @@ class TankWar(gym.Env):
 
         return enemy_speed, enemy_shoot_intvl
 
-    def _create_explosion(self, obj):
+    def _create_explosion(self, obj, terminated=False):
         """
         An internal function that creates explosion animation at a given location.
         """
-        explosion = Explosion(obj)
+        explosion = Explosion(obj, terminated)
         self.explosions.add(explosion)
         self.all_sprites.add(explosion)
 
@@ -638,9 +638,7 @@ class TankWar(gym.Env):
                     if len(self.enemies) != 0 else self.player_killed_reward
             self.hp -= 1
 
-            # Kill the player
-            self._create_explosion(self.player)
-            self.player.kill()
+
 
             # Set volume of engine sound to 0
             if self.pygame_initialized and self.render_mode == "human":
@@ -664,8 +662,14 @@ class TankWar(gym.Env):
                     for bullet in bullets:
                         bullet.kill()
 
-                # Respawn the player
+            # Render the explosion animation
+            self._create_explosion(self.player, terminated)
+            # Kill the player
+            self.player.kill()
+            # Respawn the player
+            if not terminated:
                 self._create_player()
+
 
             # Remove the leftmost heart
             self.hearts.sprites()[-1].kill()
