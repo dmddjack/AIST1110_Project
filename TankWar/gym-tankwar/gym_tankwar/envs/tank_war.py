@@ -594,7 +594,7 @@ class TankWar(gym.Env):
                             dokill=True)
             if enemies_hit:
                 for enemy in enemies_hit:
-                    reward += self.enemy_killed_reward * len(self.enemies)
+                    reward += self.enemy_killed_reward * (len(self.enemies) + 1)
                     self.score += 1
                     bullet_lifetime = bullet.lifetime
                     self._create_explosion(enemy)
@@ -620,18 +620,21 @@ class TankWar(gym.Env):
         any of the enemies or any of the enemies' bullets, terminate the 
         episode if self.hp == 0
         """
-
-        if (pygame.sprite.spritecollide(
-                self.player,
-                self.enemies,
-                dokill=True,
-            ) or
-                pygame.sprite.spritecollide(
-                    self.player,
-                    self.enemy_bullets,
-                    dokill=True
-                )):
-            reward += self.player_killed_reward / len(self.enemies)
+        killed_by_enemy = bool(pygame.sprite.spritecollide(
+                        self.player,
+                        self.enemies,
+                        dokill=True,
+                        ))
+        killed_by_bullet = bool(pygame.sprite.spritecollide(
+                        self.player,
+                        self.enemy_bullets,
+                        dokill=True
+                        ))
+        if killed_by_enemy or killed_by_bullet:
+            if killed_by_enemy:
+                reward += self.player_killed_reward / (len(self.enemies) + 1)
+            else:
+                reward += self.player_killed_reward / len(self.enemies)
             self.hp -= 1
 
             # Kill the player
