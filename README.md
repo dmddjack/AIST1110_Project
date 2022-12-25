@@ -41,6 +41,7 @@ Project Name: Tank War
 - [x] Change variables names in tankwar_train.py
 - [x] Delete unnecessary codes in all scripts
 - [x] Solve enemy collision bug
+- [ ] Add -fast mode for 20-min training
 - [ ] Do experiment:
     - [ ] Time interval
     - [ ] Huber or MSE loss
