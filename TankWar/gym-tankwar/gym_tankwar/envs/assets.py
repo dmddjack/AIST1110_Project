@@ -6,6 +6,7 @@ import numpy as np
 import pygame
 from PIL import Image
 
+
 # Code source: https://stackoverflow.com/questions/595305/how-do-i-get-the-path-of-the-python-script-i-am-running-in
 images_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 audios_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audios")

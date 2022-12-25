@@ -634,7 +634,8 @@ class TankWar(gym.Env):
             if killed_by_enemy:
                 reward += self.player_killed_reward / (len(self.enemies) + 1)
             else:
-                reward += self.player_killed_reward / len(self.enemies)
+                reward += self.player_killed_reward / len(self.enemies) \
+                    if len(self.enemies) != 0 else self.player_killed_reward
             self.hp -= 1
 
             # Kill the player
