@@ -5,7 +5,7 @@ import numpy as np
 import pygame
 from gym import spaces
 
-from .assets import Audios, Background, Black, Enemy, Heart, Player, Explosion
+from .assets import Audios, Background, Black, Enemy, Explosion, Heart, Player
 
 
 class TankWar(gym.Env):
@@ -13,7 +13,7 @@ class TankWar(gym.Env):
 
     def __init__(self, render_mode: str | None,
                  starting_hp: int, difficulty: int, 
-                 full_enemy: bool, ending: bool = False) -> None:
+                 full_enemy: bool, extra_scene: bool = False) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
@@ -23,8 +23,8 @@ class TankWar(gym.Env):
         # Whether or not use all enemies
         self.full_enemy = full_enemy
 
-        # Whether or not show ending scene
-        self.ending = ending
+        # Whether or not show beginning and ending scenes
+        self.extra_scene = extra_scene
 
         # The size of the pygame window
         self.window_width, self.window_height = 450, 350
@@ -49,7 +49,6 @@ class TankWar(gym.Env):
 
         # The maximum number of enemies' bullets
         self.max_enemy_bullets = self.max_enemies * 3
-
 
         # The reward when the player kills an enemy
         self.enemy_killed_reward = 1000
@@ -101,6 +100,7 @@ class TankWar(gym.Env):
 
         self.font = None
         self.background = None
+        self.black = None
 
         # The following will remain None iff "rgb_array" mode is used
         self.window = None
@@ -805,6 +805,10 @@ class TankWar(gym.Env):
             # Load the background
             self.background = Background()
 
+        if self.black is None:
+            # Load the black image
+            self.black = Black()
+
         # Create a surface to hold all elements
         canvas = pygame.Surface((self.window_width, self.window_height))
         canvas.fill((255, 255, 255))
@@ -812,63 +816,77 @@ class TankWar(gym.Env):
         # Set the background
         canvas.blit(self.background.surf, (0, 0))
 
-        # Draw all sprites
-        for sprite in self.all_sprites:
-            canvas.blit(sprite.surf, sprite.rect)
+        if self.steps != 0:
+            # Draw all sprites
+            for sprite in self.all_sprites:
+                canvas.blit(sprite.surf, sprite.rect)
 
-        # Draw all hearts
-        for heart in self.hearts:
-            canvas.blit(heart.surf, heart.rect)
+            # Draw all hearts
+            for heart in self.hearts:
+                canvas.blit(heart.surf, heart.rect)
 
-        # Display the score on the window
-        score_surf = self.font.render(f"Score: {self.score}", True, (0, 0, 0))
-        canvas.blit(score_surf, (5, 5))
+            # Display the score on the window
+            score_surf = self.font.render(f"Score: {self.score}", True, (0, 0, 0))
+            canvas.blit(score_surf, (5, 5))
 
-        # Display the duration of game on the window
-        duration_total = self.steps // self.metadata["render_fps"]
-        duration_min = duration_total // 60
-        duration_sec = duration_total - duration_min * 60
-        time_surf = self.font.render(
-            f"Time: {duration_min:0>2d}:{duration_sec:0>2d}", True, (0, 0, 0)
-        )
-        canvas.blit(time_surf, (5, 25))
-
-        # Display the player's cannon's remaining reloading time as a
-        # shrinking rectangle
-        if self.player.last_shoot != 0:
-            reload_bar_len = max(
-                0,
-                80 * (self.metadata["render_fps"] * self.player_shoot_intvl
-                      - (self.steps - self.player.last_shoot))
-                // (self.metadata["render_fps"] * self.player_shoot_intvl),
+            # Display the duration of game on the window
+            duration_total = self.steps // self.metadata["render_fps"]
+            duration_min = duration_total // 60
+            duration_sec = duration_total - duration_min * 60
+            time_surf = self.font.render(
+                f"Time: {duration_min:0>2d}:{duration_sec:0>2d}", True, (0, 0, 0)
             )
-            pygame.draw.rect(
-                canvas,
-                (230, 230, 230),
-                (
-                    self.window_width - reload_bar_len - 15,
-                    self.window_height - 20,
-                    reload_bar_len,
-                    10,
-                ),
-            )
+            canvas.blit(time_surf, (5, 25))
+
+            # Display the player's cannon's remaining reloading time as a
+            # shrinking rectangle
+            if self.player.last_shoot != 0:
+                reload_bar_len = max(
+                    0,
+                    80 * (self.metadata["render_fps"] * self.player_shoot_intvl
+                        - (self.steps - self.player.last_shoot))
+                    // (self.metadata["render_fps"] * self.player_shoot_intvl),
+                )
+                pygame.draw.rect(
+                    canvas,
+                    (230, 230, 230),
+                    (
+                        self.window_width - reload_bar_len - 15,
+                        self.window_height - 20,
+                        reload_bar_len,
+                        10,
+                    ),
+                )
 
         # Add ending scene
-        if terminated and self.ending:
-            black = Black()
-            canvas.blit(black.surf, (0, 0))
+        if self.extra_scene:
+            # Beginning
+            if self.steps == 0:
+                canvas.blit(self.black.surf, (0, 0))
 
-            ending_text = pygame.font.SysFont("Garamond", 50).render("GAME OVER", True, (255, 255, 255))
-            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 35))
-            canvas.blit(ending_text, ending_text_rect)
+                title_text = pygame.font.SysFont("Garamond", 50).render("TANK WAR", True, (255, 255, 255))
+                title_text_rect = title_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 20))
+                canvas.blit(title_text, title_text_rect)
+                
+                beginning_text = self.font.render("Press [Enter] to play", True, (255, 255, 255))
+                beginning_text_rect = beginning_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 20))
+                canvas.blit(beginning_text, beginning_text_rect)
 
-            ending_text = self.font.render("Press [R] to restart", True, (255, 255, 255))
-            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 5))
-            canvas.blit(ending_text, ending_text_rect)
+            # Ending
+            elif terminated:
+                canvas.blit(self.black.surf, (0, 0))
 
-            ending_text = self.font.render("Press [Q] or [Esc] to quit", True, (255, 255, 255))
-            ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 35))
-            canvas.blit(ending_text, ending_text_rect)
+                ending_text = pygame.font.SysFont("Garamond", 50).render("GAME OVER", True, (255, 255, 255))
+                ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 35))
+                canvas.blit(ending_text, ending_text_rect)
+
+                ending_text = self.font.render("Press [R] to restart", True, (255, 255, 255))
+                ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 5))
+                canvas.blit(ending_text, ending_text_rect)
+
+                ending_text = self.font.render("Press [Q] or [Esc] to quit", True, (255, 255, 255))
+                ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 35))
+                canvas.blit(ending_text, ending_text_rect)
 
         if self.render_mode == "human":
             # Draw the canvas to the pygame window
@@ -894,9 +912,3 @@ class TankWar(gym.Env):
 
             # Quit pygame
             pygame.quit()
-
-
-
-
-
-

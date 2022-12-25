@@ -34,6 +34,8 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | No
         return None
     if pressed_keys[pygame.K_r]:
         return -100
+    if pressed_keys[pygame.K_RETURN]:
+        return -200
 
     last_action_space = filter_dir(last_pressed_keys)
     action_space = filter_dir(pressed_keys)
@@ -86,7 +88,7 @@ def main():
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
         full_enemy=args.full_enemy,
-        ending=True if args.mode == "human" else False
+        extra_scene=True if args.mode == "human" else False
     )
 
     if args.mode != "human":
@@ -103,13 +105,11 @@ def main():
     success_episodes = 0
     running = True
     rewards = 0
-    total_rewards = 0
-    total_score = 0
     step = 0
-    total_steps = 0
+    total_rewards = total_score = total_steps = 0
     action = None
     pressed_keys = None
-    gameover = False
+    beginning, gameover = True, False
     while running and episode < args.episodes:
         if args.mode == "human":
             # Detect pygame events for quiting the game
@@ -132,6 +132,16 @@ def main():
             if action is None:
                 running = False
 
+            # Check if the game just starts
+            if beginning:
+                if action == -200:
+                    beginning = False
+                else:
+                    continue
+            else:  # Check if the Enter key is pressed when the game is not over
+                if action == -200:
+                    action = 4
+
             # Check if the game is over
             if gameover:
                 if action == -100:  # Check if the R key is pressed when the game is over
@@ -139,8 +149,8 @@ def main():
                     observation, reset_info = env.reset(seed=args.seed)
                 else:
                     continue
-            else:  # Check if the R key is pressed when the game is not over
-                if action == -100:
+            else:  # Check if the R key or Enter key is pressed when the game is not over
+                if action == -200:
                     action = 4
         else:
             # Detect events and pressed keys for quitting the game
