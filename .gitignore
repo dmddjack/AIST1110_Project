@@ -139,8 +139,7 @@ sample
 # zip file
 *.zip
 
-# training result pic
-*training result/
+# training result plot
 *training_results/
 
 # generated cropped explosion image
