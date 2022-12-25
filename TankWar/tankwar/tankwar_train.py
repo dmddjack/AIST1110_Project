@@ -291,17 +291,18 @@ class RLModel:
 
     @staticmethod
     def _timer(start_time, progress, total) -> None:
+        # Code source: https://github.com/dmddjack/ESTR2018_Project/blob/main/wordle_bot.py
         """
         An internal function that prints the current progress, time elapsed 
-        and ETA.
+        and Estimated remaining time. Modified from FONG Shi Yuk's ESTR 2018 Project.
         """
 
         time_elapsed = time() - start_time
 
         print(f"Progress: {progress}/{total} ({progress / total * 100:.2f}%)")
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
-        print(
-            f"Estimated time remaining: {strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
+        print(f"Estimated time remaining: "
+              f"{strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
 
     @staticmethod
     def _average(lst: list[int | float]) -> float:
