@@ -381,6 +381,20 @@ class TankWar(gym.Env):
         return 30 * original_speed // render_fps
 
     @staticmethod
+    def _angle_to_dir(angle: int) -> tuple[int, int]:
+        dx, dy = 0, 0
+        if angle == 0:  # Move up
+            dy = -1
+        elif angle == 90:  # Move left
+            dx = -1
+        elif angle == 180:  # Move down
+            dy = 1
+        else:  # Move right
+            dx = 1
+
+        return dx, dy
+
+    @staticmethod
     def _get_distance(p: int, x1: int, y1: int, x2: int, y2: int) -> float:
         """An internal function that returns l_p norm."""
 
@@ -482,14 +496,7 @@ class TankWar(gym.Env):
                     enemy.last_rotate = self.steps
                     # print(enemy_new_angle)
 
-            if enemy_new_angle == 0:  # Move up
-                enemy_dy = -1
-            elif enemy_new_angle == 90:  # Move left
-                enemy_dx = -1
-            elif enemy_new_angle == 180:  # Move down
-                enemy_dy = 1
-            else:  # Move right
-                enemy_dx = 1
+            enemy_dx, enemy_dy = self._angle_to_dir(enemy_new_angle)
 
             # Update the enemy's location
             enemy_touches_border, enemy_correction_angles = enemy.update(
@@ -545,19 +552,13 @@ class TankWar(gym.Env):
         for enemy in collided_enemies:
             # Reverse the directions of two enemies when they collide 
             # with each other
-            enemy_dx, enemy_dy = 0, 0
+            enemy_dx, enemy_dy = self._angle_to_dir(enemy.angle)
+            enemy.update(-enemy_dx * 2, -enemy_dy * 2, enemy.angle)
             enemy_new_angle = self.np_random.choice(
                         [angle for angle in self.angles if angle != enemy.angle]
                     )
-            if enemy_new_angle == 0:  # Move up
-                enemy_dy = -2
-            elif enemy_new_angle == 90:  # Move left
-                enemy_dx = -2
-            elif enemy_new_angle == 180:  # Move down
-                enemy_dy = 2
-            else:  # Move right
-                enemy_dx = 2
-            enemy.update(enemy_dx, enemy_dy, enemy_new_angle)
+            enemy_dx, enemy_dy = self._angle_to_dir(enemy_new_angle)
+            enemy.update(enemy_dx * 1, enemy_dy * 1, enemy_new_angle)
             enemy.last_rotate = self.steps
 
             # Kill the enemy
