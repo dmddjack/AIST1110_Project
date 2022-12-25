@@ -53,7 +53,7 @@ class TankWar(gym.Env):
         self.player_killed_reward = -100
 
         # The reward when the player shoots in a correct direction
-        self.player_shoot_reward = 100
+        self.player_shoot_reward = 1
 
         # The reward when the player shoots misses all targets
         self.player_miss_reward = -10
@@ -820,8 +820,8 @@ class TankWar(gym.Env):
             black = Black()
             canvas.blit(black.surf, (0, 0))
 
-            ending_keys_surf = self.font.render("Press [R] to restart, [Q] to quit", True, (255, 255, 255))
-            canvas.blit(ending_keys_surf, (220, 50))
+            ending_keys_surf = self.font.render("Press [R] to restart, [Q] or [Esc] to quit", True, (255, 255, 255))
+            canvas.blit(ending_keys_surf, (70, 160))
 
         if self.render_mode == "human":
             # Draw the canvas to the pygame window

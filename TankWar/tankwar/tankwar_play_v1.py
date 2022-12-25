@@ -7,7 +7,7 @@ import pygame
 from cmdargs import args
 
 
-def _pressed_to_action(pressed_keys, last_pressed_keys, last_action):
+def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | None:
     """An internal function that maps pressed key(s) to an action"""
 
     def filter_dir(keys):
@@ -32,6 +32,8 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action):
 
     if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
         return None
+    if pressed_keys[pygame.K_r]:
+        return -100
 
     last_action_space = filter_dir(last_pressed_keys)
     action_space = filter_dir(pressed_keys)
@@ -84,7 +86,7 @@ def main():
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
         full_enemy=args.full_enemy,
-        ending=True
+        ending=True if args.mode == "human" else False
     )
 
     if args.mode != "human":
@@ -105,6 +107,7 @@ def main():
     total_rewards = total_score = total_steps = 0
     action = None
     pressed_keys = None
+    gameover = False
     while running and episode < args.episodes:
         if args.mode == "human":
             # Detect pygame events for quiting the game
@@ -126,8 +129,34 @@ def main():
             action = _pressed_to_action(pressed_keys, last_pressed_keys, last_action)
             if action is None:
                 running = False
+
+            # Check if the game is over
+            if gameover:
+                if action == -100:  # Check if the R key is pressed when the game is over
+                    gameover = False
+                    observation, reset_info = env.reset(seed=args.seed)
+                else:
+                    continue
+            else:  # Check if the R key is pressed when the game is not over
+                if action == -100:
+                    action = 4
         else:
-            action = env.action_space.sample()  # random
+            # Detect events and pressed keys for quitting the game
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            pressed_keys = pygame.key.get_pressed()
+            if pressed_keys[pygame.K_q] or pressed_keys[pygame.K_ESCAPE]:
+                running = False
+
+            # Pick an action from the action space randomly
+            action = env.action_space.sample()
+
+            # Check if the game is over
+            if gameover:
+                gameover = False
+                observation, reset_info = env.reset(seed=args.seed)
 
         if action is not None:
             observation, reward, terminated, truncated, info = env.step(action)
@@ -154,25 +183,14 @@ def main():
 
                 episode += 1
                 total_steps += step
-                step = 0
                 total_score += info["score"]
                 total_rewards += rewards
+
+                step = 0
                 rewards = 0
 
-                done = False if args.mode == "human" else True
-
-                if args.mode == "human":
-                    pressed_keys = pygame.key.get_pressed()
-                    if pressed_keys[pygame.K_r]:
-                        done = True
-
-                    elif pressed_keys[pygame.K_q]:
-                        running = False
-                        done = True
-
-                # Reset the environment
-                if done:
-                    observation, reset_info = env.reset(seed=args.seed)
+                gameover = True
+                    
 
     if episode > 0:
         print(
