@@ -142,8 +142,7 @@ class RLModel:
                     self._timer(start_time, episode, self.train_episodes)
                     print(f"Total training reward = {total_training_rewards:<8.1f} at episode {episode:<{len(str(args.train_episodes))}d} "
                           f"with score = {info['score']:<2d}, steps = {info['steps']}")
-                    self.scores.append(info["score"])
-                    self.steps.append(info["steps"])
+
                     if steps_to_update_target_model >= 400:
                         self.target_model.set_weights(self.main_model.get_weights())
                         steps_to_update_target_model = 0
