@@ -371,6 +371,8 @@ class Heart(pygame.sprite.Sprite):
 
 class Explosion(pygame.sprite.Sprite):
     # Image source: http://gushh.net/blog/free-game-sprites-explosion-4/
+    # License: http://gushh.net/blog/free-game-sprites-explosion-1/
+    
     # Code source: https://github.com/russs123/Explosion/blob/main/explosion.py
     def __init__(self, obj, terminated=False):
         pygame.sprite.Sprite.__init__(self)
