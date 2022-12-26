@@ -131,7 +131,7 @@ dmypy.json
 .pyre/
 
 # model file
-TankWar/tankwar/models/model_*
+TankWar/tankwar/models/*
 
 # sample env
 sample
