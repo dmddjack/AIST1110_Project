@@ -409,7 +409,7 @@ class TankWar(gym.Env):
 
     def step(self, action: int | None):
         self.steps += 1
-        reward = 0.06 * np.sqrt(self.steps)
+        reward = 0.1 * np.sqrt(self.steps)
         terminated = False
 
         if self.pygame_initialized and self.render_mode == "human":
