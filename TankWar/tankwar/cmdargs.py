@@ -31,6 +31,8 @@ parser.add_argument("-teste", "--test_episodes", type=int,
 parser.add_argument("-ms", "--max_steps", type=int, 
                     help="The maximum number of steps in an episode", 
                     default=5400)
+parser.add_argument("-fast", "--fast", action="store_true", 
+                    help="Train the model in around 20 minutes")
 parser.add_argument("-fps", "--fps", type=int, 
                     help="The rendering speed in frames per second", 
                     choices=(15, 30, 60), metavar="[15, 30, 60]", 
