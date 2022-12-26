@@ -198,8 +198,7 @@ class RLModel:
         )
 
         model.compile(
-            # loss=tf.keras.losses.Huber(),
-            loss=tf.keras.losses.MeanSquaredError(reduction="auto", name="mean_squared_error"),
+            loss=tf.keras.losses.Huber(),
             optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
             metrics=['accuracy'],
         )
