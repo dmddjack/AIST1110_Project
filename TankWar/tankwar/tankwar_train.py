@@ -258,7 +258,7 @@ class RLModel:
     def save(self) -> None:
         """A method that save the target model."""
 
-        self.target_model.save(f"models/model_diff_{self.difficulty}_epi_{self.episode}_{strftime('%H-%M-%S', gmtime(time() - self.start_time))}.h5")
+        self.target_model.save(f"models/model_{'fast_' if self.fast else ''}diff_{self.difficulty}_epi_{self.episode}_{strftime('%H-%M-%S', gmtime(time() - self.start_time))}.h5")
 
     def plot(self) -> None:
         """
