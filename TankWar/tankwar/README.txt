@@ -1,4 +1,5 @@
 # Command-line arguments
+# Open this file in an IDE or Notepad++
 # This document partly follows Google developer documentation style guide. For more information, see https://developers.google.com/style/code-syntax.
 # Available command:
 python tankwar_play.py [-m MODE] [-sh STARTING_HP] [-s SEED] [-d DIFFICULTY] [-fe] [-e EPISODES] [-ms MAX_STEPS] [-fps FPS] [-h]
@@ -18,7 +19,7 @@ Argument name       Argument name alias    Definition & usage                   
                                            every episode of the game will be 
                                            the same)
 
---difficulty        -d                     The difficulty of enemy tank path       int                   DIFFICULTY = (0 | 1)          0
+--difficulty        -d                     The level of enemy tank path            int                   DIFFICULTY = (0 | 1)          0
                                            finding AI
 
 --full_enemy        -fe                    Fix the number of enemies to its        N/A                   N/A                           False
@@ -42,7 +43,6 @@ Argument name       Argument name alias    Definition & usage                   
                                            tankwar_train.py and tankwar_test.py)
 
 --file              -f                     The file name of the HDF5 model file    str |  NoneType       N/A                           None
-                                           (If the file name is model.h5, only
-                                           model should be inputed)
+                                           (without .h5 suffix)
                                            
 --help              -h                     Show the help message and exit          N/A                   N/A                           N/A
