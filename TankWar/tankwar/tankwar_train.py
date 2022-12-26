@@ -63,13 +63,16 @@ class RLModel:
         print(self.target_model.summary())
         print("=" * 60)
 
+        # Initialize a fixed-sized list to store states, actions and rewards
         self.replay_memory = deque(maxlen=20_000)
 
         steps_to_update_target_model = 0
 
         time_intvl = int(self.time_intvl_factor * args.fps)
 
-        start_time = time()
+        # Get the starting time of the training
+        self.start_time = time()
+
         episode = 0
         running = True
         while episode < self.train_episodes and running:
@@ -139,12 +142,12 @@ class RLModel:
                     self.scores.append(info['score'])
                     self.steps.append(info['steps'])
 
-                    # Save the target model for every 25 episodes
-                    if episode % 25 == 0:
+                    # Save the target model for every 10 episodes
+                    if episode % 1 == 0:
                         self.save(episode)
 
                     # Print progress wrt time
-                    self._timer(start_time, episode, self.train_episodes)
+                    self._timer(self.start_time, episode, self.train_episodes)
 
                     # Print episode's training result
                     print(f"Total training reward = {total_training_rewards:<9.2f} "
@@ -240,10 +243,13 @@ class RLModel:
     def save(self, episode: int) -> None:
         """A method that save the target model."""
 
-        self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}.h5")
+        self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}_{strftime('%H-%M-%S', gmtime(time() - self.start_time))}.h5")
 
     def plot(self) -> None:
-        """A method that plots rewards, scores, steps and epsilons wrt training episodes."""
+        """
+        A method that plots rewards, scores, steps and epsilons wrt 
+        training episodes.
+        """
 
         fig = plt.figure(figsize=(10, 8))
 
