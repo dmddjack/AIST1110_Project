@@ -53,6 +53,7 @@ class RLModel:
 
         self.train_target_steps = 15 if not self.fast else 30
         self.update_target_stesp = 400 if not self.fast else 800
+        self.save_model_steps = 10 if not self.fast else 5
         
         # Maximum time elapsed (in minute) in fast mode
         self.fast_minute = 0.5
@@ -154,8 +155,8 @@ class RLModel:
                     self.scores.append(info['score'])
                     self.steps.append(info['steps'])
 
-                    # Save the target model for every 10 episodes
-                    if self.episode % 10 == 0:
+                    # Save the target model regularly
+                    if self.episode % self.save_model_steps == 0:
                         self.save()
 
                     # Print progress wrt time
