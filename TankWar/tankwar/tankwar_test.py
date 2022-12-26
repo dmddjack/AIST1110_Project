@@ -16,14 +16,17 @@ from cmdargs import args
 
 
 def main():
-    assert args.mode != "human_rand"
+    assert args.mode != "human_rand", "human_rand mode cannot be used here"
+    assert args.test_episodes > 0, "TEST_EPISODES must be a positive integer"
+    assert args.max_steps > 0, "MAX_STEPS must be a positive integer"
+    assert args.file is not None, "FILE cannot be None"
 
     env = gym.make(
         "gym_tankwar/TankWar-v0",
         render_mode=args.mode,
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
-        episodes=args.episodes,
+        episodes=args.test_episodes,
         full_enemy=args.full_enemy,
     )
 

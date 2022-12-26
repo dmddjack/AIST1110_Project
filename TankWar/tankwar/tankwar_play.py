@@ -53,6 +53,9 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | No
 
 
 def main():
+    assert args.episodes > 0, "EPISODES must be a positive integer"
+    assert args.max_steps > 0, "MAX_STEPS must be a positive integer"
+
     render_mode = args.mode
     if render_mode == "human_rand":
         render_mode = "human"

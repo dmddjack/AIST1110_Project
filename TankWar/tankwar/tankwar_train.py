@@ -341,6 +341,11 @@ class RLModel:
 
 
 def main():
+    assert args.mode != "human_rand", "human_rand mode cannot be used here"
+    assert args.seed is not None, "SEED cannot be None"
+    assert args.train_episodes > 0, "TRAIN_EPISODES must be a positive integer"
+    assert args.max_steps > 0, "MAX_STEPS must be a positive integer"
+
     # Make a directory to store target models if necessary
     if not os.path.isdir("models"):
         os.mkdir("models")
@@ -349,15 +354,12 @@ def main():
     if not os.path.isdir("training_results"):
         os.mkdir("training_results")
 
-    assert args.mode != "human_rand"
-    assert args.seed is not None, "Seed cannot be None"
-
     env = gym.make(
         "gym_tankwar/TankWar-v0",
         render_mode=args.mode,
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
-        episodes=args.episodes,
+        episodes=args.train_episodes,
         full_enemy=args.full_enemy,
     )
     env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
