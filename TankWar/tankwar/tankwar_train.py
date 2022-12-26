@@ -143,7 +143,7 @@ class RLModel:
                     self.steps.append(info['steps'])
 
                     # Save the target model for every 10 episodes
-                    if episode % 1 == 0:
+                    if episode % 10 == 0:
                         self.save(episode)
 
                     # Print progress wrt time
