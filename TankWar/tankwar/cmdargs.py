@@ -18,7 +18,7 @@ parser.add_argument("-d", "--difficulty", type=int,
                     choices=(0, 1), metavar="[0, 1]",
                     default=0)
 parser.add_argument("-fe", "--full_enemy", action="store_true", 
-                    help="The number of enemies is always maximum")
+                    help="Fix the number of enemies to its maximum value")
 parser.add_argument("-e", "--episodes", type=int, 
                     help="The number of playing episodes", 
                     default=1000)
@@ -32,9 +32,9 @@ parser.add_argument("-ms", "--max_steps", type=int,
                     help="The maximum number of steps in an episode", 
                     default=7200)
 parser.add_argument("-fast", "--fast", action="store_true", 
-                    help="Train the model in around 20 minutes")
+                    help="Use fast mode to train DQN model in around 20 minutes")
 parser.add_argument("-fps", "--fps", type=int, 
-                    help="The rendering speed in frames per second", 
+                    help="Frames per second", 
                     choices=(15, 30, 60), metavar="[15, 30, 60]", 
                     default=30)
 parser.add_argument("-f", "--file", type=str, 
