@@ -389,6 +389,7 @@ class TankWar(gym.Env):
 
     @staticmethod
     def _angle_to_dir(angle: int) -> tuple[int, int]:
+        """An internal function that map the angle to direction"""
         dx, dy = 0, 0
         if angle == 0:  # Move up
             dy = -1

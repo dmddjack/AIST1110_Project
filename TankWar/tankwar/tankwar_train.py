@@ -6,7 +6,7 @@
 import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"  # Use GPU acceleration if possible
 
 import gc
 import random

@@ -10,7 +10,8 @@ from cmdargs import args
 def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | None:
     """An internal function that maps pressed key(s) to an action"""
 
-    def filter_dir(keys):
+    def filter_dir(keys) -> list[int]:
+        """An internal function maps pressed key(s) to a list of actions"""
         dir_ = (keys[pygame.K_UP] or keys[pygame.K_w],  # Going up
                 keys[pygame.K_DOWN] or keys[pygame.K_s],  # Going down
                 keys[pygame.K_LEFT] or keys[pygame.K_a],  # Going left
