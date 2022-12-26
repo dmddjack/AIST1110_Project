@@ -23,13 +23,14 @@ def main():
         render_mode=args.mode,
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
+        episodes=args.episodes,
         full_enemy=args.full_enemy,
     )
 
     env.action_space.seed(args.seed)
 
     # Load the model
-    model = keras.models.load_model(f"models/{args.file}.h5")
+    model = keras.models.load_model(f"models/{args.file}.h5", compile=False)
 
     print("Testing started ...")
     episode = success_episodes = 0
