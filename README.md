@@ -43,8 +43,8 @@ Project Name: Tank War
 - [x] Solve enemy collision bug
 - [ ] Add -fast mode for 20-min training
 - [ ] Do experiment:
-    - [ ] Time interval
-    - [ ] Huber or MSE loss
+    - [x] Time interval
+    - [x] Huber or MSE loss
     - [ ] Modify reward
 
 ## Ideas
