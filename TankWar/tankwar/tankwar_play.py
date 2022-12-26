@@ -63,6 +63,7 @@ def main():
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
         full_enemy=args.full_enemy,
+        episodes=args.episodes,
         extra_scene=True if args.mode == "human" else False
     )
 
