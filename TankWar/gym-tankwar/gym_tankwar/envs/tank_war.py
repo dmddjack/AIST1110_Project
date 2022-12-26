@@ -13,7 +13,7 @@ class TankWar(gym.Env):
 
     def __init__(self, render_mode: str | None,
                  starting_hp: int, difficulty: int,
-                 full_enemy: bool, extra_scene: bool = False) -> None:
+                 full_enemy: bool, episodes: int, extra_scene: bool = False) -> None:
         # The starting health point (HP) of the player
         self.starting_hp = starting_hp
 
@@ -22,6 +22,9 @@ class TankWar(gym.Env):
 
         # Whether or not use all enemies
         self.full_enemy = full_enemy
+
+        # The number of episodes
+        self.episodes = episodes
 
         # Whether or not show beginning and ending scenes
         self.extra_scene = extra_scene
@@ -73,6 +76,9 @@ class TankWar(gym.Env):
 
         # Constant to fill empty observation space
         self.empty_space = -1
+
+        # A variable that counts how many episode has been run
+        self.episode = 0
 
         # Normalized observation: all tanks' and bullets' location, angle, speed, 
         # and the player's cannon's remaining reloading time
@@ -198,6 +204,8 @@ class TankWar(gym.Env):
               options=None) -> tuple[np.ndarray, dict]:
         # Seed self.np_random
         super().reset(seed=seed)
+
+        self.episode += 1
 
         # Reset all counting variables
         self.steps = 0
@@ -874,7 +882,7 @@ class TankWar(gym.Env):
                 canvas.blit(beginning_text, beginning_text_rect)
 
             # Ending
-            elif terminated:
+            elif terminated and self.episode != self.episodes:
                 canvas.blit(self.black.surf, (0, 0))
 
                 # "GAME OVER"

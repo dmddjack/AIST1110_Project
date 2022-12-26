@@ -52,7 +52,7 @@ class RLModel:
         self.time_intvl_factor = 1
 
         self.train_target_steps = 15 if not self.fast else 30
-        self.update_target_stesp = 400 if not self.fast else 800
+        self.update_target_stesp = 400 if not self.fast else 600
         self.save_model_steps = 10 if not self.fast else 5
         
         # Maximum time elapsed (in minute) in fast mode
@@ -156,7 +156,7 @@ class RLModel:
                     self.steps.append(info['steps'])
 
                     # Save the target model regularly
-                    if self.episode % self.save_model_steps == 0:
+                    if self.episode % self.save_model_steps == 0 or self.episode == self.train_episodes:
                         self.save()
 
                     # Print progress wrt time
@@ -353,6 +353,7 @@ def main():
         render_mode=args.mode,
         starting_hp=args.starting_hp,
         difficulty=args.difficulty,
+        episodes=args.episodes,
         full_enemy=args.full_enemy,
     )
     env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
@@ -380,7 +381,6 @@ def main():
         args.seed,
     )
     my_model.run()
-    my_model.save()
     my_model.plot()
 
 
