@@ -29,12 +29,17 @@ print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 
 class RLModel:
-    def __init__(self, env: gym.Env, state_shape, action_shape,
-                 train_episodes: int, seed: int | None = None) -> None:
+    def __init__(self, env: gym.Env, state_shape: int, action_shape: int, 
+                 mode: str, difficulty: int, train_episodes: int, fast: bool, 
+                 render_fps: int, seed: int | None = None) -> None:
         self.env = env
         self.state_shape = state_shape
         self.action_shape = action_shape
+        self.mode = mode
+        self.difficulty = difficulty
         self.train_episodes = train_episodes
+        self.fast = fast
+        self.render_fps = render_fps
         self.seed = seed
 
         # Initialize variables that determine the behaviour of 
@@ -46,8 +51,14 @@ class RLModel:
 
         self.time_intvl_factor = 1
 
+        self.train_target_steps = 15 if not self.fast else 30
+        self.update_target_stesp = 400 if not self.fast else 800
+        
+        # Maximum time elapsed (in minute) in fast mode
+        self.fast_minute = 0.5
+
         # Number of neurons for each layer
-        self.neurons = (256, 128, 128, 64, 32)
+        self.neurons = (256, 128, 128, 64, 32) if not self.fast else (128, 64, 32)
 
     def run(self) -> None:
         self.rewards, self.epsilons, self.scores, self.steps = [], [], [], []
@@ -56,27 +67,27 @@ class RLModel:
         self.main_model = self._agent(self.neurons)
         self.target_model = self._agent(self.neurons)
 
-        # Copy main_model's weights to target_model
+        # Copy main model's weights to target model
         self.target_model.set_weights(self.main_model.get_weights())
 
         # Print the summary of the target model
         print(self.target_model.summary())
-        print("=" * 60)
+        print("=" * 65)
 
         # Initialize a fixed-sized list to store states, actions and rewards
         self.replay_memory = deque(maxlen=20_000)
 
         steps_to_update_target_model = 0
 
-        time_intvl = int(self.time_intvl_factor * args.fps)
+        time_intvl = int(self.time_intvl_factor * self.render_fps)
 
         # Get the starting time of the training
         self.start_time = time()
 
-        episode = 0
+        self.episode = 0
         running = True
-        while episode < self.train_episodes and running:
-            episode += 1
+        while self.episode < self.train_episodes and running:
+            self.episode += 1
             total_training_rewards = 0
 
             # Reset the environment
@@ -91,7 +102,7 @@ class RLModel:
                     break
 
                 # Detect events and pressed keys for quitting the game
-                if args.mode == "human":
+                if self.mode == "human":
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                             running = False
@@ -127,7 +138,7 @@ class RLModel:
 
                 if step > time_intvl:
                     self.replay_memory[-time_intvl][2] = reward_mean + reward_interval_shoot[0]
-                if steps_to_update_target_model % 15 == 0 or (terminated or truncated):
+                if steps_to_update_target_model % self.train_target_steps == 0 or (terminated or truncated):
                     self._train(terminated)
 
                 state = new_state
@@ -137,38 +148,41 @@ class RLModel:
                     for i in range(1, min(time_intvl, step) + 1):
                         self.replay_memory[-i][2] = np.array(list(islice(reward_interval, i - 1, None))).mean() + \
                                                     reward_interval_shoot[i - 1]
+
                     self.rewards.append(total_training_rewards)
                     self.epsilons.append(self.epsilon)
                     self.scores.append(info['score'])
                     self.steps.append(info['steps'])
 
                     # Save the target model for every 10 episodes
-                    if episode % 10 == 0:
-                        self.save(episode)
+                    if self.episode % 10 == 0:
+                        self.save()
 
                     # Print progress wrt time
-                    self._timer(self.start_time, episode, self.train_episodes)
+                    time_elapsed = self._timer(self.start_time, self.episode, self.train_episodes)
 
                     # Print episode's training result
                     print(f"Total training reward = {total_training_rewards:<9.2f} "
-                          f"at episode {episode:<{len(str(args.train_episodes))}d} "
+                          f"at episode {self.episode:<{len(str(self.train_episodes))}d} "
                           f"with score = {info['score']:<2d}, steps = {info['steps']}")
 
-                    if steps_to_update_target_model >= 400:
+                    # Copy main model's weights to target model
+                    if steps_to_update_target_model >= self.update_target_stesp:
                         self.target_model.set_weights(self.main_model.get_weights())
                         steps_to_update_target_model = 0
 
-                    break
+                    if time_elapsed >= self.fast_minute * 60 and self.fast:
+                        running = False
 
             # Garbage collection for memory issue
             gc.collect()
             keras.backend.clear_session()
 
             print("Epsilon:", self.epsilon)
-            print("=" * 60)
+            print("=" * 65)
 
             # Update epsilon
-            self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * episode)
+            self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * self.episode)
 
         self.env.close()
 
@@ -240,10 +254,10 @@ class RLModel:
 
         self.main_model.fit(np.array(x), np.array(y), batch_size=batch_size, verbose=0, shuffle=True)
 
-    def save(self, episode: int) -> None:
+    def save(self) -> None:
         """A method that save the target model."""
 
-        self.target_model.save(f"models/model_diff_{args.difficulty}_epi_{episode}_{strftime('%H-%M-%S', gmtime(time() - self.start_time))}.h5")
+        self.target_model.save(f"models/model_diff_{self.difficulty}_epi_{self.episode}_{strftime('%H-%M-%S', gmtime(time() - self.start_time))}.h5")
 
     def plot(self) -> None:
         """
@@ -253,7 +267,7 @@ class RLModel:
 
         fig = plt.figure(figsize=(10, 8))
 
-        x = np.arange(1, self.train_episodes + 1)
+        x = np.arange(1, self.episode + 1)
 
         # Plot rewards
         ax1 = fig.add_subplot(221)
@@ -299,7 +313,7 @@ class RLModel:
         plt.show()
 
     @staticmethod
-    def _timer(start_time, progress, total) -> None:
+    def _timer(start_time, progress, total) -> float:
         # Code source: https://github.com/dmddjack/ESTR2018_Project/blob/main/wordle_bot.py
         """
         An internal function that prints the current progress, time elapsed 
@@ -312,6 +326,8 @@ class RLModel:
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
         print(f"Estimated time remaining: "
               f"{strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
+
+        return time_elapsed
 
     @staticmethod
     def _average(lst: list[int | float]) -> float:
@@ -355,11 +371,15 @@ def main():
         env,
         observation_space_shape,
         action_space_size,
+        args.mode,
+        args.difficulty,
         args.train_episodes,
-        args.seed
+        args.fast,
+        args.fps,
+        args.seed,
     )
     my_model.run()
-    my_model.save(args.train_episodes)
+    my_model.save()
     my_model.plot()
 
 
