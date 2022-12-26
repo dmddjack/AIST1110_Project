@@ -131,7 +131,7 @@ dmypy.json
 .pyre/
 
 # model file
-TankWar/tankwar/models/*
+# TankWar/tankwar/models/
 
 # sample env
 sample
@@ -140,7 +140,7 @@ sample
 *.zip
 
 # training result plot
-*training_results/
+# *training_results/
 
 # generated cropped explosion image
 TankWar/gym-tankwar/gym_tankwar/envs/images/explosion/explosion_*.png
