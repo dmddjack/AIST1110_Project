@@ -191,7 +191,7 @@ def main():
         # Print overall results
         print(
             f"Completion rate = {success_episodes/episode:.2f}, "
-            f"Avg score = {total_rewards/episode:.2f}, "
+            f"Avg score = {total_score/episode:.2f}, "
             f"Avg steps = {total_steps/episode:.2f}"
         )
 
