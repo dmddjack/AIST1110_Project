@@ -84,7 +84,7 @@ def main():
     action = None
     pressed_keys = None
     beginning, gameover = True, False
-    while running and episode < args.episodes:
+    while running and episode <= args.episodes:
         if args.mode == "human":
             # Detect pygame events for quiting the game
             for event in pygame.event.get():
@@ -119,8 +119,11 @@ def main():
             # Check if the game is over
             if gameover:
                 if action == -100:  # Check if the R key is pressed when the game is over
-                    gameover = False
-                    observation, reset_info = env.reset(seed=args.seed)
+                    if episode != args.episodes:
+                        gameover = False
+                        observation, reset_info = env.reset(seed=args.seed)
+                    else:
+                        continue
                 else:
                     continue
             else:  # Check if the R key or Enter key is pressed when the game is not over
@@ -157,14 +160,14 @@ def main():
                     print(
                         f"Episode {episode:<{len(str(args.episodes))}d} "
                         f"completed in {step:<5d} "
-                        f"steps with reward = {rewards:<8.1f}, "
+                        f"steps with reward = {rewards:<9.2f}, "
                         f"score = {info['score']}"
                     )
                     success_episodes += 1
                 else:
                     print(
                         f"Episode {episode:<{len(str(args.episodes))}d} "
-                        f"truncated with reward = {rewards:<8.1f}, "
+                        f"truncated with reward = {rewards:<9.2f}, "
                         f"score = {info['score']}"
                     )
 

@@ -410,7 +410,7 @@ class TankWar(gym.Env):
 
     def step(self, action: int | None):
         self.steps += 1
-        reward = 0.03 * np.sqrt(self.steps)
+        reward = 0.06 * np.sqrt(self.steps)
         terminated = False
 
         if self.pygame_initialized and self.render_mode == "human":
@@ -882,7 +882,7 @@ class TankWar(gym.Env):
                 canvas.blit(beginning_text, beginning_text_rect)
 
             # Ending
-            elif terminated and self.episode != self.episodes:
+            elif terminated:
                 canvas.blit(self.black.surf, (0, 0))
 
                 # "GAME OVER"
@@ -890,10 +890,11 @@ class TankWar(gym.Env):
                 ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 - 35))
                 canvas.blit(ending_text, ending_text_rect)
 
-                # "Press [R] to restart"
-                ending_text = self.font.render("Press [R] to restart", True, (255, 255, 255))
-                ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 5))
-                canvas.blit(ending_text, ending_text_rect)
+                if self.episode != self.episodes:
+                    # "Press [R] to restart"
+                    ending_text = self.font.render("Press [R] to restart", True, (255, 255, 255))
+                    ending_text_rect = ending_text.get_rect(center=(self.window_width / 2, self.window_height / 2 + 5))
+                    canvas.blit(ending_text, ending_text_rect)
 
                 # "Press [Q] or [Esc] to quit"
                 ending_text = self.font.render("Press [Q] or [Esc] to quit", True, (255, 255, 255))
