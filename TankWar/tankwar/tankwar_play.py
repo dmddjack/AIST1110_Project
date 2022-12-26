@@ -22,7 +22,7 @@ def _pressed_to_action(pressed_keys, last_pressed_keys, last_action) -> int | No
                 actions.append(i)
 
         if not actions:
-            actions.append(4)  # stand still, no action
+            actions.append(4)  # Stand still
 
         return actions
 
