@@ -245,7 +245,6 @@ class TankWar(gym.Env):
         # Create a placeholder for additional information
         info = {}
 
-        # if self.render_mode == "human":
         self._render_frame()
 
         return observation, info

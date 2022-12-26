@@ -88,7 +88,9 @@ class RLModel:
         self.episode = 0
         running = True
         while self.episode < self.train_episodes and running:
+            # Count current episode
             self.episode += 1
+
             total_training_rewards = 0
 
             # Reset the environment
