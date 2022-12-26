@@ -350,6 +350,7 @@ def main():
         os.mkdir("training_results")
 
     assert args.mode != "human_rand"
+    assert args.seed is not None, "Seed cannot be None"
 
     env = gym.make(
         "gym_tankwar/TankWar-v0",
