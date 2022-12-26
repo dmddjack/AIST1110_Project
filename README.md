@@ -35,17 +35,17 @@ Project Name: Tank War
 
 ## TO-DO
 - [x] Handle situations when different enemies touch one another \
-  ***The current handling method is to kill both enemies. It would be better to reverse their directions.***
 - [x] Use DQN to train a model
 - [ ] Add sufficient comments in all scripts
 - [x] Change variables names in tankwar_train.py
 - [x] Delete unnecessary codes in all scripts
 - [x] Solve enemy collision bug
-- [ ] Add -fast mode for 20-min training
+- [x] Add -fast mode for 20-min training
 - [ ] Do experiment:
     - [x] Time interval
     - [x] Huber or MSE loss
     - [ ] Modify reward
+- [ ] Reformat all scripts such that they are (mostly) consistent
 
 ## Ideas
 - [x] Difficulty
