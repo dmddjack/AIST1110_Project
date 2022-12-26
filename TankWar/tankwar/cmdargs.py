@@ -38,7 +38,7 @@ parser.add_argument("-fps", "--fps", type=int,
                     choices=(15, 30, 60), metavar="[15, 30, 60]", 
                     default=30)
 parser.add_argument("-f", "--file", type=str, 
-                    help="The file name of the HDF5 model file",
+                    help="The file name of the HDF5 model file (without .h5)",
                     default=None)
 args = parser.parse_args()
 print(args)
