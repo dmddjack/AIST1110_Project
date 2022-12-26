@@ -64,7 +64,7 @@ def main():
         difficulty=args.difficulty,
         full_enemy=args.full_enemy,
         episodes=args.episodes,
-        extra_scene=True if args.mode == "human" else False
+        extra_scene=True if args.mode == "human" else False,
     )
 
     if args.mode != "human":

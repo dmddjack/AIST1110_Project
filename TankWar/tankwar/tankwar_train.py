@@ -47,7 +47,7 @@ class RLModel:
         self.epsilon = 1
         self.max_epsilon = 1
         self.min_epsilon = 0.01
-        self.decay = 0.03
+        self.decay = 0.03 if not self.fast else 0.07
 
         self.time_intvl_factor = 1
 
@@ -56,7 +56,7 @@ class RLModel:
         self.save_model_steps = 10 if not self.fast else 5
         
         # Maximum time elapsed (in minute) in fast mode
-        self.fast_minute = 0.5
+        self.fast_minute = 20
 
         # Number of neurons for each layer
         self.neurons = (256, 128, 128, 64, 32) if not self.fast else (128, 64, 32)
