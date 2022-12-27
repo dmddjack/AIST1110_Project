@@ -272,7 +272,7 @@ class RLModel:
         # Save the target model
         self.target_model.save(f"models/model_d_{self.difficulty}_"
                                f"{'fast_' if self.fast else ''}epi_"
-                               f"{self.episode}_{self.last_datetime}.h5")
+                               f"{self.episode:0>{len(str(self.train_episodes))}d}_{self.last_datetime}.h5")
 
     def plot(self) -> None:
         """
