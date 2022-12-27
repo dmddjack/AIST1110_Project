@@ -47,7 +47,8 @@ def main():
         total_testing_rewards = 0
 
         # Reset the environment
-        # Use random.randint to generate seed so that the testing scenarios will be identical
+        # Use random.randint to generate a sequence of seeds from args.seed
+        # so that the testing scenarios will be identical for the same args.seed
         state, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
 
         for step in range(1, args.max_steps + 1):

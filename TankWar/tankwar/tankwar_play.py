@@ -72,7 +72,9 @@ def main():
         extra_scene=True if args.mode == "human" else False,
     )
 
-    episodes = args.episodes + 1 if args.mode == "human" else args.episodes  # The extra +1 is for the last game-over scene in human mode
+    # The extra +1 is for the last game-over scene in human mode
+    episodes = args.episodes + 1 if args.mode == "human" else args.episodes
+
 
     if args.mode != "human":
         env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
@@ -83,7 +85,8 @@ def main():
     env.action_space.seed(args.seed)
     random.seed(args.seed)
 
-    # observation, reset_info = env.reset(seed=args.seed)
+    # Use random.randint to generate a sequence of seeds from args.seed
+    # to match the same implementation in tankwar_test.py
     observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
     
     episode = 1
