@@ -85,8 +85,9 @@ def main():
         else:
             print(f"Episode {episode} truncated ...")
 
-    print(f"Completion rate: {success_episodes/episode:.2f}")
-    print(f"Avg score: {total_score/success_episodes:.2f}, Avg steps: {total_step/success_episodes:.2f}")
+    print(f"Completion rate: {success_episodes/episode:.2f}, "
+          f"Avg score: {total_score/success_episodes:.2f}, "
+          f"Avg steps: {total_step/success_episodes:.2f}")
 
     env.close()
 
