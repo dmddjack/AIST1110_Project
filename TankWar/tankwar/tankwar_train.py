@@ -55,7 +55,7 @@ class RLModel:
 
         self.train_target_steps = 15
         self.update_target_stesp = 400
-        self.save_model_steps = 10 if not self.fast else 5
+        self.save_model_steps = 25 if not self.fast else 5
         
         # Maximum time elapsed (in minute) in fast mode
         self.fast_minute = 20
@@ -166,7 +166,7 @@ class RLModel:
                         self.save()
 
                     # Print progress wrt time
-                    time_elapsed = self._timer(self.start_time, self.episode, self.train_episodes)
+                    time_elapsed = self._timer(self.start_time, self.episode, self.train_episodes, self.fast)
 
                     # Print episode's training result
                     print(f"Total training reward = {total_training_rewards:<9.2f} "
@@ -328,7 +328,7 @@ class RLModel:
         plt.show()
 
     @staticmethod
-    def _timer(start_time, progress, total) -> float:
+    def _timer(start_time, progress, total, fast) -> float:
         # Code source: https://github.com/dmddjack/ESTR2018_Project/blob/main/wordle_bot.py
         """
         An internal function that prints the current progress, time elapsed 
@@ -337,10 +337,16 @@ class RLModel:
 
         time_elapsed = time() - start_time
 
-        print(f"Progress: {progress}/{total} ({progress / total * 100:.2f}%)")
+        if fast:
+            print(f"Process: {progress}")
+        else:  
+            print(f"Progress: {progress}/{total} ({progress / total * 100:.2f}%)")
+
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
-        print(f"Estimated time remaining: "
-              f"{strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
+
+        if not fast:
+            print(f"Estimated time remaining: "
+                f"{strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
 
         return time_elapsed
 
