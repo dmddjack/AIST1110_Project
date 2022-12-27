@@ -15,9 +15,8 @@ Argument name       Argument name alias    Definition & usage                   
 
 --seed              -s                     The seed for random number generator    int | NoneType        N/A                           None
                                            (if this argument is specified in 
-                                           tankwar_play.py or tankwar_test.py,
-                                           every episode of the game will be 
-                                           the same)
+                                           tankwar_play.py every episode of the 
+					   game will be identical)
 
 --difficulty        -d                     The level of enemy tank path            int                   DIFFICULTY = (0 | 1)          0
                                            finding AI
