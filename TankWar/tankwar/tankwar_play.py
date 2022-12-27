@@ -200,9 +200,9 @@ def main():
 
     # Print overall results
     print(
-        f"Completion rate = {success_episodes/(episode-1):.2f}, "
-        f"Avg score = {total_score/success_episodes:.2f}, "
-        f"Avg steps = {total_steps/success_episodes:.2f}"
+        f"Completion rate = {success_episodes/(episode-1) if episode > 1 else 0:.2f}, "
+        f"Avg score = {total_score/success_episodes if success_episodes > 0 else 0:.2f}, "
+        f"Avg steps = {total_steps/success_episodes if success_episodes > 0 else 0:.2f}"
     )
 
     env.close()
