@@ -327,23 +327,23 @@ class TankWar(gym.Env):
                 # Choose which border to start from based on the starting angle
                 if new_enemy_start_angle == 0:
                     enemy_start_x = int(
-                        self.np_random.integers(15, self.window_width - 15, size=1)
+                        self.np_random.integers(15, self.window_width - 25, size=1)
                     )
                     enemy_start_y = self.window_height
                 elif new_enemy_start_angle == 90:
                     enemy_start_x = self.window_width
                     enemy_start_y = int(
-                        self.np_random.integers(15, self.window_height - 15, size=1)
+                        self.np_random.integers(15, self.window_height - 25, size=1)
                     )
                 elif new_enemy_start_angle == 180:
                     enemy_start_x = int(
-                        self.np_random.integers(15, self.window_width - 15, size=1)
+                        self.np_random.integers(15, self.window_width - 25, size=1)
                     )
                     enemy_start_y = 0
                 else:
                     enemy_start_x = 0
                     enemy_start_y = int(
-                        self.np_random.integers(15, self.window_height - 15, size=1)
+                        self.np_random.integers(15, self.window_height - 25, size=1)
                     )
 
                 # Create a new enemy
