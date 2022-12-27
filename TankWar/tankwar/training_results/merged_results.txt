@@ -1702,3 +1702,39 @@ Estimated time remaining: 00:39:09
 Total training reward = 18444.77  at episode 284 with score = 9 , steps = 2256
 Epsilon: 0.010203458127514388
 =================================================================
+Progress: 285/300 (95.00%)
+Time elapsed: 11:39:39
+Estimated time remaining: 00:36:49
+Total training reward = 26857.33  at episode 285 with score = 10, steps = 3225
+Epsilon: 0.010197445031110482
+=================================================================
+Progress: 286/300 (95.33%)
+Time elapsed: 11:43:31
+Estimated time remaining: 00:34:26
+Total training reward = 21286.30  at episode 286 with score = 7 , steps = 2850
+Epsilon: 0.010191609648562514
+=================================================================
+Progress: 287/300 (95.67%)
+Time elapsed: 11:45:49
+Estimated time remaining: 00:31:58
+Total training reward = 12248.57  at episode 287 with score = 6 , steps = 1679
+Epsilon: 0.01018594672763229
+=================================================================
+Progress: 288/300 (96.00%)
+Time elapsed: 11:48:07
+Estimated time remaining: 00:29:30
+Total training reward = 12578.75  at episode 288 with score = 6 , steps = 1682
+Epsilon: 0.010180451171308717
+=================================================================
+Progress: 289/300 (96.33%)
+Time elapsed: 11:48:54
+Estimated time remaining: 00:26:58
+Total training reward = -2500.32  at episode 289 with score = 0 , steps = 577
+Epsilon: 0.01017511803322014
+=================================================================
+Progress: 290/300 (96.67%)
+Time elapsed: 11:51:21
+Estimated time remaining: 00:24:31
+Total training reward = 12346.93  at episode 290 with score = 6 , steps = 1808
+Epsilon: 0.010169942513182286
+=================================================================
