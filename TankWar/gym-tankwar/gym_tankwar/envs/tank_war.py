@@ -781,7 +781,7 @@ class TankWar(gym.Env):
 
                 # Load and keep looping the tank engine sound effect
                 self.tank_engine_sound = pygame.mixer.Sound(Audios.tank_engine_sound)
-                self.tank_engine_sound.set_volume(0.4)
+                self.tank_engine_sound.set_volume(0)
                 self.tank_engine_sound.play(loops=-1)
 
                 # Load the cannon firing sound effect
@@ -868,6 +868,7 @@ class TankWar(gym.Env):
         if self.extra_scene:
             # Beginning
             if self.steps == 0:
+                # Set the partially transparent black image
                 canvas.blit(self.black.surf, (0, 0))
 
                 # "TANK WAR"
@@ -883,6 +884,7 @@ class TankWar(gym.Env):
 
             # Ending
             elif terminated:
+                # Set the partially transparent black image
                 canvas.blit(self.black.surf, (0, 0))
 
                 # "GAME OVER"
