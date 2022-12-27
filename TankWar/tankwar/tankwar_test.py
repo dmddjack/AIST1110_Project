@@ -6,6 +6,8 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"  # Use GPU acceleration if possible
 
+import random
+
 import gym
 import gym_tankwar
 import numpy as np
@@ -31,6 +33,7 @@ def main():
     )
 
     env.action_space.seed(args.seed)
+    random.seed(args.seed)
 
     # Load the model
     model = keras.models.load_model(f"models/{args.file}.h5", compile=False)
@@ -44,7 +47,8 @@ def main():
         total_testing_rewards = 0
 
         # Reset the environment
-        state, reset_info = env.reset()
+        # Use random.randint to generate seed so that the testing scenarios will be identical
+        state, reset_info = env.reset(seed=random.randint(0, 2 ** 32 -1))
 
         for step in range(1, args.max_steps + 1):
             if not running:
@@ -81,8 +85,8 @@ def main():
         else:
             print(f"Episode {episode} truncated ...")
 
-    print(f"Completion rate: {success_episodes / episode:.2f}")
-    print(f"Avg score: {total_score / success_episodes:.2f}, Avg steps: {total_step / success_episodes:.2f}")
+    print(f"Completion rate: {success_episodes/episode:.2f}")
+    print(f"Avg score: {total_score/success_episodes:.2f}, Avg steps: {total_step/success_episodes:.2f}")
 
     env.close()
 
