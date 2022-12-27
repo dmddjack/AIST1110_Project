@@ -3,7 +3,7 @@
 import gym
 import gym_tankwar
 import pygame
-import random 
+import random
 
 from cmdargs import args
 
@@ -82,9 +82,10 @@ def main():
 
     env.action_space.seed(args.seed)
     random.seed(args.seed)
-    
-    observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
-    
+
+    observation, reset_info = env.reset(seed=args.seed)
+    # observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
+
     episode = 1
     success_episodes = 0
     running = True
@@ -130,7 +131,8 @@ def main():
                 if action == -100:  # Check if the R key is pressed when the game is over
                     if episode != episodes:
                         gameover = False
-                        observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
+                        observation, reset_info = env.reset(seed=args.seed)
+                        # observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
                     else:
                         continue
                 else:
@@ -154,7 +156,8 @@ def main():
             # Check if the game is over
             if gameover:
                 gameover = False
-                observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
+                observation, reset_info = env.reset(seed=args.seed)
+                # observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
 
         if action is not None:
             # Take action and get reward
