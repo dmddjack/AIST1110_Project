@@ -3,7 +3,7 @@
 import gym
 import gym_tankwar
 import pygame
-import random 
+import random
 
 from cmdargs import args
 
@@ -82,7 +82,8 @@ def main():
 
     env.action_space.seed(args.seed)
     random.seed(args.seed)
-    
+
+    # observation, reset_info = env.reset(seed=args.seed)
     observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
     
     episode = 1
@@ -130,6 +131,7 @@ def main():
                 if action == -100:  # Check if the R key is pressed when the game is over
                     if episode != episodes:
                         gameover = False
+                        # observation, reset_info = env.reset(seed=args.seed)
                         observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
                     else:
                         continue
@@ -154,6 +156,7 @@ def main():
             # Check if the game is over
             if gameover:
                 gameover = False
+                # observation, reset_info = env.reset(seed=args.seed)
                 observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
 
         if action is not None:
@@ -192,13 +195,12 @@ def main():
 
                 gameover = True
 
-    if episode > 0:
-        # Print overall results
-        print(
-            f"Completion rate = {success_episodes/episode:.2f}, "
-            f"Avg score = {total_score/episode:.2f}, "
-            f"Avg steps = {total_steps/episode:.2f}"
-        )
+    # Print overall results
+    print(
+        f"Completion rate = {success_episodes/(episode-1):.2f}, "
+        f"Avg score = {total_score/success_episodes:.2f}, "
+        f"Avg steps = {total_steps/success_episodes:.2f}"
+    )
 
     env.close()
 
