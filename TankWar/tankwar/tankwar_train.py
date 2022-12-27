@@ -5,7 +5,8 @@
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Reduce the number of logging messages
+
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"  # Use GPU acceleration if possible
 
 import gc
@@ -25,7 +26,8 @@ from tensorflow import keras
 
 from cmdargs import args
 
-print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+# Print the number of GPUs available
+print("Number of GPUs available: ", len(tf.config.list_physical_devices('GPU')))
 
 
 class RLModel:
@@ -60,6 +62,8 @@ class RLModel:
 
         # Number of neurons for each layer
         self.neurons = (256, 128, 128, 64, 32)
+
+        self.last_datetime = None
 
     def run(self) -> None:
         self.rewards, self.epsilons, self.scores, self.steps = [], [], [], []
@@ -251,7 +255,8 @@ class RLModel:
             current_qs = old_qs_list[idx]
 
             # Update Q-value
-            current_qs[action] = (1 - learning_rate) * current_qs[action] + learning_rate * max_future_q
+            current_qs[action] = (1 - learning_rate) * current_qs[action] \
+                                 + learning_rate * max_future_q
 
             x.append(state)
             y.append(current_qs)
@@ -259,9 +264,15 @@ class RLModel:
         self.main_model.fit(np.array(x), np.array(y), batch_size=batch_size, verbose=0, shuffle=True)
 
     def save(self) -> None:
-        """A method that save the target model."""
+        """A method that saves the target model."""
 
-        self.target_model.save(f"models/model_{'fast_' if self.fast else ''}diff_{self.difficulty}_epi_{self.episode}_{strftime('%H-%M-%S', gmtime(time() - self.start_time))}.h5")
+        # Update self.last_datetime
+        self.last_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+        # Save the target model
+        self.target_model.save(f"models/model_{'fast_' if self.fast else ''}"
+                               f"diff_{self.difficulty}_epi_{self.episode}_"
+                               f"{self.last_datetime}.h5")
 
     def plot(self) -> None:
         """
@@ -311,7 +322,7 @@ class RLModel:
         fig.tight_layout()
 
         # Save the figure
-        plt.savefig(f"training_results/training_result_{datetime.now().strftime('%H%M%S')}.png", dpi=300)
+        plt.savefig(f"training_results/training_result_{self.last_datetime}.png", dpi=300)
 
         # Show the figure
         plt.show()
