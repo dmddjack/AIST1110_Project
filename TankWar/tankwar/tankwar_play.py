@@ -71,6 +71,8 @@ def main():
         extra_scene=True if args.mode == "human" else False,
     )
 
+    episodes = args.episodes + 1 if args.mode == "human" else args.episodes  # The extra +1 is for the last game-over scene in human mode
+
     if args.mode != "human":
         env = gym.wrappers.TimeLimit(env, max_episode_steps=args.max_steps)
 
@@ -81,14 +83,15 @@ def main():
 
     observation, reset_info = env.reset(seed=args.seed)
 
-    episode = success_episodes = 0
+    episode = 1
+    success_episodes = 0
     running = True
     rewards = step = 0
     total_rewards = total_score = total_steps = 0
     action = None
     pressed_keys = None
     beginning, gameover = True, False
-    while running and episode <= args.episodes:
+    while running and episode < episodes + 1:
         if args.mode == "human":
             # Detect pygame events for quiting the game
             for event in pygame.event.get():
@@ -123,7 +126,7 @@ def main():
             # Check if the game is over
             if gameover:
                 if action == -100:  # Check if the R key is pressed when the game is over
-                    if episode != args.episodes:
+                    if episode != episodes:
                         gameover = False
                         observation, reset_info = env.reset(seed=args.seed)
                     else:
