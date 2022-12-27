@@ -14,8 +14,11 @@ parser.add_argument("-sh", "--starting_hp", type=int,
                     default=3)
 parser.add_argument("-s", "--seed", type=int, 
                     help="The seed for random number generator (if this argument "
-                         "is specified in tankwar_play.py, every episode of the game "
-                         "will be the same)",
+                         "is specified in tankwar_play.py or tankwar_test.py, the "
+                         "sequence of randomly generated action of enemy is identical "
+                         "for the same seed used in two different runs so that for the "
+                         "same model and the same seed, tankwar_test.py will yield the "
+                         "same result.)",
                     default=None)
 parser.add_argument("-d", "--difficulty", type=int, 
                     help="The level of enemy tank path finding AI",

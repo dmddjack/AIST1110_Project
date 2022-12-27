@@ -3,7 +3,7 @@
 import gym
 import gym_tankwar
 import pygame
-import random
+import random 
 
 from cmdargs import args
 
@@ -82,9 +82,9 @@ def main():
 
     env.action_space.seed(args.seed)
     random.seed(args.seed)
-
+    
     observation, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
-
+    
     episode = 1
     success_episodes = 0
     running = True

@@ -14,9 +14,14 @@ Argument name       Argument name alias    Definition & usage                   
 --starting_hp       -sh                    The starting HP of the player           int                   1 <= STARTING_HP <= 10        3
 
 --seed              -s                     The seed for random number generator    int | NoneType        N/A                           None
-                                           (if this argument is specified in 
-                                           tankwar_play.py every episode of the 
-					   game will be identical)
+                                           (If this argument is specified in
+                                           tankwar_play.py or tankwar_test.py,
+                                           the sequence of randomly generated
+                                           action of enemy is identical for the
+                                           same seed used in two different runs
+                                           so that for the same model and the
+                                           same seed, tankwar_test.py will yield
+                                           the same result.)
 
 --difficulty        -d                     The level of enemy tank path            int                   DIFFICULTY = (0 | 1)          0
                                            finding AI
@@ -42,6 +47,6 @@ Argument name       Argument name alias    Definition & usage                   
                                            tankwar_train.py and tankwar_test.py)
 
 --file              -f                     The file name of the HDF5 model file    str |  NoneType       N/A                           None
-                                           (without .h5 suffix)
+                                           without .h5 suffix
                                            
 --help              -h                     Show the help message and exit          N/A                   N/A                           N/A
