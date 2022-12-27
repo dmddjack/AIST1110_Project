@@ -337,7 +337,7 @@ class RLModel:
         time_elapsed = time() - self.start_time
 
         if self.fast:
-            print(f"Process: {progress}")
+            print(f"Episode: {progress}")
         else:  
             print(f"Progress: {progress}/{self.train_episodes} ({progress / self.train_episodes * 100:.2f}%)")
 
