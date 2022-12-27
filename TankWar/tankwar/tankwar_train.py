@@ -91,7 +91,7 @@ class RLModel:
 
         self.episode = 0
         running = True
-        while self.episode < self.train_episodes and running:
+        while (self.episode < self.train_episodes or self.fast) and running:
             # Count current episode
             self.episode += 1
 
@@ -270,9 +270,9 @@ class RLModel:
         self.last_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
 
         # Save the target model
-        self.target_model.save(f"models/model_{'fast_' if self.fast else ''}"
-                               f"diff_{self.difficulty}_epi_{self.episode}_"
-                               f"{self.last_datetime}.h5")
+        self.target_model.save(f"models/model_d_{self.difficulty}_"
+                               f"{'fast_' if self.fast else ''}epi_"
+                               f"{self.episode}_{self.last_datetime}.h5")
 
     def plot(self) -> None:
         """
