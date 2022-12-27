@@ -4,6 +4,7 @@
 
 # Code source: https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
 import os
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # Reduce the number of logging messages
 
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"  # Use GPU acceleration if possible
@@ -30,8 +31,8 @@ print("Number of GPUs available: ", len(tf.config.list_physical_devices('GPU')))
 
 
 class RLModel:
-    def __init__(self, env: gym.Env, state_shape: int, action_shape: int, 
-                 mode: str, difficulty: int, train_episodes: int, fast: bool, 
+    def __init__(self, env: gym.Env, state_shape: int, action_shape: int,
+                 mode: str, difficulty: int, train_episodes: int, fast: bool,
                  render_fps: int, seed: int | None = None) -> None:
         self.env = env
         self.state_shape = state_shape
@@ -55,7 +56,7 @@ class RLModel:
         self.train_target_steps = 15
         self.update_target_stesp = 400
         self.save_model_steps = 25 if not self.fast else 5
-        
+
         # Maximum time elapsed (in minute) in fast mode
         self.fast_minute = 20
 
@@ -181,7 +182,7 @@ class RLModel:
                         self.save()
                         running = False
 
-            # Garbage collection for memory issue
+            # Garbage collection for memory leak issue
             gc.collect()
             keras.backend.clear_session()
 
@@ -337,7 +338,7 @@ class RLModel:
 
         if self.fast:
             print(f"Episode: {progress}")
-        else:  
+        else:
             print(f"Progress: {progress}/{self.train_episodes} ({progress / self.train_episodes * 100:.2f}%)")
 
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
