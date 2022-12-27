@@ -48,7 +48,7 @@ def main():
 
         # Reset the environment
         # Use random.randint to generate seed so that the testing scenarios will be identical
-        state, reset_info = env.reset(seed=random.randint(0, 2 ** 32 -1))
+        state, reset_info = env.reset(seed=random.randint(0, 2 ** 32 - 1))
 
         for step in range(1, args.max_steps + 1):
             if not running:
