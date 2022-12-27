@@ -39,7 +39,8 @@ parser.add_argument("-ms", "--max_steps", type=int,
                     help="The maximum number of steps in an episode when FPS=30",
                     default=7200)
 parser.add_argument("-fast", "--fast", action="store_true", 
-                    help="Use fast mode to train DQN model in around 20 minutes")
+                    help="Use fast mode to train DQN model in around 20 minutes."
+                         "If this argument is specified, -traine need not be specified.")
 parser.add_argument("-fps", "--fps", type=int, 
                     help="Frames per second (Although possible, it would be "
                          "better not to use this argument in tankwar_train.py "
