@@ -187,7 +187,7 @@ class RLModel:
             keras.backend.clear_session()
 
             print("Epsilon:", self.epsilon)
-            print("=" * 65)
+            print("=" * 80)
 
             # Update epsilon
             self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay * self.episode)
