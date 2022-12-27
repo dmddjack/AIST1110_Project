@@ -166,7 +166,7 @@ class RLModel:
                         self.save()
 
                     # Print progress wrt time
-                    time_elapsed = self._timer(self.start_time, self.episode, self.train_episodes, self.fast)
+                    time_elapsed = self._timer(self.episode)
 
                     # Print episode's training result
                     print(f"Total training reward = {total_training_rewards:<9.2f} "
@@ -327,26 +327,28 @@ class RLModel:
         # Show the figure
         plt.show()
 
-    @staticmethod
-    def _timer(start_time, progress, total, fast) -> float:
-        # Code source: https://github.com/dmddjack/ESTR2018_Project/blob/main/wordle_bot.py
+    def _timer(self, progress) -> float:
         """
         An internal function that prints the current progress, time elapsed 
         and Estimated remaining time. Modified from FONG Shi Yuk's ESTR 2018 Project.
+        Code source: https://github.com/dmddjack/ESTR2018_Project/blob/main/wordle_bot.py
         """
 
-        time_elapsed = time() - start_time
+        time_elapsed = time() - self.start_time
 
-        if fast:
+        if self.fast:
             print(f"Process: {progress}")
         else:  
-            print(f"Progress: {progress}/{total} ({progress / total * 100:.2f}%)")
+            print(f"Progress: {progress}/{self.train_episodes} ({progress / self.train_episodes * 100:.2f}%)")
 
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
 
-        if not fast:
+        if not self.fast:
             print(f"Estimated time remaining: "
-                f"{strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / total) - time_elapsed))}")
+                  f"{strftime(f'%H:%M:%S', gmtime(self.fast_minute - time_elapsed))}")
+        else:
+            print(f"Estimated time remaining: "
+                  f"{strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / self.train_episodes) - time_elapsed))}")
 
         return time_elapsed
 
