@@ -174,7 +174,7 @@ def main():
                 if terminated:
                     print(
                         f"Episode {episode:<{len(str(args.episodes))}d} "
-                        f"completed in {step:<5d} "
+                        f"completed in {step:<{len(str(args.max_steps))}d} "
                         f"steps with reward = {rewards:<9.2f}, "
                         f"score = {info['score']}"
                     )
