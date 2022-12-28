@@ -344,8 +344,10 @@ class RLModel:
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
 
         if self.fast:
+            fast_time_remaining = self.fast_minute * 60 - time_elapsed
+            fast_time_remaining = 0 if fast_time_remaining < 0 else fast_time_remaining
             print(f"Estimated time remaining: "
-                  f"{strftime(f'%H:%M:%S', gmtime(self.fast_minute * 60 - time_elapsed))}")
+                  f"{strftime(f'%H:%M:%S', gmtime(fast_time_remaining))}")
         else:
             print(f"Estimated time remaining: "
                   f"{strftime(f'%H:%M:%S', gmtime(time_elapsed / (progress / self.train_episodes) - time_elapsed))}")
