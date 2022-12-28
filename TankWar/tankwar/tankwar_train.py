@@ -343,7 +343,7 @@ class RLModel:
 
         print(f"Time elapsed: {strftime('%H:%M:%S', gmtime(time_elapsed))}")
 
-        if not self.fast:
+        if self.fast:
             print(f"Estimated time remaining: "
                   f"{strftime(f'%H:%M:%S', gmtime(self.fast_minute * 60 - time_elapsed))}")
         else:
