@@ -362,7 +362,8 @@ class RLModel:
 def main():
     assert args.mode != "human_rand", "human_rand mode cannot be used here"
     assert args.seed is not None, "SEED cannot be None"
-    assert args.train_episodes > 0, "TRAIN_EPISODES must be a positive integer"
+    if not args.fast:
+        assert args.train_episodes > 0, "TRAIN_EPISODES must be a positive integer"
     assert args.max_steps > 0, "MAX_STEPS must be a positive integer"
 
     # Make a directory to store target models if necessary
